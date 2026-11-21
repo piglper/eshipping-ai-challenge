@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.1.0 |
+| Versión | 1.2.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 21/11/2026 |
@@ -87,6 +87,7 @@ Este diseño se valida con una **prueba de concepto (PoC) funcional** sobre los 
 5. **Medir, no suponer**: las cifras de fiabilidad y de coste salen de mediciones o de supuestos declarados.
 6. **Alcance protegido**: si hay retraso, se recorta la PoC, nunca el diseño ni la documentación.
 7. **Todo como código**: código, documentación, diagramas, configuración y proceso se versionan en el repositorio.
+8. **La IA no es un requisito, es una herramienta**: cada etapa usa la técnica más simple, barata y explicable que la resuelva con la fiabilidad necesaria (parsers, reglas, validaciones, OCR, NLP clásico...). El LLM solo entra donde esas técnicas no llegan, y nunca toma decisiones que deban ser deterministas y auditables. Ver la [sección 7.1](#71-selección-de-técnica-por-etapa).
 
 ---
 
@@ -169,7 +170,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F2.1 | Arquitectura con el modelo C4 (niveles 1 a 3): contexto, contenedores y componentes |
 | F2.2 | Diagramas de secuencia de los flujos principales: ingesta → evento, discrepancia → revisión, corrección → aprendizaje |
 | F2.3 | Modelo de datos: correo, documento, evento extraído (valor, fuente, confianza, evidencia), expediente, discrepancia, corrección. Incluye linaje del dato y bitemporalidad (cuándo ocurrió y cuándo lo supimos) |
-| F2.4 | Estrategia de IA (ADR): cascada híbrida de reglas, plantillas por proveedor y LLM, frente a las alternativas |
+| F2.4 | Estrategia de IA (ADR): validar y formalizar la técnica por etapa ([§7.1](#71-selección-de-técnica-por-etapa)): deterministas, plantillas, OCR, NLP clásico y LLM, frente a las alternativas («todo LLM», «todo reglas») |
 | F2.5 | Política de resolución de discrepancias (ADR): jerarquía de fuentes por campo, frescura, reglas de dominio y escalado a un humano |
 | F2.6 | Diseño de fiabilidad: métricas, calibración de la confianza, umbrales y muestreo de auditoría |
 | F2.7 | Modelo de costes: 100.000 y 150.000 correos, cómputo, LLM, almacenamiento y horas de revisión humana |
@@ -187,7 +188,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | # | Tarea |
 |---|---|
 | F3.1 | Modelo de dominio y esquemas (Pydantic) |
-| F3.2 | Adaptador de ingesta: `.msg`, `.eml` y adjuntos PDF |
+| F3.2 | Adaptador de ingesta: `.msg`, `.eml` y adjuntos PDF (texto digital y OCR si no hay capa de texto) |
 | F3.3 | Extractores deterministas: identificadores (expediente, booking, B/L, contenedor con dígito de control ISO 6346), fechas y puertos (UN/LOCODE) |
 | F3.4 | Puerto `LLMClient` y adaptador de Ollama: clasificación y extracción con esquema JSON impuesto, temperatura 0 y entrada limpia ([ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md)) |
 | F3.5 | Normalización y asociación correo → expediente |
@@ -207,7 +208,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 |---|---|
 | F4.1 | Tests unitarios y de integración (pytest) con datos sintéticos |
 | F4.2 | Evaluación frente al gold standard: precisión, recall y F1 por campo, exactitud de la clasificación, discrepancias detectadas. **Solo se publican métricas agregadas** |
-| F4.3 | Análisis de errores: tipología y qué parte del pipeline falla |
+| F4.3 | Análisis de errores: tipología, qué parte del pipeline falla y **porcentaje resuelto en cada escalón** (determinista, plantilla, ML, LLM, humano) |
 | F4.4 | Medición de tokens, latencia y memoria por correo y recalibración del modelo de costes y de la comparativa de proveedores |
 | F4.4b | **Benchmark de modelos locales** (2–3 candidatos de 3 a 8B parámetros, cuantizados): acierto frente al gold standard, latencia y memoria. Elección justificada |
 | F4.5 | Prueba de volumen sintético (por ejemplo, 10.000 correos generados) para el rendimiento del procesamiento determinista |
@@ -263,6 +264,30 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 - **Idempotencia** en la ingesta (deduplicación por `Message-ID` y hash), para poder reprocesar sin efectos secundarios.
 - **Observabilidad**: métricas por etapa (tiempo, coste, confianza) desde la PoC.
 - **Humano en el bucle (human-in-the-loop)**: la baja confianza o las discrepancias críticas se envían a una cola de revisión, nunca se escriben a ciegas en el ERP.
+
+### 7.1 Selección de técnica por etapa
+
+Propuesta preliminar: se valida con los datos en F1 y se formaliza en el ADR de la estrategia de IA (D5) en F2. El criterio es elegir la técnica más simple que cumpla, por este orden: **determinista → plantilla → NLP clásico o ML → LLM**.
+
+| Etapa | Técnica principal | Cuándo se recurre a otra | ¿LLM? |
+|---|---|---|---|
+| Ingesta y parseo (`.msg`, `.eml`, MIME) | Parsers estándar (`extract-msg`, `email`) | — | No |
+| Limpieza del cuerpo (HTML, firmas, avisos legales, hilos citados) | Reglas y heurísticas | — | No |
+| Texto de PDF digital | Extracción de texto (`pdfplumber`, `pypdf`) | Si el PDF no tiene capa de texto → OCR | No |
+| PDF escaneado o imagen | **OCR** (Tesseract) | — | No |
+| PDF de formato fijo por proveedor | **Plantillas por proveedor** (coordenadas o anclas de texto) | Proveedor o formato desconocido → LLM, y la salida sirve para crear una plantilla nueva | Solo como respaldo |
+| Identificadores (expediente, booking, B/L, contenedor) | **Expresiones regulares y validación** (dígito de control ISO 6346) | — | No |
+| Fechas y horas | Parser de fechas con los formatos conocidos y una zona horaria explícita | Expresiones relativas o ambiguas («next Monday», «ETA +2») | Solo los casos ambiguos |
+| Puertos | Diccionario UN/LOCODE y coincidencia aproximada | — | No |
+| Buques | Lista de buques conocida (ERP e histórico) y coincidencia aproximada | — | No |
+| Clasificación del tipo de correo o evento | Reglas por asunto, remitente y palabras clave → modelo clásico (TF-IDF + regresión logística) entrenado con las correcciones | Baja confianza de los anteriores | Solo el resto |
+| Extracción de texto libre (retrasos, motivos, cambios) | LLM con esquema JSON | — | **Sí** |
+| Asociación correo → expediente | **Claves deterministas** (expediente, booking, B/L, contenedor) | Sin clave → coincidencia por varios campos; si sigue sin resolverse → revisión humana | No |
+| Reconciliación con el ERP y discrepancias | **Motor de reglas** con jerarquía de fuentes por campo | — | **Nunca**: debe ser determinista y auditable |
+| Resolución de casos dudosos | Revisión humana | — | No (el LLM puede sugerir, el humano decide) |
+| Analítica de negocio | SQL y agregaciones | — | No |
+
+**Indicador clave**: el porcentaje de campos resueltos en cada escalón (determinista, plantilla, ML, LLM, humano). Se mide en la PoC (F4) y alimenta el modelo de costes: cuanto menos llegue al LLM, más barato y más explicable es el sistema.
 
 ---
 
@@ -406,3 +431,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 0.2.0 | 21/11/2026 | P. Iglesias Peral | Calendario ajustado para terminar el miércoles 25/11 | — |
 | 1.0.0 | 21/11/2026 | P. Iglesias Peral | Plan completo: alcance, estándares de ingeniería, arquitectura y documentación, flujo de GitHub, calidad, trazabilidad; decisiones D2–D4 tomadas; histórico en tres niveles (ADR, historial del plan y CHANGELOG) | `docs/plan-actuacion` |
 | 1.1.0 | 21/11/2026 | P. Iglesias Peral | D1 decidida: Ollama en local en la PoC con criterios de eficiencia y comparativa de proveedores de pago (ADR-0005). Nuevas tareas F0.10, F2.7b y F4.4b, y decisión abierta D9. Responsable: Pablo Iglesias Peral | `docs/plan-actuacion` |
+| 1.2.0 | 21/11/2026 | P. Iglesias Peral | Principio 8 («la IA no es un requisito»); nueva §7.1 con la técnica por etapa (deterministas, plantillas, OCR, ML clásico, LLM solo para el resto, reconciliación nunca con LLM); F2.4, F3.2 y F4.3 ajustadas | `docs/plan-actuacion` |
