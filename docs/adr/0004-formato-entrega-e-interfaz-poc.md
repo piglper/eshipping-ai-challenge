@@ -2,7 +2,7 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-11-21
-- **Decisores:** piglper
+- **Decisores:** Pablo Iglesias Peral
 - **Referencias:** apartado 8 del enunciado (Entregables), decisiones D2 y D3
 
 ## Contexto y problema

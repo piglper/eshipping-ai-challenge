@@ -2,7 +2,7 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-11-21
-- **Decisores:** piglper
+- **Decisores:** Pablo Iglesias Peral
 - **Referencias:** [PLAN.md §8](../PLAN.md#8-estándares-de-documentación)
 
 ## Contexto y problema

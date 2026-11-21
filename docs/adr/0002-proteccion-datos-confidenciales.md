@@ -2,7 +2,7 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-11-21
-- **Decisores:** piglper
+- **Decisores:** Pablo Iglesias Peral
 - **Referencias:** apartado 4 del enunciado (Confidencialidad), `CLAUDE.md`
 
 ## Contexto y problema

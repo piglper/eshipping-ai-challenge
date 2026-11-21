@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.0.0 |
+| Versión | 1.1.0 |
 | Estado | Borrador para revisión |
-| Responsable | piglper |
+| Responsable | Pablo Iglesias Peral |
 | Última actualización | 21/11/2026 |
 | Documentos relacionados | [Índice de ADR](adr/README.md) · [CHANGELOG](../CHANGELOG.md) · [Índice de documentación](README.md) |
 
@@ -139,9 +139,10 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F0.6 | Plantillas de GitHub: issues (tarea, bug, decisión), PR y `CONTRIBUTING.md` | ⏳ |
 | F0.7 | Etiquetas, milestones (uno por fase), tablero de GitHub Projects e issues de F1–F5 | ⏳ |
 | F0.8 | CI en GitHub Actions: lint, tipos y tests, solo con datos sintéticos | ⏳ |
-| F0.9 | Decisión D1 (proveedor de LLM para la PoC) → ADR | ⏳ |
+| F0.9 | Decisión D1 (proveedor de LLM para la PoC) → [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) | ✅ |
+| F0.10 | Instalar Ollama y descargar los modelos candidatos (sin datos todavía) | ⏳ |
 
-**Entregables:** el repositorio configurado, este plan, `CHANGELOG.md`, los ADR 0001–0004 y el `CONTRIBUTING.md`.
+**Entregables:** el repositorio configurado, este plan, `CHANGELOG.md`, los ADR 0001–0005 y el `CONTRIBUTING.md`.
 
 **Criterios de salida:** el CI pasa en `main`, el plan está aprobado y las issues de F1 están creadas.
 
@@ -172,6 +173,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F2.5 | Política de resolución de discrepancias (ADR): jerarquía de fuentes por campo, frescura, reglas de dominio y escalado a un humano |
 | F2.6 | Diseño de fiabilidad: métricas, calibración de la confianza, umbrales y muestreo de auditoría |
 | F2.7 | Modelo de costes: 100.000 y 150.000 correos, cómputo, LLM, almacenamiento y horas de revisión humana |
+| F2.7b | **Comparativa de proveedores de LLM** (pago y autoalojado): precio por millón de tokens, lotes y caché, coste para 100.000 y 150.000 correos, calidad, latencia, residencia en la UE y política de datos. Precios de fuentes oficiales con fecha de consulta |
 | F2.8 | Aprendizaje continuo: correcciones como señal, few-shot dinámico, nuevas plantillas y control de calidad de las etiquetas |
 | F2.9 | Seguridad, privacidad y cumplimiento (RGPD, retención, seudonimización, proveedores externos) |
 | F2.10 | Diseño de la PoC: qué partes de la arquitectura se implementan y cuáles se simulan |
@@ -187,7 +189,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F3.1 | Modelo de dominio y esquemas (Pydantic) |
 | F3.2 | Adaptador de ingesta: `.msg`, `.eml` y adjuntos PDF |
 | F3.3 | Extractores deterministas: identificadores (expediente, booking, B/L, contenedor con dígito de control ISO 6346), fechas y puertos (UN/LOCODE) |
-| F3.4 | Puerto `LLMClient` y su adaptador según D1: clasificación y extracción con salida estructurada |
+| F3.4 | Puerto `LLMClient` y adaptador de Ollama: clasificación y extracción con esquema JSON impuesto, temperatura 0 y entrada limpia ([ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md)) |
 | F3.5 | Normalización y asociación correo → expediente |
 | F3.6 | Adaptador del ERP (CSV) y motor de reconciliación |
 | F3.7 | Persistencia (SQLite, con un esquema migrable a PostgreSQL) |
@@ -206,7 +208,8 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F4.1 | Tests unitarios y de integración (pytest) con datos sintéticos |
 | F4.2 | Evaluación frente al gold standard: precisión, recall y F1 por campo, exactitud de la clasificación, discrepancias detectadas. **Solo se publican métricas agregadas** |
 | F4.3 | Análisis de errores: tipología y qué parte del pipeline falla |
-| F4.4 | Medición del coste y la latencia reales por correo y recalibración del modelo de costes |
+| F4.4 | Medición de tokens, latencia y memoria por correo y recalibración del modelo de costes y de la comparativa de proveedores |
+| F4.4b | **Benchmark de modelos locales** (2–3 candidatos de 3 a 8B parámetros, cuantizados): acierto frente al gold standard, latencia y memoria. Elección justificada |
 | F4.5 | Prueba de volumen sintético (por ejemplo, 10.000 correos generados) para el rendimiento del procesamiento determinista |
 
 **Entregables:** `docs/10_evaluacion.md` e informe reproducible con `make evaluate`.
@@ -326,7 +329,7 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 | Salidas | Todo lo derivado de datos reales se guarda en `data/output/` (ignorado) |
 | Tests y demo | Solo datos sintéticos (`data_sample/`) |
 | Logs | Sin contenido de correos; identificadores seudonimizados |
-| Servicios externos | Según el ADR del proveedor de LLM (D1); cualquier envío se declara en la propuesta junto con sus garantías |
+| Servicios externos | La PoC usa un LLM local (Ollama): los datos reales no salen del equipo ([ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md)). Para producción se documentan las garantías de cada proveedor de pago |
 | Asistencia de IA en el desarrollo | Se usa Claude Code, que lee los datos en local y los procesa en la API de Anthropic; se declara en la propuesta |
 | Capturas y presentación | Solo con datos sintéticos o anonimizados |
 | Cierre | Borrado de todas las copias (F6) |
@@ -341,7 +344,7 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 | R2 | Envío no declarado de datos a terceros | Baja | Alto | Decisión D1 explícita y declarada |
 | R3 | Muestra pequeña (unos 10 correos) para medir la fiabilidad | Alta | Medio | Intervalos de confianza, transparencia y un diseño de medición para producción |
 | R4 | Parseo complejo de `.msg`, de PDF o de hilos | Media | Medio | Librerías maduras (`extract-msg`, `pdfplumber`), OCR solo si hace falta |
-| R5 | Un LLM local, con poca memoria (16 GB), rinde peor | Media | Medio | Reglas primero y LLM solo donde aporta, prompts con esquema, y comparativa documentada |
+| R5 | Un LLM local, con poca memoria (16 GB), rinde peor | Media | Medio | Cascada (reglas primero), entrada limpia, esquema JSON, benchmark de modelos (F4.4b) y comparativa con los de pago |
 | R6 | Falta de tiempo | Media | Alto | Alcance protegido (principio 6), milestones diarios, día de colchón |
 | R7 | Sobrecarga del proceso (demasiada ceremonia para una persona) | Media | Bajo | Plantillas ligeras e issues de tamaño razonable |
 | R8 | Sobreingeniería de la PoC | Media | Medio | Criterios de salida por fase; la PoC solo valida el diseño |
@@ -381,13 +384,14 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | — | Controles de protección de los datos confidenciales | [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) |
 | D4 | Proceso completo en GitHub: GitHub Flow, Conventional Commits, SemVer, issues, milestones y PR | [ADR-0003](adr/0003-flujo-de-trabajo-git.md) |
 | D2, D3 | Entrega en presentación PDF o HTML con acceso opcional al repositorio; PoC con CLI y Streamlit | [ADR-0004](adr/0004-formato-entrega-e-interfaz-poc.md) |
+| D1 | LLM local (Ollama) en la PoC, optimizado para eficiencia; comparativa de proveedores de pago para producción | [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) |
 
 ### 14.2 Decisiones abiertas
 
 | ID | Decisión | Opciones | Fase en que se decide |
 |---|---|---|---|
-| D1 | Proveedor de LLM de la PoC para los datos reales | a) Modelo local (Ollama) · b) API de pago (Claude), declarada · c) Seudonimizar y usar una API · d) Combinar: local para los datos reales y API solo con datos sintéticos para comparar | F0 |
-| D5 | Estrategia de IA de producción | Reglas, NLP clásico, LLM o híbrido | F2 |
+| D5 | Estrategia de IA de producción, incluido el proveedor de LLM recomendado | Reglas, NLP clásico, LLM o híbrido; proveedor según la comparativa F2.7b | F2 |
+| D9 | Modelos locales de la PoC | 2–3 candidatos; se elige por benchmark | F4 |
 | D6 | Política de resolución de discrepancias | Jerarquía de fuentes, frescura, reglas de dominio | F2 |
 | D7 | Almacenamiento de producción | PostgreSQL, almacén de eventos, data warehouse | F2 |
 | D8 | Plataforma de despliegue de referencia | Nube (AWS, Azure o GCP) o local | F2 |
@@ -398,6 +402,7 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 
 | Versión | Fecha | Autor | Cambios | Referencia |
 |---|---|---|---|---|
-| 0.1.0 | 21/11/2026 | piglper | Primer borrador: fases, riesgos y decisiones abiertas | — |
-| 0.2.0 | 21/11/2026 | piglper | Calendario ajustado para terminar el miércoles 25/11 | — |
-| 1.0.0 | 21/11/2026 | piglper | Plan completo: alcance, estándares de ingeniería, arquitectura y documentación, flujo de GitHub, calidad, trazabilidad; decisiones D2–D4 tomadas; histórico en tres niveles (ADR, historial del plan y CHANGELOG) | `docs/plan-actuacion` |
+| 0.1.0 | 21/11/2026 | P. Iglesias Peral | Primer borrador: fases, riesgos y decisiones abiertas | — |
+| 0.2.0 | 21/11/2026 | P. Iglesias Peral | Calendario ajustado para terminar el miércoles 25/11 | — |
+| 1.0.0 | 21/11/2026 | P. Iglesias Peral | Plan completo: alcance, estándares de ingeniería, arquitectura y documentación, flujo de GitHub, calidad, trazabilidad; decisiones D2–D4 tomadas; histórico en tres niveles (ADR, historial del plan y CHANGELOG) | `docs/plan-actuacion` |
+| 1.1.0 | 21/11/2026 | P. Iglesias Peral | D1 decidida: Ollama en local en la PoC con criterios de eficiencia y comparativa de proveedores de pago (ADR-0005). Nuevas tareas F0.10, F2.7b y F4.4b, y decisión abierta D9. Responsable: Pablo Iglesias Peral | `docs/plan-actuacion` |

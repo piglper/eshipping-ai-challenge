@@ -10,6 +10,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Plan de actuación completo (`docs/PLAN.md`) con fases, estándares, riesgos, trazabilidad e historial de revisiones.
 - Sistema de registro de decisiones (ADR, formato MADR) con plantilla e índice.
 - ADR-0001 a ADR-0004: uso de ADR, protección de datos confidenciales, flujo de trabajo en Git, y formato de entrega e interfaz de la PoC.
+- ADR-0005: LLM local (Ollama) en la PoC, con criterios de eficiencia y comparativa de proveedores de pago para producción.
 - Índice de documentación (`docs/README.md`).
 
 ## [0.0.1] - 2026-11-21

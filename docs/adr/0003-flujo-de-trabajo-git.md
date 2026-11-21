@@ -2,7 +2,7 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-11-21
-- **Decisores:** piglper
+- **Decisores:** Pablo Iglesias Peral
 - **Referencias:** [PLAN.md §9](../PLAN.md#9-flujo-de-trabajo-en-git-y-github), decisión D4
 
 ## Contexto y problema
