@@ -30,3 +30,5 @@
 - GitHub Flow: nunca push directo a `main`; rama `tipo/<issue>-<tema>`, PR con plantilla, fusión squash.
 - Conventional Commits en español, con referencia a la issue. Código en inglés, documentación en español.
 - Estándares: arquitectura hexagonal, tipado estricto, ruff, mypy, pytest. Calidad de nivel profesional: el repositorio lo pueden revisar los técnicos de EShipping.
+- Escalable y mantenible por diseño: el volumen es un flujo de ~100.000 correos al mes que puede crecer a 150.000 o más; crecer debe ser configuración y réplicas, no rediseño (PLAN §7.2).
+- La IA no es un requisito: usar en cada etapa la técnica más simple que funcione (PLAN §7.1).

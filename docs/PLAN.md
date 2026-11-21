@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.2.0 |
+| Versión | 1.3.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 21/11/2026 |
@@ -34,7 +34,7 @@
 
 ## 1. Objetivo
 
-Diseñar un sistema capaz de procesar más de 100.000 correos operativos de transporte marítimo que:
+Diseñar un sistema capaz de procesar un flujo continuo de **unos 100.000 correos operativos al mes**, preparado para crecer a **150.000 al mes o más** sin rediseño, que:
 
 1. reciba e ingiera los correos,
 2. los clasifique por tipo de evento,
@@ -88,6 +88,7 @@ Este diseño se valida con una **prueba de concepto (PoC) funcional** sobre los 
 6. **Alcance protegido**: si hay retraso, se recorta la PoC, nunca el diseño ni la documentación.
 7. **Todo como código**: código, documentación, diagramas, configuración y proceso se versionan en el repositorio.
 8. **La IA no es un requisito, es una herramienta**: cada etapa usa la técnica más simple, barata y explicable que la resuelva con la fiabilidad necesaria (parsers, reglas, validaciones, OCR, NLP clásico...). El LLM solo entra donde esas técnicas no llegan, y nunca toma decisiones que deban ser deterministas y auditables. Ver la [sección 7.1](#71-selección-de-técnica-por-etapa).
+9. **Escalable y mantenible por diseño**: el volumen actual (100.000 correos al mes) no es el techo. Pasar a 150.000 o más debe resolverse con **configuración y más réplicas, nunca con cambios de arquitectura ni de código**. Cualquier componente que no cumpla esto se rechaza en el diseño. Ver la [sección 7.2](#72-escalabilidad-y-mantenibilidad).
 
 ---
 
@@ -157,7 +158,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F1.4 | Catálogo de ambigüedades entre fuentes (significados de ETD y ETA según la fuente, fechas estimadas frente a reales, tipos de cut-off, formatos y zonas horarias, varios contenedores, hilos con información contradictoria) |
 | F1.5 | Taxonomía de tipos de correo y evento |
 | F1.6 | Especificación de requisitos funcionales y no funcionales, con identificadores (`RF-xx`, `RNF-xx`) |
-| F1.7 | Lista de preguntas para EShipping y supuestos adoptados |
+| F1.7 | Lista de preguntas para EShipping y supuestos adoptados (incluida la distribución horaria de los correos, la proporción con PDF y la latencia aceptable por tipo de evento) |
 
 **Entregables:** `docs/01_analisis_datos.md` (describe patrones sin datos reales), `docs/02_requisitos.md`, `docs/03_ambiguedades.md`, `docs/glosario.md`.
 
@@ -167,13 +168,14 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 
 | # | Tarea |
 |---|---|
-| F2.1 | Arquitectura con el modelo C4 (niveles 1 a 3): contexto, contenedores y componentes |
+| F2.1 | Arquitectura con el modelo C4 (niveles 1 a 3): contexto, contenedores y componentes, aplicando las reglas de escalabilidad y mantenibilidad ([§7.2](#72-escalabilidad-y-mantenibilidad)) |
+| F2.1b | Análisis de capacidad: rendimiento por etapa, cuellos de botella, réplicas necesarias a 100.000, 150.000 y 300.000 correos al mes, y qué cambia (solo configuración) al crecer |
 | F2.2 | Diagramas de secuencia de los flujos principales: ingesta → evento, discrepancia → revisión, corrección → aprendizaje |
 | F2.3 | Modelo de datos: correo, documento, evento extraído (valor, fuente, confianza, evidencia), expediente, discrepancia, corrección. Incluye linaje del dato y bitemporalidad (cuándo ocurrió y cuándo lo supimos) |
 | F2.4 | Estrategia de IA (ADR): validar y formalizar la técnica por etapa ([§7.1](#71-selección-de-técnica-por-etapa)): deterministas, plantillas, OCR, NLP clásico y LLM, frente a las alternativas («todo LLM», «todo reglas») |
 | F2.5 | Política de resolución de discrepancias (ADR): jerarquía de fuentes por campo, frescura, reglas de dominio y escalado a un humano |
 | F2.6 | Diseño de fiabilidad: métricas, calibración de la confianza, umbrales y muestreo de auditoría |
-| F2.7 | Modelo de costes: 100.000 y 150.000 correos, cómputo, LLM, almacenamiento y horas de revisión humana |
+| F2.7 | Modelo de costes **mensual y por correo** para 100.000 y 150.000 correos al mes: cómputo, LLM, OCR, almacenamiento y horas de revisión humana |
 | F2.7b | **Comparativa de proveedores de LLM** (pago y autoalojado): precio por millón de tokens, lotes y caché, coste para 100.000 y 150.000 correos, calidad, latencia, residencia en la UE y política de datos. Precios de fuentes oficiales con fecha de consulta |
 | F2.8 | Aprendizaje continuo: correcciones como señal, few-shot dinámico, nuevas plantillas y control de calidad de las etiquetas |
 | F2.9 | Seguridad, privacidad y cumplimiento (RGPD, retención, seudonimización, proveedores externos) |
@@ -211,7 +213,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F4.3 | Análisis de errores: tipología, qué parte del pipeline falla y **porcentaje resuelto en cada escalón** (determinista, plantilla, ML, LLM, humano) |
 | F4.4 | Medición de tokens, latencia y memoria por correo y recalibración del modelo de costes y de la comparativa de proveedores |
 | F4.4b | **Benchmark de modelos locales** (2–3 candidatos de 3 a 8B parámetros, cuantizados): acierto frente al gold standard, latencia y memoria. Elección justificada |
-| F4.5 | Prueba de volumen sintético (por ejemplo, 10.000 correos generados) para el rendimiento del procesamiento determinista |
+| F4.5 | Prueba de volumen sintético (por ejemplo, 10.000 correos generados): rendimiento por etapa y extrapolación al pico de 150.000 correos al mes |
 
 **Entregables:** `docs/10_evaluacion.md` e informe reproducible con `make evaluate`.
 
@@ -286,6 +288,37 @@ Propuesta preliminar: se valida con los datos en F1 y se formaliza en el ADR de 
 | Reconciliación con el ERP y discrepancias | **Motor de reglas** con jerarquía de fuentes por campo | — | **Nunca**: debe ser determinista y auditable |
 | Resolución de casos dudosos | Revisión humana | — | No (el LLM puede sugerir, el humano decide) |
 | Analítica de negocio | SQL y agregaciones | — | No |
+
+### 7.2 Escalabilidad y mantenibilidad
+
+**Dimensionamiento** (supuestos que se validarán con EShipping; ver F1.7):
+
+| Métrica | 100.000 correos al mes | 150.000 correos al mes |
+|---|---|---|
+| Media por día laborable (unos 22 días) | ~4.500 | ~6.800 |
+| Media por hora laborable (unas 10 horas) | ~450 | ~680 |
+| Pico estimado (×3 sobre la media horaria) | ~1.400 por hora (~23 por minuto) | ~2.000 por hora (~35 por minuto) |
+| Adjuntos (PDF) | Por medir en F1 | Por medir en F1 |
+
+El sistema se dimensiona para el **pico**, no para la media, y con margen para crecer al menos 2× sobre los 150.000 correos al mes.
+
+**Reglas de diseño para la escalabilidad:**
+- **Workers sin estado detrás de colas**, con escalado horizontal en cada etapa por separado (OCR, LLM y reconciliación escalan de forma independiente según su cuello de botella).
+- **Desacoplamiento por colas**: control de la presión entre etapas (*backpressure*), reintentos con espera exponencial y cola de mensajes fallidos (*dead-letter*). Un pico se absorbe en la cola, no se pierde.
+- **Idempotencia** en todas las etapas: se puede reprocesar sin duplicar.
+- **Procesamiento por lotes** cuando el proveedor lo permite (las APIs batch de los LLM suelen tener descuento), y procesamiento en tiempo real solo para lo urgente (por ejemplo, un cambio de cut-off).
+- **Cascada de técnicas** ([§7.1](#71-selección-de-técnica-por-etapa)): cuanto menos llegue al LLM, menos crece el coste con el volumen.
+- **Almacenamiento particionado** por fecha y con índices por expediente, booking y contenedor; retención y archivado definidos.
+- **Límites externos**: los límites de uso de la API del LLM y del ERP se gestionan con limitación de tasa y colas, no fallando.
+- **Coste proporcional**: el modelo de costes se expresa **por mes y por correo**, para que el paso a 150.000 sea una multiplicación con supuestos visibles.
+
+**Reglas de diseño para la mantenibilidad:**
+- **Arquitectura hexagonal**: cambiar de proveedor de LLM, de OCR, de buzón o de base de datos supone cambiar un adaptador, no el dominio.
+- **Lo que cambia con el negocio es configuración o datos, no código**: plantillas de proveedores, reglas de clasificación, jerarquía de fuentes, umbrales de confianza y catálogo de tipos de evento. Añadir una naviera nueva no requiere desplegar código.
+- **Versionado de todo lo que afecta al resultado**: prompts, modelos, plantillas y reglas, para saber con qué versión se procesó cada correo y poder reprocesar.
+- **Esquemas explícitos** (Pydantic, y migraciones de base de datos) y contratos entre etapas.
+- **Observabilidad**: métricas por etapa (rendimiento, latencia, cola pendiente, coste, confianza), logs estructurados y alertas. Sin observabilidad no se puede escalar con seguridad.
+- **Tests automáticos y CI**, y documentación viva (ADR y runbooks).
 
 **Indicador clave**: el porcentaje de campos resueltos en cada escalón (determinista, plantilla, ML, LLM, humano). Se mide en la PoC (F4) y alimenta el modelo de costes: cuanto menos llegue al LLM, más barato y más explicable es el sistema.
 
@@ -373,6 +406,7 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 | R6 | Falta de tiempo | Media | Alto | Alcance protegido (principio 6), milestones diarios, día de colchón |
 | R7 | Sobrecarga del proceso (demasiada ceremonia para una persona) | Media | Bajo | Plantillas ligeras e issues de tamaño razonable |
 | R8 | Sobreingeniería de la PoC | Media | Medio | Criterios de salida por fase; la PoC solo valida el diseño |
+| R9 | Diseño que no aguante el crecimiento (100.000 → 150.000 correos al mes o más) | Media | Alto | Principio 9, reglas de la §7.2, análisis de capacidad (F2.1b) y prueba de volumen (F4.5) |
 
 ---
 
@@ -389,7 +423,7 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 | 7 · Coste computacional y económico | `06_costes.md` | F2, F4 | ⏳ |
 | 7 · Datos obtenidos y estructura | `05_modelo_datos.md` | F2 | ⏳ |
 | 7 · Fiabilidad y baja confianza | `07_fiabilidad.md` | F2 | ⏳ |
-| 7 · Escalabilidad (100.000 → 150.000 correos) | `04_arquitectura.md`, `06_costes.md` | F2, F4 | ⏳ |
+| 7 · Escalabilidad (100.000 → 150.000 correos al mes) | `04_arquitectura.md` (análisis de capacidad), `06_costes.md` | F2, F4 | ⏳ |
 | 7 · Aprendizaje continuo sin aprender de errores | `08_aprendizaje_continuo.md` | F2 | ⏳ |
 | 3 · Ambigüedad entre fuentes | `03_ambiguedades.md`, ADR de reconciliación | F1, F2 | ⏳ |
 | 4 · Declarar el envío a servicios externos | `09_seguridad.md`, presentación | F2, F5 | ⏳ |
@@ -432,3 +466,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.0.0 | 21/11/2026 | P. Iglesias Peral | Plan completo: alcance, estándares de ingeniería, arquitectura y documentación, flujo de GitHub, calidad, trazabilidad; decisiones D2–D4 tomadas; histórico en tres niveles (ADR, historial del plan y CHANGELOG) | `docs/plan-actuacion` |
 | 1.1.0 | 21/11/2026 | P. Iglesias Peral | D1 decidida: Ollama en local en la PoC con criterios de eficiencia y comparativa de proveedores de pago (ADR-0005). Nuevas tareas F0.10, F2.7b y F4.4b, y decisión abierta D9. Responsable: Pablo Iglesias Peral | `docs/plan-actuacion` |
 | 1.2.0 | 21/11/2026 | P. Iglesias Peral | Principio 8 («la IA no es un requisito»); nueva §7.1 con la técnica por etapa (deterministas, plantillas, OCR, ML clásico, LLM solo para el resto, reconciliación nunca con LLM); F2.4, F3.2 y F4.3 ajustadas | `docs/plan-actuacion` |
+| 1.3.0 | 21/11/2026 | P. Iglesias Peral | Volumen como flujo mensual (100.000 al mes, crecimiento a 150.000 o más). Principio 9 y nueva §7.2 de escalabilidad y mantenibilidad con dimensionamiento. Tareas F2.1b (capacidad) y F1.7, F2.7 y F4.5 ajustadas. Riesgo R9 | `docs/plan-actuacion` |
