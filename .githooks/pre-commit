@@ -1,0 +1,10 @@
+#!/bin/sh
+# Bloquea commits que incluyan datos reales o ficheros de correo/CSV.
+blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(^|/)data/|\.(csv|eml|msg|pst|mbox)$')
+if [ -n "$blocked" ]; then
+  echo "ERROR: commit bloqueado. Ficheros potencialmente confidenciales en el stage:" >&2
+  echo "$blocked" | sed 's/^/  - /' >&2
+  echo "Quítalos con: git restore --staged <fichero>" >&2
+  exit 1
+fi
+exit 0
