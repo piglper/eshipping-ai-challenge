@@ -21,3 +21,12 @@
 
 - macOS, Python en `.venv/` (`source .venv/bin/activate`).
 - Estructura: `src/` (código), `tests/` (tests con datos sintéticos), `data_sample/` (datos sintéticos), `data/` (real, ignorado).
+
+## Proceso y documentación (ver `docs/PLAN.md`)
+
+- Seguir el plan `docs/PLAN.md` y mantenerlo al día: todo cambio del plan se apunta en su historial de revisiones (§15).
+- Toda decisión relevante → ADR nuevo en `docs/adr/` (plantilla MADR) y actualizar el índice. Los ADR aceptados no se reescriben: se sustituyen.
+- Cambios del producto → `CHANGELOG.md` (Keep a Changelog + SemVer).
+- GitHub Flow: nunca push directo a `main`; rama `tipo/<issue>-<tema>`, PR con plantilla, fusión squash.
+- Conventional Commits en español, con referencia a la issue. Código en inglés, documentación en español.
+- Estándares: arquitectura hexagonal, tipado estricto, ruff, mypy, pytest. Calidad de nivel profesional: el repositorio lo pueden revisar los técnicos de EShipping.
