@@ -7,7 +7,7 @@
 | [PLAN.md](PLAN.md) | Plan de actuación, estándares e historial de revisiones | F0 | 🔄 Borrador |
 | [adr/](adr/README.md) | Registro de decisiones de arquitectura y de proyecto | Todas | 🔄 En curso |
 | [../CHANGELOG.md](../CHANGELOG.md) | Cambios del proyecto por versión | Todas | 🔄 En curso |
-| `01_analisis_datos.md` | Análisis de los correos y del ERP (sin datos reales) | F1 | ⏳ |
+| [01_analisis_datos.md](01_analisis_datos.md) | Análisis de los correos y del ERP (sin datos reales) | F1 | 🔄 Borrador |
 | `02_requisitos.md` | Requisitos funcionales y no funcionales | F1 | ⏳ |
 | `03_ambiguedades.md` | Catálogo de ambigüedades entre fuentes | F1 | ⏳ |
 | `glosario.md` | Glosario de dominio | F1 | ⏳ |

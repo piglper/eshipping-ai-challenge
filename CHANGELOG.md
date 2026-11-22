@@ -7,6 +7,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Análisis de los datos de la muestra (`docs/01_analisis_datos.md`): estructura de los correos, tipos de correo y de PDF, identificadores, columnas del ERP para el cruce y primeras discrepancias, sin datos reales.
+- Tablero de GitHub Projects con todas las tareas del plan.
 - Configuración del proyecto en `pyproject.toml` (paquete `eshipping_ai` en `src/`, dependencias de desarrollo fijadas, ruff, mypy estricto, pytest y cobertura) y `Makefile` (`setup`, `lint`, `format`, `typecheck`, `test`, `check`).
 - Framework `pre-commit` (ruff, mypy, gitleaks y comprobaciones de ficheros), ejecutado desde el hook de confidencialidad.
 - CI en GitHub Actions: job de confidencialidad y secretos, y job de lint, tipos y tests.
