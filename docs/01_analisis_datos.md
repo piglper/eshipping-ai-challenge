@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.2.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 22/11/2026 |
-| Tareas | F1.1 (#8), F1.2 (#9) |
+| Tareas | F1.1 (#8), F1.2 (#9), F1.3 (#10) |
 
 > **Confidencialidad:** este documento describe **patrones y cifras agregadas**. No contiene nombres de clientes, personas, números de expediente, bookings, B/L, contenedores ni buques. Los ejemplos de formato son sintéticos. El inventario detallado está solo en local (`data/output/`, ignorado por git).
 
@@ -170,7 +170,51 @@ El inventario exhaustivo de discrepancias es parte del gold standard (F1.3, #10)
 6. **Cada dato con su estado** (estimado / confirmado), su fuente y su fecha de conocimiento, para resolver los hilos con valores sucesivos.
 7. **El sistema enriquece el ERP**, no solo lo contrasta.
 
-## 6. Limitaciones
+## 6. Gold standard (F1.3)
+
+Referencia contra la que se evalúa la PoC (F4.2). Contiene datos reales, así que **solo existe en local** (`data/gold/`, ignorado por git); aquí se describen su formato y sus cifras agregadas.
+
+### 6.1 Contenido
+
+| Nivel | Qué se etiqueta | Para medir |
+|---|---|---|
+| Correo (38) | Expediente al que pertenece y clases de la taxonomía (multietiqueta, con una clase principal) | Asociación y clasificación |
+| Expediente (11) | Valor correcto de cada campo clave, con el correo que lo respalda, su clasificador (`PLN`/`EST`/`ACT`), su `known_at` y el **veredicto** frente al ERP | Extracción por campo y detección de discrepancias |
+
+Campos: booking, buque, salida del buque, llegada a destino, carga en almacén (fecha, hora y lugar), levante de aduana, cut-off, equipo (número, tipo, contenedores y precintos), B/L e incidencias.
+
+### 6.2 Veredictos
+
+| Veredicto | Significado | Qué debe hacer el sistema |
+|---|---|---|
+| `MATCH` | Correo y ERP coinciden | Nada |
+| `ERP_MISSING` | El dato está en los correos y el ERP lo tiene vacío | Proponer completarlo |
+| `ERP_ERROR` | El ERP contradice a los correos y el error es claro | Proponer corregirlo (alta prioridad) |
+| `ERP_NEWER` | Difieren, pero el ERP refleja probablemente información posterior al último correo | No alertar si el ERP es más reciente (requiere saber cuándo se actualizó) |
+| `DISCREPANCY` | Difieren sin poder atribuirlo | Alertar y pedir revisión |
+| `MAIL_MISSING` | El ERP tiene el dato y los correos no | Nada (no hay evidencia) |
+| `NOT_IN_ERP` | El ERP no tiene columna para el dato | Guardarlo en el expediente enriquecido |
+
+### 6.3 Cifras agregadas
+
+- 38 correos con una media de 1,7 clases. Clase principal: reserva 11, aduanas 11, transporte terrestre 10, documentación 5 e inspección 1.
+- 89 comparaciones de campo: 50 `MATCH`, 12 `NOT_IN_ERP`, 8 `ERP_NEWER`, 7 `DISCREPANCY`, 5 `ERP_MISSING`, 4 `ERP_ERROR` y 3 `MAIL_MISSING`.
+- Por campo: el booking coincide en 11 de 11; el buque en 10 de 11 (1 error del ERP); la carga en almacén en 10 de 11 (1 errata de mes); las **fechas del buque** concentran casi todas las diferencias (salida: 4 coincidencias de 11; llegada: 1 de 11), y el **levante** falta en el ERP en 4 de 11 expedientes.
+
+### 6.4 Hallazgos que afectan al diseño
+
+1. **El ERP y los correos son fotos de momentos distintos.** En 8 comparaciones el ERP tiene un dato real (`SalidaOK`/`LlegadaOK = SI`) posterior al último correo. Sin la fecha de actualización de cada campo del ERP, el sistema no puede distinguir un error de una actualización: es una **pregunta para EShipping** y un requisito de integración.
+2. **Las fechas del buque son el campo crítico**: cambian varias veces por expediente y los hilos ofrecen listas de buques alternativos (A-25).
+3. **El levante y el equipo se extraen con reglas** de los PDF oficiales; los cuatro errores claros del ERP se detectan sin LLM.
+4. Un precinto pasó el dígito de control ISO 6346; se descarta por la cuarta letra (categoría `U`, `J` o `Z`). La validación tiene que ser completa (A-27).
+
+### 6.5 Calidad del gold standard
+
+- Lo etiquetó **Claude Code** sobre un dossier por expediente (mensajes del hilo con fecha, líneas relevantes y PDF) y está **pendiente de revisión humana** (campo `meta.review`). Hasta entonces, las métricas de F4 se publican como provisionales.
+- Para reducir el sesgo, la PoC no usa el modelo que etiquetó: usa reglas y modelos locales (ADR-0005).
+- Una sola persona etiqueta: no hay acuerdo entre anotadores. En producción, el muestreo de auditoría (F2.6) lo resuelve con doble revisión de una fracción.
+
+## 7. Limitaciones
 
 - 11 expedientes y 38 correos: **ninguna proporción es estadísticamente representativa**; sirven para el diseño, no para estimar el volumen de producción.
 - Todos son de exportación marítima FCL desde España y de una misma oficina. Importación, LCL, aéreo o terrestre pueden tener otros patrones (pregunta para EShipping, F1.7).
@@ -181,3 +225,4 @@ El inventario exhaustivo de discrepancias es parte del gold standard (F1.3, #10)
 | Versión | Fecha | Cambios |
 |---|---|---|
 | 0.1.0 | 22/11/2026 | Inventario de correos (F1.1) y análisis del ERP (F1.2) |
+| 0.2.0 | 22/11/2026 | Gold standard (F1.3): formato, veredictos, cifras agregadas y hallazgos |

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.6.0 |
+| Versión | 1.7.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 22/11/2026 |
@@ -407,6 +407,7 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 | R7 | Sobrecarga del proceso (demasiada ceremonia para una persona) | Media | Bajo | Plantillas ligeras e issues de tamaño razonable |
 | R8 | Sobreingeniería de la PoC | Media | Medio | Criterios de salida por fase; la PoC solo valida el diseño |
 | R9 | Diseño que no aguante el crecimiento (100.000 → 150.000 correos al mes o más) | Media | Alto | Principio 9, reglas de la §7.2, análisis de capacidad (F2.1b) y prueba de volumen (F4.5) |
+| R10 | Gold standard etiquetado con asistencia de IA sin revisión humana completa | Media | Alto | Revisión humana antes de publicar las métricas; métricas marcadas como provisionales; la PoC no usa el modelo que etiquetó |
 
 ---
 
@@ -471,3 +472,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.4.0 | 22/11/2026 | P. Iglesias Peral | F0 casi cerrada: herramientas de calidad (`pyproject.toml`, ruff, mypy estricto, pytest, `Makefile`), `pre-commit` encadenado desde `.githooks/pre-commit`, CI con job de confidencialidad, plantillas de GitHub y `CONTRIBUTING.md`. Etiquetas, milestones e issues #2–#50 creados. Paquete en `src/eshipping_ai/`. Pendiente el tablero de Projects (requiere permiso `project` en `gh`) | #2–#6 |
 | 1.5.0 | 22/11/2026 | P. Iglesias Peral | F0.7 cerrada con el tablero de Projects. F0.10: candidatos locales elegidos (`qwen3.5:4b`, `gemma4:e4b`, `llama3.2:3b`), los únicos de 3–8B de las familias recientes que caben en 16 GB. Primer entregable de F1: `docs/01_analisis_datos.md`. Hallazgo que afecta al diseño: la clave de asociación es el **booking** (en 37 de 38 asuntos), no el expediente (7 de 38) | #5, #7, #8, #9 |
 | 1.6.0 | 22/11/2026 | P. Iglesias Peral | F1.4 y F1.5 en un único entregable (`docs/03_taxonomia_y_ambiguedades.md`). Nueva decisión: modelo de eventos DCSA (ADR-0006), que afecta a F2.3 y F3.1 | #11, #12 |
+| 1.7.0 | 22/11/2026 | P. Iglesias Peral | F1.3: gold standard en dos niveles (correo y expediente) con siete veredictos frente al ERP, incluido `ERP_NEWER` porque el ERP es posterior a los correos. Etiquetado asistido por Claude Code, pendiente de revisión humana; las métricas de F4 serán provisionales hasta entonces (nuevo riesgo R10) | #10 |
