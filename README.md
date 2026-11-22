@@ -21,6 +21,13 @@ source .venv/bin/activate
 git config core.hooksPath .githooks   # activa el hook que bloquea datos reales
 ```
 
+## Documentación
+
+- [Plan de actuación](docs/PLAN.md)
+- [Índice de documentación](docs/README.md)
+- [Registro de decisiones (ADR)](docs/adr/README.md)
+- [CHANGELOG](CHANGELOG.md)
+
 ## Estado
 
-En preparación: arquitectura, justificación técnica, estimación de costes, medición de fiabilidad y PoC.
+Fase F0 (entorno y proceso). Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).
