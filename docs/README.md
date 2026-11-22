@@ -9,7 +9,7 @@
 | [../CHANGELOG.md](../CHANGELOG.md) | Cambios del proyecto por versión | Todas | 🔄 En curso |
 | [01_analisis_datos.md](01_analisis_datos.md) | Análisis de los correos y del ERP (sin datos reales) | F1 | 🔄 Borrador |
 | `02_requisitos.md` | Requisitos funcionales y no funcionales | F1 | ⏳ |
-| `03_ambiguedades.md` | Catálogo de ambigüedades entre fuentes | F1 | ⏳ |
+| [03_taxonomia_y_ambiguedades.md](03_taxonomia_y_ambiguedades.md) | Taxonomía de correos y eventos (DCSA) y catálogo de ambigüedades | F1 | 🔄 Borrador |
 | `glosario.md` | Glosario de dominio | F1 | ⏳ |
 | `04_arquitectura.md` | Arquitectura (C4) y flujos | F2 | ⏳ |
 | `05_modelo_datos.md` | Modelo de datos y linaje | F2 | ⏳ |

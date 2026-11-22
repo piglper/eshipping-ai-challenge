@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+- Taxonomía de correos (9 clases) y de eventos con el modelo DCSA, y catálogo de 24 ambigüedades con su regla de resolución propuesta (`docs/03_taxonomia_y_ambiguedades.md`).
+- ADR-0006: modelo de eventos basado en el estándar DCSA.
+
 ## [0.1.0] - 2026-11-22
 
 Cierre de la fase F0 (entorno y proceso).
