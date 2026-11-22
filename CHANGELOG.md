@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-22
+
+Cierre de la fase F0 (entorno y proceso).
+
 ### Added
 - Análisis de los datos de la muestra (`docs/01_analisis_datos.md`): estructura de los correos, tipos de correo y de PDF, identificadores, columnas del ERP para el cruce y primeras discrepancias, sin datos reales.
 - Tablero de GitHub Projects con todas las tareas del plan.
@@ -28,5 +32,6 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - `.gitignore` que excluye datos reales (`data/`, `*.csv`, `*.eml`, `*.msg`), entornos virtuales y secretos.
 - Hook de pre-commit (`.githooks/pre-commit`) que bloquea commits con ficheros confidenciales.
 
-[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/piglper/eshipping-ai-challenge/releases/tag/v0.0.1
