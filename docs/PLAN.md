@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.4.0 |
+| Versión | 1.5.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 22/11/2026 |
@@ -139,10 +139,10 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F0.4 | `pyproject.toml` con dependencias y configuración de las herramientas (ruff, mypy, pytest) | ✅ |
 | F0.5 | Framework `pre-commit`: ruff, mypy, detección de secretos y el hook de datos existente | ✅ |
 | F0.6 | Plantillas de GitHub: issues (tarea, bug, decisión), PR y `CONTRIBUTING.md` | ✅ |
-| F0.7 | Etiquetas, milestones (uno por fase), tablero de GitHub Projects e issues de F1–F5 (issues #2–#50) | 🔄 tablero pendiente |
+| F0.7 | Etiquetas, milestones (uno por fase), tablero de GitHub Projects e issues de F1–F5 (issues #2–#50) y tablero de Projects | ✅ |
 | F0.8 | CI en GitHub Actions: lint, tipos y tests, solo con datos sintéticos | ✅ |
 | F0.9 | Decisión D1 (proveedor de LLM para la PoC) → [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) | ✅ |
-| F0.10 | Instalar Ollama y descargar los modelos candidatos (sin datos todavía) | ⏳ |
+| F0.10 | Instalar Ollama y descargar los modelos candidatos (sin datos todavía): `qwen3.5:4b`, `gemma4:e4b` (9,5 GB en disco, justo en 16 GB) y `llama3.2:3b` | ✅ |
 
 **Entregables:** el repositorio configurado, este plan, `CHANGELOG.md`, los ADR 0001–0005 y el `CONTRIBUTING.md`.
 
@@ -468,3 +468,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.2.0 | 21/11/2026 | P. Iglesias Peral | Principio 8 («la IA no es un requisito»); nueva §7.1 con la técnica por etapa (deterministas, plantillas, OCR, ML clásico, LLM solo para el resto, reconciliación nunca con LLM); F2.4, F3.2 y F4.3 ajustadas | `docs/plan-actuacion` |
 | 1.3.0 | 21/11/2026 | P. Iglesias Peral | Volumen como flujo mensual (100.000 al mes, crecimiento a 150.000 o más). Principio 9 y nueva §7.2 de escalabilidad y mantenibilidad con dimensionamiento. Tareas F2.1b (capacidad) y F1.7, F2.7 y F4.5 ajustadas. Riesgo R9 | `docs/plan-actuacion` |
 | 1.4.0 | 22/11/2026 | P. Iglesias Peral | F0 casi cerrada: herramientas de calidad (`pyproject.toml`, ruff, mypy estricto, pytest, `Makefile`), `pre-commit` encadenado desde `.githooks/pre-commit`, CI con job de confidencialidad, plantillas de GitHub y `CONTRIBUTING.md`. Etiquetas, milestones e issues #2–#50 creados. Paquete en `src/eshipping_ai/`. Pendiente el tablero de Projects (requiere permiso `project` en `gh`) | #2–#6 |
+| 1.5.0 | 22/11/2026 | P. Iglesias Peral | F0.7 cerrada con el tablero de Projects. F0.10: candidatos locales elegidos (`qwen3.5:4b`, `gemma4:e4b`, `llama3.2:3b`), los únicos de 3–8B de las familias recientes que caben en 16 GB. Primer entregable de F1: `docs/01_analisis_datos.md`. Hallazgo que afecta al diseño: la clave de asociación es el **booking** (en 37 de 38 asuntos), no el expediente (7 de 38) | #5, #7, #8, #9 |
