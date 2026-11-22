@@ -1,0 +1,31 @@
+name: Tarea
+description: Tarea del plan de actuación
+title: "Fx.y · "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: "**No incluyas datos reales** (expedientes, bookings, clientes, correos). Usa ejemplos sintéticos."
+  - type: input
+    id: plan
+    attributes:
+      label: Tarea del plan
+      description: Identificador en docs/PLAN.md (p. ej., F3.3)
+    validations:
+      required: true
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Qué se quiere conseguir y por qué
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      value: |
+        - [ ]
+        - [ ] Cumple la definición de hecho (PLAN §10)
+    validations:
+      required: true

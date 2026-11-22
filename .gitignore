@@ -22,3 +22,12 @@ __pycache__/
 .env
 .env.*
 .DS_Store
+
+# --- Herramientas y artefactos ---
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+build/
+dist/

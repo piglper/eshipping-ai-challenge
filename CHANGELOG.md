@@ -7,6 +7,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Configuración del proyecto en `pyproject.toml` (paquete `eshipping_ai` en `src/`, dependencias de desarrollo fijadas, ruff, mypy estricto, pytest y cobertura) y `Makefile` (`setup`, `lint`, `format`, `typecheck`, `test`, `check`).
+- Framework `pre-commit` (ruff, mypy, gitleaks y comprobaciones de ficheros), ejecutado desde el hook de confidencialidad.
+- CI en GitHub Actions: job de confidencialidad y secretos, y job de lint, tipos y tests.
+- Plantillas de issue (tarea, bug y decisión) y de PR, y `CONTRIBUTING.md`.
 - Plan de actuación completo (`docs/PLAN.md`) con fases, estándares, riesgos, trazabilidad e historial de revisiones.
 - Sistema de registro de decisiones (ADR, formato MADR) con plantilla e índice.
 - ADR-0001 a ADR-0004: uso de ADR, protección de datos confidenciales, flujo de trabajo en Git, y formato de entrega e interfaz de la PoC.
