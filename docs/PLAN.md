@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.3.0 |
+| Versión | 1.4.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
-| Última actualización | 21/11/2026 |
+| Última actualización | 22/11/2026 |
 | Documentos relacionados | [Índice de ADR](adr/README.md) · [CHANGELOG](../CHANGELOG.md) · [Índice de documentación](README.md) |
 
 > Documento vivo. Cada cambio se registra en el [historial de revisiones](#15-historial-de-revisiones) y cada decisión relevante en un [ADR](adr/README.md). No contiene datos reales.
@@ -135,12 +135,12 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 |---|---|---|
 | F0.1 | Git, `.gitignore`, hook de pre-commit contra datos reales, estructura, `.venv`, `CLAUDE.md` | ✅ |
 | F0.2 | Repositorio privado en GitHub | ✅ |
-| F0.3 | Plan de actuación, CHANGELOG y sistema de ADR (este documento) | 🔄 |
-| F0.4 | `pyproject.toml` con dependencias y configuración de las herramientas (ruff, mypy, pytest) | ⏳ |
-| F0.5 | Framework `pre-commit`: ruff, mypy, detección de secretos y el hook de datos existente | ⏳ |
-| F0.6 | Plantillas de GitHub: issues (tarea, bug, decisión), PR y `CONTRIBUTING.md` | ⏳ |
-| F0.7 | Etiquetas, milestones (uno por fase), tablero de GitHub Projects e issues de F1–F5 | ⏳ |
-| F0.8 | CI en GitHub Actions: lint, tipos y tests, solo con datos sintéticos | ⏳ |
+| F0.3 | Plan de actuación, CHANGELOG y sistema de ADR (este documento) | ✅ |
+| F0.4 | `pyproject.toml` con dependencias y configuración de las herramientas (ruff, mypy, pytest) | ✅ |
+| F0.5 | Framework `pre-commit`: ruff, mypy, detección de secretos y el hook de datos existente | ✅ |
+| F0.6 | Plantillas de GitHub: issues (tarea, bug, decisión), PR y `CONTRIBUTING.md` | ✅ |
+| F0.7 | Etiquetas, milestones (uno por fase), tablero de GitHub Projects e issues de F1–F5 (issues #2–#50) | 🔄 tablero pendiente |
+| F0.8 | CI en GitHub Actions: lint, tipos y tests, solo con datos sintéticos | ✅ |
 | F0.9 | Decisión D1 (proveedor de LLM para la PoC) → [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) | ✅ |
 | F0.10 | Instalar Ollama y descargar los modelos candidatos (sin datos todavía) | ⏳ |
 
@@ -467,3 +467,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.1.0 | 21/11/2026 | P. Iglesias Peral | D1 decidida: Ollama en local en la PoC con criterios de eficiencia y comparativa de proveedores de pago (ADR-0005). Nuevas tareas F0.10, F2.7b y F4.4b, y decisión abierta D9. Responsable: Pablo Iglesias Peral | `docs/plan-actuacion` |
 | 1.2.0 | 21/11/2026 | P. Iglesias Peral | Principio 8 («la IA no es un requisito»); nueva §7.1 con la técnica por etapa (deterministas, plantillas, OCR, ML clásico, LLM solo para el resto, reconciliación nunca con LLM); F2.4, F3.2 y F4.3 ajustadas | `docs/plan-actuacion` |
 | 1.3.0 | 21/11/2026 | P. Iglesias Peral | Volumen como flujo mensual (100.000 al mes, crecimiento a 150.000 o más). Principio 9 y nueva §7.2 de escalabilidad y mantenibilidad con dimensionamiento. Tareas F2.1b (capacidad) y F1.7, F2.7 y F4.5 ajustadas. Riesgo R9 | `docs/plan-actuacion` |
+| 1.4.0 | 22/11/2026 | P. Iglesias Peral | F0 casi cerrada: herramientas de calidad (`pyproject.toml`, ruff, mypy estricto, pytest, `Makefile`), `pre-commit` encadenado desde `.githooks/pre-commit`, CI con job de confidencialidad, plantillas de GitHub y `CONTRIBUTING.md`. Etiquetas, milestones e issues #2–#50 creados. Paquete en `src/eshipping_ai/`. Pendiente el tablero de Projects (requiere permiso `project` en `gh`) | #2–#6 |

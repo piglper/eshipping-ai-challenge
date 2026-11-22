@@ -2,7 +2,7 @@
 
 - **Estado:** Propuesto | Aceptado | Rechazado | Obsoleto | Sustituido por ADR-XXXX
 - **Fecha:** AAAA-MM-DD
-- **Decisores:** 
+- **Decisores:**
 - **Referencias:** issue #, PR #
 
 ## Contexto y problema

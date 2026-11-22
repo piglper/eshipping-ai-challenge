@@ -1,0 +1,29 @@
+name: Decisión
+description: Decisión de arquitectura o de proceso que acabará en un ADR
+title: "ADR: "
+labels: ["type:decision"]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Contexto y problema
+    validations:
+      required: true
+  - type: textarea
+    id: factores
+    attributes:
+      label: Factores de decisión
+  - type: textarea
+    id: opciones
+    attributes:
+      label: Opciones consideradas
+      value: |
+        1.
+        2.
+    validations:
+      required: true
+  - type: input
+    id: fase
+    attributes:
+      label: Fase en que se decide
+      description: Según PLAN §14.2

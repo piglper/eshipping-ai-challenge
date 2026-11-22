@@ -7,7 +7,7 @@ Propuesta para la prueba técnica de Ingeniero IA: un sistema que extrae informa
 ## Estructura
 
 ```
-src/          Código de la prueba de concepto
+src/          Código de la prueba de concepto (paquete eshipping_ai)
 tests/        Tests (solo con datos sintéticos)
 data_sample/  Datos sintéticos inventados
 data/         Datos reales (local, NO versionado)
@@ -15,11 +15,14 @@ data/         Datos reales (local, NO versionado)
 
 ## Puesta en marcha
 
+Requisitos: Python 3.14 y `make`.
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-git config core.hooksPath .githooks   # activa el hook que bloquea datos reales
+make setup    # entorno virtual, dependencias de desarrollo y hooks (bloqueo de datos reales incluido)
+make check    # lint, tipos y tests, igual que el CI
 ```
+
+Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
 
 ## Documentación
 
