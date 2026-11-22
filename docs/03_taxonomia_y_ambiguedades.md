@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.2.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 22/11/2026 |
@@ -136,7 +136,7 @@ Cada ambigüedad tiene una regla de resolución **propuesta**. La política defi
 
 | ID | Ambigüedad | Ejemplo sintético | Resolución propuesta |
 |---|---|---|---|
-| A-17 | Expediente truncado | `Exp. ES1234` en lugar de `ES12345678` | Usar el booking del mismo asunto; el expediente truncado solo como confirmación por prefijo |
+| A-17 | Expediente truncado | `Exp. ES1234` en lugar de `ES12345678` | Usar el booking del mismo asunto; el expediente truncado solo como confirmación por prefijo. En la muestra lo genera **siempre** la herramienta interna de solicitudes de transporte: se corrige en origen |
 | A-18 | Booking confundible con otros números | `123456789` puede ser un pedido o un teléfono | Exigir contexto (`BKG`, `Booking:`, posición en el asunto) o que exista en el ERP |
 | A-19 | Varios expedientes en un correo | Una naviera agrupa varios bookings | El correo se asocia a todos; cada evento solo al expediente cuyo identificador aparece en su contexto |
 | A-20 | Cambio de booking | Una enmienda o un roleo genera un booking nuevo | Guardar los alias del expediente (booking anterior → nuevo) |
@@ -149,6 +149,16 @@ Cada ambigüedad tiene una regla de resolución **propuesta**. La política defi
 | A-22 | Notaciones del tipo de contenedor | `40HC`, `40'HC`, `1x40´`, `M40HC`, `40 DH` | Tabla de equivalencias a ISO 6346 (código de tamaño y tipo, p. ej. `45G1`) |
 | A-23 | El ERP solo tiene número de contenedores y TEU | `Cont = 1`, `TEUS = 2` | Comparar contra el número y tipo extraídos; regla de coherencia TEU = Σ(tamaño/20) |
 | A-24 | Contenedores parciales en un correo | La orden de transporte cubre 2 de 5 contenedores | Acumular por contenedor (matrícula) a lo largo del expediente |
+
+### 4.6 Encontradas al construir el gold standard
+
+| ID | Ambigüedad | Ejemplo sintético | Resolución propuesta |
+|---|---|---|---|
+| A-25 | **Listas de buques ofertados**: el hilo trae varias opciones (buque, ETD, ETA, closing, ventana de carga) y solo una se reserva | «Opción 1: NORDIC STAR ETD 04/09… Opción 2: BLUE HORIZON ETD 07/09…» | Las opciones son `PLN` candidatos, no eventos del expediente. Solo cuenta la que confirma la naviera o el mensaje de reserva («booking confirmado», «tomad nota») |
+| A-26 | Fechas mal escritas | `Closing: 0/8/09` | Si no se puede interpretar sin adivinar, se descarta el dato y se marca; nunca se completa |
+| A-27 | **Precintos con formato de contenedor** | `ABCS1234567` junto al contenedor | ISO 6346 completo: cuarta letra `U`, `J` o `Z` **y** dígito de control. El contexto («Seal», «precinto», posición tras «/») lo confirma |
+| A-28 | El ERP es más reciente que los correos | Salida real en el ERP posterior al último correo | Comparar con la versión del correo vigente en la fecha de actualización del ERP; si no se conoce, veredicto `ERP_NEWER` cuando el ERP marca la fecha como real y es posterior al último correo |
+| A-29 | Significado de `Despacho` en el ERP | Con circuito naranja, el ERP tiene una fecha anterior al levante | Hipótesis: es la fecha de solicitud, no la de levante. **Pregunta para EShipping** |
 
 ## 5. Ambigüedad residual: cuándo interviene una persona
 
@@ -167,9 +177,12 @@ Cada corrección humana se guarda como un evento `ACT` de fuente `humano` y alim
 2. ¿`F. Carga` es la carga en el almacén del cliente o la entrada en terminal?
 3. ¿Qué jerarquía de fuentes aplica hoy el equipo de operaciones cuando la naviera y el cliente dicen cosas distintas?
 4. ¿Qué cut-offs importan más para la operación y con cuánta antelación hay que avisar?
+5. ¿Se puede saber cuándo se actualizó cada campo del ERP (A-28)?
+6. ¿`Despacho` es la fecha de solicitud del despacho o la de levante (A-29)?
 
 ## Historial
 
 | Versión | Fecha | Cambios |
 |---|---|---|
 | 0.1.0 | 22/11/2026 | Taxonomía de correos y eventos (F1.5) y catálogo de ambigüedades A-01 a A-24 (F1.4) |
+| 0.2.0 | 22/11/2026 | A-25 a A-29, encontradas al construir el gold standard; nota sobre A-17; preguntas 5 y 6 |

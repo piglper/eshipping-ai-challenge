@@ -7,6 +7,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Metodología y cifras agregadas del gold standard (`docs/01_analisis_datos.md` §6), con siete veredictos frente al ERP. El gold standard en sí solo existe en local.
+- Ambigüedades A-25 a A-29 (ofertas de buques, fechas mal escritas, precintos con formato de contenedor, ERP más reciente que los correos y significado de `Despacho`).
+
+### Added
 - Taxonomía de correos (9 clases) y de eventos con el modelo DCSA, y catálogo de 24 ambigüedades con su regla de resolución propuesta (`docs/03_taxonomia_y_ambiguedades.md`).
 - ADR-0006: modelo de eventos basado en el estándar DCSA.
 
