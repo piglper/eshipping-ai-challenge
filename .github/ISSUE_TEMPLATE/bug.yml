@@ -1,0 +1,30 @@
+name: Bug
+description: Comportamiento incorrecto de la PoC
+title: "Bug: "
+labels: ["type:fix"]
+body:
+  - type: markdown
+    attributes:
+      value: "**No incluyas datos reales.** Reproduce el fallo con datos sintéticos o descríbelo sin identificadores."
+  - type: textarea
+    id: actual
+    attributes:
+      label: Qué pasa
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Qué debería pasar
+    validations:
+      required: true
+  - type: textarea
+    id: reproducir
+    attributes:
+      label: Cómo reproducirlo
+      description: Comando y entrada sintética mínima
+      render: bash
+  - type: input
+    id: version
+    attributes:
+      label: Versión o commit

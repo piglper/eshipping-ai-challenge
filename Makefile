@@ -1,0 +1,31 @@
+.DEFAULT_GOAL := help
+PYTHON ?= python3.14
+VENV   := .venv
+BIN    := $(VENV)/bin
+
+.PHONY: help setup lint format typecheck test check
+
+help: ## Muestra esta ayuda
+	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
+
+setup: ## Crea el entorno, instala dependencias y activa los hooks
+	test -d $(VENV) || $(PYTHON) -m venv $(VENV)
+	$(BIN)/pip install --upgrade pip
+	$(BIN)/pip install -e . --group dev
+	git config core.hooksPath .githooks
+
+lint: ## Lint y comprobación de formato
+	$(BIN)/ruff check .
+	$(BIN)/ruff format --check .
+
+format: ## Aplica el formato y las correcciones automáticas
+	$(BIN)/ruff check --fix .
+	$(BIN)/ruff format .
+
+typecheck: ## Comprobación de tipos (mypy estricto)
+	$(BIN)/mypy
+
+test: ## Tests con cobertura
+	$(BIN)/pytest --cov --cov-report=term-missing
+
+check: lint typecheck test ## Todo lo que comprueba el CI

@@ -1,0 +1,89 @@
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eshipping-ai"
+description = "Extracción de eventos operativos de correos de transporte marítimo y reconciliación con el ERP"
+readme = "README.md"
+requires-python = ">=3.14"
+authors = [{ name = "Pablo Iglesias Peral" }]
+license = "LicenseRef-Proprietary"
+dynamic = ["version"]
+# Las dependencias de ejecución se añaden en F3, solo cuando se necesitan y con versión fijada.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy==2.4.1",
+    "pre-commit==4.7.0",
+    "pytest==9.2.0",
+    "pytest-cov==7.1.0",
+    "ruff==0.17.6",
+]
+
+[tool.hatch.version]
+path = "src/eshipping_ai/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/eshipping_ai"]
+
+# --- ruff -------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "N",        # pep8-naming
+    "UP",       # pyupgrade
+    "B",        # bugbear
+    "C4",       # comprehensions
+    "SIM",      # simplify
+    "RET",      # return
+    "PTH",      # pathlib
+    "DTZ",      # fechas sin zona horaria
+    "BLE",      # except genéricos
+    "S",        # seguridad (bandit)
+    "D",        # docstrings
+    "ANN",      # anotaciones de tipo
+    "PL",       # pylint
+    "RUF",
+]
+ignore = [
+    "D105", "D107",   # docstrings en métodos mágicos y __init__
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "D", "ANN", "PLR2004"]
+
+# --- mypy -------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+mypy_path = "src"
+packages = ["eshipping_ai"]
+warn_unreachable = true
+
+# --- pytest -----------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
+
+[tool.coverage.run]
+source = ["eshipping_ai"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

@@ -1,5 +1,6 @@
 #!/bin/sh
 # Bloquea commits que incluyan datos reales o ficheros de correo/CSV.
+# Esta comprobación no depende de nada instalado: funciona aunque falte el entorno virtual.
 blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(^|/)data/|\.(csv|eml|msg|pst|mbox)$')
 if [ -n "$blocked" ]; then
   echo "ERROR: commit bloqueado. Ficheros potencialmente confidenciales en el stage:" >&2
@@ -7,4 +8,10 @@ if [ -n "$blocked" ]; then
   echo "Quítalos con: git restore --staged <fichero>" >&2
   exit 1
 fi
+
+# Resto de comprobaciones (ruff, mypy, secretos...) con el framework pre-commit.
+if [ -x .venv/bin/pre-commit ]; then
+  exec .venv/bin/pre-commit run --hook-stage pre-commit
+fi
+echo "AVISO: pre-commit no está instalado (make setup); solo se ha comprobado la confidencialidad." >&2
 exit 0
