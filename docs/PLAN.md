@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.5.0 |
+| Versión | 1.6.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 22/11/2026 |
@@ -160,7 +160,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F1.6 | Especificación de requisitos funcionales y no funcionales, con identificadores (`RF-xx`, `RNF-xx`) |
 | F1.7 | Lista de preguntas para EShipping y supuestos adoptados (incluida la distribución horaria de los correos, la proporción con PDF y la latencia aceptable por tipo de evento) |
 
-**Entregables:** `docs/01_analisis_datos.md` (describe patrones sin datos reales), `docs/02_requisitos.md`, `docs/03_ambiguedades.md`, `docs/glosario.md`.
+**Entregables:** `docs/01_analisis_datos.md` (describe patrones sin datos reales), `docs/02_requisitos.md`, `docs/03_taxonomia_y_ambiguedades.md` (F1.4 y F1.5 juntas, porque cada ambigüedad se define sobre un evento de la taxonomía), `docs/glosario.md`.
 
 **Criterios de salida:** todos los correos están inventariados, el gold standard está completo, y cada requisito tiene identificador y criterio de aceptación.
 
@@ -425,7 +425,7 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 | 7 · Fiabilidad y baja confianza | `07_fiabilidad.md` | F2 | ⏳ |
 | 7 · Escalabilidad (100.000 → 150.000 correos al mes) | `04_arquitectura.md` (análisis de capacidad), `06_costes.md` | F2, F4 | ⏳ |
 | 7 · Aprendizaje continuo sin aprender de errores | `08_aprendizaje_continuo.md` | F2 | ⏳ |
-| 3 · Ambigüedad entre fuentes | `03_ambiguedades.md`, ADR de reconciliación | F1, F2 | ⏳ |
+| 3 · Ambigüedad entre fuentes | `03_taxonomia_y_ambiguedades.md`, ADR-0006, ADR de reconciliación | F1, F2 | 🔄 |
 | 4 · Declarar el envío a servicios externos | `09_seguridad.md`, presentación | F2, F5 | ⏳ |
 | 5.1–5.7 · Capacidades del sistema | `02_requisitos.md` (RF-01…RF-07) | F1 | ⏳ |
 
@@ -444,6 +444,7 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | D4 | Proceso completo en GitHub: GitHub Flow, Conventional Commits, SemVer, issues, milestones y PR | [ADR-0003](adr/0003-flujo-de-trabajo-git.md) |
 | D2, D3 | Entrega en presentación PDF o HTML con acceso opcional al repositorio; PoC con CLI y Streamlit | [ADR-0004](adr/0004-formato-entrega-e-interfaz-poc.md) |
 | D1 | LLM local (Ollama) en la PoC, optimizado para eficiencia; comparativa de proveedores de pago para producción | [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) |
+| — | Modelo de eventos basado en DCSA (tipo + clasificador planificado, estimado o real), con extensiones para aduanas e incidencias | [ADR-0006](adr/0006-modelo-de-eventos-basado-en-dcsa.md) |
 
 ### 14.2 Decisiones abiertas
 
@@ -469,3 +470,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.3.0 | 21/11/2026 | P. Iglesias Peral | Volumen como flujo mensual (100.000 al mes, crecimiento a 150.000 o más). Principio 9 y nueva §7.2 de escalabilidad y mantenibilidad con dimensionamiento. Tareas F2.1b (capacidad) y F1.7, F2.7 y F4.5 ajustadas. Riesgo R9 | `docs/plan-actuacion` |
 | 1.4.0 | 22/11/2026 | P. Iglesias Peral | F0 casi cerrada: herramientas de calidad (`pyproject.toml`, ruff, mypy estricto, pytest, `Makefile`), `pre-commit` encadenado desde `.githooks/pre-commit`, CI con job de confidencialidad, plantillas de GitHub y `CONTRIBUTING.md`. Etiquetas, milestones e issues #2–#50 creados. Paquete en `src/eshipping_ai/`. Pendiente el tablero de Projects (requiere permiso `project` en `gh`) | #2–#6 |
 | 1.5.0 | 22/11/2026 | P. Iglesias Peral | F0.7 cerrada con el tablero de Projects. F0.10: candidatos locales elegidos (`qwen3.5:4b`, `gemma4:e4b`, `llama3.2:3b`), los únicos de 3–8B de las familias recientes que caben en 16 GB. Primer entregable de F1: `docs/01_analisis_datos.md`. Hallazgo que afecta al diseño: la clave de asociación es el **booking** (en 37 de 38 asuntos), no el expediente (7 de 38) | #5, #7, #8, #9 |
+| 1.6.0 | 22/11/2026 | P. Iglesias Peral | F1.4 y F1.5 en un único entregable (`docs/03_taxonomia_y_ambiguedades.md`). Nueva decisión: modelo de eventos DCSA (ADR-0006), que afecta a F2.3 y F3.1 | #11, #12 |
