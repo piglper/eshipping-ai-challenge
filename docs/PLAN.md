@@ -142,7 +142,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F0.7 | Etiquetas, milestones (uno por fase), tablero de GitHub Projects e issues de F1–F5 (issues #2–#50) y tablero de Projects | ✅ |
 | F0.8 | CI en GitHub Actions: lint, tipos y tests, solo con datos sintéticos | ✅ |
 | F0.9 | Decisión D1 (proveedor de LLM para la PoC) → [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) | ✅ |
-| F0.10 | Instalar Ollama y descargar los modelos candidatos (sin datos todavía): `qwen3.5:4b`, `gemma4:e4b` y `llama3.2:3b` | 🔄 |
+| F0.10 | Instalar Ollama y descargar los modelos candidatos (sin datos todavía): `qwen3.5:4b`, `gemma4:e4b` (9,5 GB en disco, justo en 16 GB) y `llama3.2:3b` | ✅ |
 
 **Entregables:** el repositorio configurado, este plan, `CHANGELOG.md`, los ADR 0001–0005 y el `CONTRIBUTING.md`.
 
