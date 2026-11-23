@@ -17,6 +17,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Modelo de datos (`docs/05_modelo_datos.md`): entrada y observaciones inmutables, proyecciones recalculables, linaje y bitemporalidad.
 - Diagramas de secuencia de los flujos principales (`docs/04_arquitectura.md` §12).
 - Aprendizaje continuo (`docs/08_aprendizaje_continuo.md`): mecanismos, control de calidad de las etiquetas, reversibilidad y gobernanza.
+- Seguridad y RGPD (`docs/09_seguridad.md`): datos, base legal y retención, controles, seudonimización antes del LLM y amenazas propias como la inyección de instrucciones.
 
 ### Changed
 - Plan 1.10.0: F2 completa y PoC recortada (Streamlit mínima, OCR solo si sobra tiempo); calendario ajustado.

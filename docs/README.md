@@ -16,7 +16,7 @@
 | [06_costes.md](06_costes.md) | Coste del LLM por proveedor, requisitos de máquina y coste técnico mensual y por correo | F2, F4 | 🔄 Borrador |
 | [07_fiabilidad.md](07_fiabilidad.md) | Métricas, confianza calibrada, umbrales y auditoría | F2 | 🔄 Borrador |
 | [08_aprendizaje_continuo.md](08_aprendizaje_continuo.md) | Aprendizaje continuo sin aprender de errores | F2 | 🔄 Borrador |
-| `09_seguridad.md` | Seguridad, privacidad y servicios externos | F2 | ⏳ |
+| [09_seguridad.md](09_seguridad.md) | Seguridad, privacidad y servicios externos | F2 | 🔄 Borrador |
 | `10_evaluacion.md` | Resultados de la evaluación de la PoC | F4 | ⏳ |
 | `00_resumen_ejecutivo.md` | Resumen ejecutivo | F5 | ⏳ |
 
