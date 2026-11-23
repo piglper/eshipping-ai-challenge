@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.14.0 |
+| Versión | 1.15.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -484,3 +484,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.12.0 | 23/11/2026 | P. Iglesias Peral | D6 decidida (ADR-0009): roles de fuente y autoridad por campo en tres rangos, valor vigente con el estado del dato antes que la frescura, fuentes de segunda mano que no sustituyen, conflictos a revisión, regla «ERP más reciente» con y sin fecha de actualización del ERP, regla de error claro, coherencia interna del ERP y prioridades P1–P3. Validación pendiente con operaciones (P-07, P-11) | #20 |
 | 1.13.0 | 23/11/2026 | P. Iglesias Peral | F2.7 y F2.7b: `docs/06_costes.md`, centrado en el coste del LLM y en los requisitos de máquina (a petición del responsable, el trabajo de revisión no se valora en euros: depende de EShipping). Precios oficiales consultados el 23/11/2026. LLM de 20 a 260 $ al mes con 100.000 correos; infraestructura de unos 300 € (2 servidores de aplicación, 2 de base de datos y 1 de monitorización); total técnico de unos 360 € al mes (0,36 céntimos por correo). D5b decidida (ADR-0010). Hallazgo: la API directa de Anthropic no ofrece residencia en la UE; Claude en la UE pasa por Bedrock o Google Cloud | #22, #23 |
 | 1.14.0 | 23/11/2026 | P. Iglesias Peral | F2.6: `docs/07_fiabilidad.md` con métricas, confianza calibrada por campo sobre señales comprobables, umbrales elegidos por el límite inferior del intervalo de confianza, tres zonas (aceptación, revisión, no propuesto), auditoría continua con freno automático y cambios en modo sombra. Hallazgo: el gold standard no permite demostrar RNF-10 ni RNF-11 (hacen falta unos 190 casos sin error por campo para el 98 % y 765 para el 99,5 %); se demostrará en un piloto | #21 |
+| 1.15.0 | 23/11/2026 | P. Iglesias Peral | F2.3: `docs/05_modelo_datos.md` con tres capas (entrada inmutable, observaciones inmutables y proyecciones recalculables), linaje por claves ajenas, bitemporalidad con cuatro fechas (`event_time`, `known_at`, `recorded_at`, `read_at`), tablas operativas y almacenamiento físico. Recalibración de la fiabilidad cambiada de mensual a diaria, semanal y por evento (`07_fiabilidad.md` §3.2) | #18, #21 |
