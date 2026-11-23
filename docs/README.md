@@ -14,7 +14,7 @@
 | [04_arquitectura.md](04_arquitectura.md) | Arquitectura (C4), funcionamiento de la canalización y análisis de capacidad | F2 | 🔄 Borrador |
 | `05_modelo_datos.md` | Modelo de datos y linaje | F2 | ⏳ |
 | [06_costes.md](06_costes.md) | Coste del LLM por proveedor, requisitos de máquina y coste técnico mensual y por correo | F2, F4 | 🔄 Borrador |
-| `07_fiabilidad.md` | Medición de la fiabilidad | F2 | ⏳ |
+| [07_fiabilidad.md](07_fiabilidad.md) | Métricas, confianza calibrada, umbrales y auditoría | F2 | 🔄 Borrador |
 | `08_aprendizaje_continuo.md` | Aprendizaje continuo | F2 | ⏳ |
 | `09_seguridad.md` | Seguridad, privacidad y servicios externos | F2 | ⏳ |
 | `10_evaluacion.md` | Resultados de la evaluación de la PoC | F4 | ⏳ |
