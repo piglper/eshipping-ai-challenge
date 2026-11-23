@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.12.0 |
+| Versión | 1.13.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -451,12 +451,12 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | — | Monolito modular hexagonal desplegado como workers por etapa detrás de colas | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md) |
 | D5 | Estrategia de IA: cascada de técnicas por etapa, con el LLM acotado al texto libre y nunca en la asociación ni en la reconciliación | [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md) |
 | D6 | Política de discrepancias: autoridad de la fuente por campo, el estado del dato (real sobre estimado) antes que la frescura, regla «ERP más reciente», prioridades P1–P3 y nunca escritura en el ERP sin validación | [ADR-0009](adr/0009-politica-de-resolucion-de-discrepancias.md) |
+| D5b | Proveedor de LLM de producción: lista corta de cuatro candidatos con residencia en la UE, elección por evaluación sobre el conjunto de referencia; escenario de referencia de costes con Claude Haiku 5.5 y escalado a Sonnet 5.5; autoalojado como contingencia | [ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md) |
 
 ### 14.2 Decisiones abiertas
 
 | ID | Decisión | Opciones | Fase en que se decide |
 |---|---|---|---|
-| D5b | Proveedor y modelos de LLM de producción (la estrategia ya está decidida en el ADR-0008) | Proveedores de pago o autoalojado, según la comparativa F2.7b | F2 |
 | D9 | Modelos locales de la PoC | 2–3 candidatos; se elige por benchmark | F4 |
 | D7 | Almacenamiento de producción | PostgreSQL, almacén de eventos, data warehouse | F2 |
 | D8 | Plataforma de despliegue de referencia | Nube (AWS, Azure o GCP) o local | F2 |
@@ -482,3 +482,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.10.0 | 23/11/2026 | P. Iglesias Peral | Se revoca el plan compacto de F2 de la revisión 1.9.0: F2 se hace completa y se recorta la PoC (Streamlit mínima y OCR solo si sobra tiempo; ver F3). Calendario: F2 hasta el martes 24/11 por la mañana, F3 el martes y F4 hasta el miércoles por la mañana. Primer entregable de F2: `docs/04_arquitectura.md` (C4 y capacidad) y ADR-0007. Hallazgo de la capacidad: el cómputo no es el cuello de botella (menos de 1,5 núcleos en el pico a 300.000 correos al mes); lo son la revisión humana, el coste del LLM y la frescura del ERP | #15, #16 |
 | 1.11.0 | 23/11/2026 | P. Iglesias Peral | D5 decidida: cascada de técnicas por etapa (ADR-0008), que valida §7.1 con la evidencia de F1. El LLM se limita al texto libre, con entrada mínima, esquema JSON, cita verificada y confianza calibrada, y nunca interviene en identificadores, asociación ni reconciliación. La elección del proveedor de producción queda como D5b (F2.7b) | #19 |
 | 1.12.0 | 23/11/2026 | P. Iglesias Peral | D6 decidida (ADR-0009): roles de fuente y autoridad por campo en tres rangos, valor vigente con el estado del dato antes que la frescura, fuentes de segunda mano que no sustituyen, conflictos a revisión, regla «ERP más reciente» con y sin fecha de actualización del ERP, regla de error claro, coherencia interna del ERP y prioridades P1–P3. Validación pendiente con operaciones (P-07, P-11) | #20 |
+| 1.13.0 | 23/11/2026 | P. Iglesias Peral | F2.7 y F2.7b: `docs/06_costes.md`, centrado en el coste del LLM y en los requisitos de máquina (a petición del responsable, el trabajo de revisión no se valora en euros: depende de EShipping). Precios oficiales consultados el 23/11/2026. LLM de 20 a 260 $ al mes con 100.000 correos; infraestructura de unos 300 € (2 servidores de aplicación, 2 de base de datos y 1 de monitorización); total técnico de unos 360 € al mes (0,36 céntimos por correo). D5b decidida (ADR-0010). Hallazgo: la API directa de Anthropic no ofrece residencia en la UE; Claude en la UE pasa por Bedrock o Google Cloud | #22, #23 |
