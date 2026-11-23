@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.16.0 |
+| Versión | 1.17.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -486,3 +486,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.14.0 | 23/11/2026 | P. Iglesias Peral | F2.6: `docs/07_fiabilidad.md` con métricas, confianza calibrada por campo sobre señales comprobables, umbrales elegidos por el límite inferior del intervalo de confianza, tres zonas (aceptación, revisión, no propuesto), auditoría continua con freno automático y cambios en modo sombra. Hallazgo: el gold standard no permite demostrar RNF-10 ni RNF-11 (hacen falta unos 190 casos sin error por campo para el 98 % y 765 para el 99,5 %); se demostrará en un piloto | #21 |
 | 1.15.0 | 23/11/2026 | P. Iglesias Peral | F2.3: `docs/05_modelo_datos.md` con tres capas (entrada inmutable, observaciones inmutables y proyecciones recalculables), linaje por claves ajenas, bitemporalidad con cuatro fechas (`event_time`, `known_at`, `recorded_at`, `read_at`), tablas operativas y almacenamiento físico. Recalibración de la fiabilidad cambiada de mensual a diaria, semanal y por evento (`07_fiabilidad.md` §3.2) | #18, #21 |
 | 1.16.0 | 23/11/2026 | P. Iglesias Peral | F2.2: diagramas de secuencia en `docs/04_arquitectura.md` §12 (ingesta → evento, discrepancia → revisión, corrección → aprendizaje, sincronización del ERP y reprocesado tras un cambio de versión) | #17 |
+| 1.17.0 | 23/11/2026 | P. Iglesias Peral | F2.8: `docs/08_aprendizaje_continuo.md` con señales, mecanismos (calibración, clasificador clásico, ejemplos dinámicos para el LLM, inducción de plantillas, perfiles de remitente, alias), control de calidad de las etiquetas (doble revisión, casos de control, cuarentena, nunca de sus propias salidas), reversibilidad, gobernanza e indicadores | #24 |
