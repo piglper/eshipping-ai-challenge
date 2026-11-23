@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.10.0 |
+| Versión | 1.11.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -271,7 +271,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 
 ### 7.1 Selección de técnica por etapa
 
-Propuesta preliminar: se valida con los datos en F1 y se formaliza en el ADR de la estrategia de IA (D5) en F2. El criterio es elegir la técnica más simple que cumpla, por este orden: **determinista → plantilla → NLP clásico o ML → LLM**.
+Propuesta preliminar: se valida con los datos en F1 y se formaliza en el ADR de la estrategia de IA (D5) en F2. **Validada y formalizada en el [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md)**, que es la referencia vigente. El criterio es elegir la técnica más simple que cumpla, por este orden: **determinista → plantilla → NLP clásico o ML → LLM**.
 
 | Etapa | Técnica principal | Cuándo se recurre a otra | ¿LLM? |
 |---|---|---|---|
@@ -449,12 +449,13 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | D1 | LLM local (Ollama) en la PoC, optimizado para eficiencia; comparativa de proveedores de pago para producción | [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) |
 | — | Modelo de eventos basado en DCSA (tipo + clasificador planificado, estimado o real), con extensiones para aduanas e incidencias | [ADR-0006](adr/0006-modelo-de-eventos-basado-en-dcsa.md) |
 | — | Monolito modular hexagonal desplegado como workers por etapa detrás de colas | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md) |
+| D5 | Estrategia de IA: cascada de técnicas por etapa, con el LLM acotado al texto libre y nunca en la asociación ni en la reconciliación | [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md) |
 
 ### 14.2 Decisiones abiertas
 
 | ID | Decisión | Opciones | Fase en que se decide |
 |---|---|---|---|
-| D5 | Estrategia de IA de producción, incluido el proveedor de LLM recomendado | Reglas, NLP clásico, LLM o híbrido; proveedor según la comparativa F2.7b | F2 |
+| D5b | Proveedor y modelos de LLM de producción (la estrategia ya está decidida en el ADR-0008) | Proveedores de pago o autoalojado, según la comparativa F2.7b | F2 |
 | D9 | Modelos locales de la PoC | 2–3 candidatos; se elige por benchmark | F4 |
 | D6 | Política de resolución de discrepancias | Jerarquía de fuentes, frescura, reglas de dominio | F2 |
 | D7 | Almacenamiento de producción | PostgreSQL, almacén de eventos, data warehouse | F2 |
@@ -479,3 +480,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.8.0 | 22/11/2026 | P. Iglesias Peral | F1.6 y F1.7: `docs/02_requisitos.md` con 43 RF y 20 RNF (MoSCoW, cobertura en la PoC y criterio de aceptación), 10 supuestos y 13 preguntas; glosario. Supuesto S-01 explícito: el volumen del enunciado se interpreta como mensual | #13, #14 |
 | 1.9.0 | 23/11/2026 | P. Iglesias Peral | Revisión de fase de F1, cerrada con `v0.2.0`. Criterios de salida: correos inventariados y requisitos con identificador y criterio de aceptación, cumplidos; gold standard completo pero pendiente de revisión humana (R10 sigue abierto). Retraso de medio día sobre el calendario: F2 se hace de forma compacta, priorizando arquitectura y capacidad, estrategia de IA (D5), discrepancias (D6), costes y diseño de la PoC, para empezar F3 el martes 24/11 por la mañana | #57 |
 | 1.10.0 | 23/11/2026 | P. Iglesias Peral | Se revoca el plan compacto de F2 de la revisión 1.9.0: F2 se hace completa y se recorta la PoC (Streamlit mínima y OCR solo si sobra tiempo; ver F3). Calendario: F2 hasta el martes 24/11 por la mañana, F3 el martes y F4 hasta el miércoles por la mañana. Primer entregable de F2: `docs/04_arquitectura.md` (C4 y capacidad) y ADR-0007. Hallazgo de la capacidad: el cómputo no es el cuello de botella (menos de 1,5 núcleos en el pico a 300.000 correos al mes); lo son la revisión humana, el coste del LLM y la frescura del ERP | #15, #16 |
+| 1.11.0 | 23/11/2026 | P. Iglesias Peral | D5 decidida: cascada de técnicas por etapa (ADR-0008), que valida §7.1 con la evidencia de F1. El LLM se limita al texto libre, con entrada mínima, esquema JSON, cita verificada y confianza calibrada, y nunca interviene en identificadores, asociación ni reconciliación. La elección del proveedor de producción queda como D5b (F2.7b) | #19 |

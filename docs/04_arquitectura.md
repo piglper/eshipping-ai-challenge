@@ -2,12 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.1.1 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
 | Tareas | F2.1 (#15), F2.1b (#16) |
-| Decisiones | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md); pendientes D5 (#19), D6 (#20), D7 (#27) y D8 (#28) |
+| Decisiones | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md), [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md); pendientes D6 (#20), D7 (#27) y D8 (#28) |
 | Fuentes | [Requisitos](02_requisitos.md), [análisis de datos](01_analisis_datos.md), [taxonomía y ambigüedades](03_taxonomia_y_ambiguedades.md), [plan §7](PLAN.md#7-estándares-de-arquitectura) |
 
 > **Confidencialidad:** sin datos reales. Las cifras de la muestra son agregadas; las de volumen son supuestos explícitos.
@@ -450,7 +450,7 @@ Criterio de salida de F2: cada requisito de F1 está cubierto por un componente.
 | Decisión | Estado | Dónde |
 |---|---|---|
 | Monolito modular con workers por etapa y colas | Aceptada | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md) |
-| D5: estrategia de IA y técnica por etapa | Pendiente | #19 |
+| D5: estrategia de IA y técnica por etapa | Aceptada | [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md) |
 | D6: política de resolución de discrepancias | Pendiente | #20 |
 | D7: almacenamiento de producción (propuesta: PostgreSQL + almacén de objetos) | Pendiente | #27 |
 | D8: plataforma de despliegue y servicio de colas | Pendiente | #28 |
@@ -462,3 +462,4 @@ Los diagramas de secuencia de los flujos principales se añaden en F2.2 (#17).
 | Versión | Fecha | Cambios |
 |---|---|---|
 | 0.1.0 | 23/11/2026 | Primera versión: impulsores, estilo, C4 niveles 1 a 3, funcionamiento de la canalización y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes |
+| 0.1.1 | 23/11/2026 | D5 aceptada (ADR-0008) |
