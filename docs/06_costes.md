@@ -1,4 +1,4 @@
-# Costes y comparativa de proveedores de LLM
+# Costes: LLM e infraestructura
 
 | Campo | Valor |
 |---|---|
@@ -7,112 +7,56 @@
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
 | Tareas | F2.7 (#22), F2.7b (#23) |
-| Decisiones | [ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md) (D5b); se apoya en [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) y [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md) |
-| Fuentes | [Arquitectura §9](04_arquitectura.md#9-análisis-de-capacidad-f21b) (volúmenes y tokens), precios oficiales consultados el **23/11/2026** (§6) |
+| Decisiones | [ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md) (D5b); se apoya en [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md), [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md) y [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md) |
+| Fuentes | [Arquitectura §9](04_arquitectura.md#9-análisis-de-capacidad-f21b) (volúmenes, tokens y cómputo), precios oficiales consultados el **23/11/2026** (§6) |
 
 > **Confidencialidad:** sin datos reales. Todas las cifras de volumen son supuestos explícitos.
 
 ## 1. Resumen
 
-- **Coste técnico total: del orden de 500 a 1.000 € al mes** con 100.000 correos y con 150.000, es decir, **menos de 1 céntimo por correo**. El LLM es una parte pequeña: entre 30 y 250 € al mes según el proveedor (§4).
-- **El coste dominante es la revisión humana**: con el objetivo del 15 % de correos en revisión, unos 7.000 € al mes con 100.000 correos y 10.500 € con 150.000 (§3.4). Es más del 90 % del coste del sistema. La palanca de coste es **bajar el porcentaje en revisión** (aprendizaje continuo, F2.8), no el precio por token.
-- **Con los precios actuales de los modelos pequeños, el proveedor de LLM se debe elegir por calidad y cumplimiento, no por precio**: la diferencia entre el más barato y el más caro de la lista corta es de unos 200 € al mes.
-- **Residencia en la UE:** la API directa de Anthropic no ofrece hoy inferencia ni almacenamiento en la UE (solo `global` y `us`); para usar Claude con residencia en la UE hay que ir por **Amazon Bedrock o Google Cloud** con endpoint regional (prima del 10 %). OpenAI cobra un 10 % más por el procesamiento regional. Mistral es un proveedor europeo (§5).
-- **Recomendación (ADR-0010):** elegir entre una lista corta de cuatro candidatos con residencia en la UE (Anthropic vía Bedrock o Google Cloud, Mistral, Google y OpenAI) mediante una prueba con el conjunto de referencia; escenario de referencia para los costes, Claude Haiku 5.5 en endpoint regional de la UE con escalado a Claude Sonnet 5.5; alternativa europea, Mistral Small 4 con escalado a Mistral Large 4; modelo autoalojado solo si EShipping no permite proveedores externos (P-10).
-- **Sin cascada** (todo el correo a un modelo de gama media), el LLM costaría unos 2.600 $ al mes con 100.000 correos: unas 40 veces más que el escenario de referencia (§4.3). Aun así, el argumento principal de la cascada sigue siendo la fiabilidad y la auditabilidad ([ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md)); el ahorro es secundario.
+- **Alcance:** el coste técnico de la solución, es decir, el **LLM** y las **máquinas** necesarias para la infraestructura. El trabajo de revisión del equipo de operaciones no se valora en euros: depende de EShipping. El sistema lo mide como volumen (elementos y horas estimadas, [arquitectura §9.6](04_arquitectura.md#96-revisión-humana-el-cuello-de-botella-real)).
+- **LLM:** con la cascada y modelos pequeños, **entre 20 y 260 $ al mes** con 100.000 correos y entre 30 y 390 $ con 150.000, según el proveedor (§3.3). Escenario de referencia: unos **62 $ y 94 $**.
+- **Máquinas:** la carga cabe en **dos servidores de aplicación de 4 vCPU y 16 GB**, **dos servidores de base de datos de 2 vCPU y 8 GB** y **un servidor de monitorización**, más almacenamiento de objetos. Con precios de un proveedor europeo, unos **300 € al mes**, iguales para 100.000 y 150.000 correos (§4).
+- **Total técnico:** unos **360 € al mes con 100.000 correos (0,36 céntimos por correo)** y **unos 390 € con 150.000 (0,26 céntimos)**. Con 300.000 basta añadir un servidor de aplicación: unos 560 € (§5).
+- **LLM autoalojado:** requiere una GPU de 24 GB (por ejemplo, NVIDIA L4) por réplica; con alta disponibilidad, unos 1.100 € al mes. Es más caro que la API a este volumen y solo se justifica si los datos no pueden salir del entorno de EShipping (P-10).
+- **Residencia en la UE:** la API directa de Anthropic no ofrece hoy inferencia ni almacenamiento en la UE (solo `global` y `us`); Claude con residencia en la UE pasa por **Amazon Bedrock o Google Cloud** con endpoint regional (+10 %). OpenAI cobra un 10 % más por el procesamiento regional. Mistral es un proveedor europeo (§3.4).
 
 ## 2. Supuestos
 
-Además de los de la [arquitectura §9.1](04_arquitectura.md#91-parámetros) (volumen, 25 % de ruido, 50 % de correos operativos con LLM, tamaño de los correos):
+Además de los de la [arquitectura §9.1](04_arquitectura.md#91-parámetros) (volumen, 25 % de ruido, 50 % de correos operativos con LLM, tiempos de CPU por unidad):
 
 | ID | Supuesto | Valor | Cómo se valida |
 |---|---|---|---|
 | C-01 | Llamadas al LLM al mes | 37.500 (100.000 correos) y 56.250 (150.000) | Porcentaje por escalón en la PoC (F4.3) |
 | C-02 | Tokens por llamada | 3.000 de entrada (1.200 de instrucciones y esquema, fijos y cacheables; 1.800 del mensaje) y 400 de salida | Medición en la PoC (F4.4) |
 | C-03 | Llamadas que escalan al modelo superior | 10 % | Medición en la PoC |
-| C-04 | Diferencia de tokenizador | Los modelos Claude 4.7 y posteriores generan unos 30 % más tokens para el mismo texto, según Anthropic; se aplica ×1,3 a Claude. Para el resto se usa el recuento base (incertidumbre de ±30 %) | Recuento real por proveedor en la prueba (ADR-0010) |
-| C-05 | Caché del prefijo fijo | Siempre activa en horario laboral (con 8 o más llamadas por minuto en el pico, la caché de 5 minutos se mantiene). Se ignora el coste de escritura en caché | — |
+| C-04 | Diferencia de tokenizador | Los modelos Claude 4.7 y posteriores generan unos 30 % más tokens para el mismo texto, según Anthropic; se aplica ×1,3 a Claude. Para el resto se usa el recuento base (incertidumbre de ±30 %) | Recuento real por proveedor en la evaluación (ADR-0010) |
+| C-05 | Caché del prefijo fijo | Activa en horario laboral (con 8 o más llamadas por minuto en el pico, la caché de 5 minutos se mantiene). Se ignora el coste de escritura en caché | — |
 | C-06 | Residencia en la UE | Se aplica la prima regional publicada por cada proveedor cuando la hay | Contrato (P-10) |
-| C-07 | Tipo de cambio | 1 $ = 0,90 € (solo para el total; los precios del LLM se dan en dólares, como los publica cada proveedor) | — |
-| C-08 | Coste por hora de un operativo (coste de empresa) | 25 € | **Pregunta para EShipping** |
-| C-09 | Tiempo medio por elemento revisado | 1,5 minutos | Medición en un piloto con la interfaz de revisión |
+| C-07 | Tipo de cambio | 1 $ = 0,90 € (solo para los totales; los precios del LLM se dan en dólares, como los publica cada proveedor) | — |
+| C-08 | Precios de máquinas | Hetzner (centros de datos en Alemania y Finlandia) como **referencia de precio europeo**, sin IVA. No es la elección de plataforma: eso se decide en D8 (#28) | — |
 
-## 3. Coste mensual y por correo
+## 3. Coste del LLM
 
-### 3.1 Desglose
+### 3.1 Precios oficiales
 
-Escenario de referencia (ADR-0010), con residencia en la UE:
+Dólares por millón de tokens, tarifa estándar, consultados el **23/11/2026** (§6).
 
-| Partida | 100.000 correos/mes | 150.000 correos/mes | Notas |
-|---|---|---|---|
-| LLM | ≈ 56 € (62 $) | ≈ 85 € (94 $) | Claude Haiku 5.5 + 10 % de escalado a Sonnet 5.5, endpoint regional de la UE (§4) |
-| Cómputo (workers, API, sincronización del ERP) | 250–400 € | 250–400 € | Dos réplicas por rol por disponibilidad; la carga no obliga a más (arquitectura §9.3) |
-| Base de datos PostgreSQL gestionada con alta disponibilidad | 150–300 € | 150–300 € | Instancia pequeña; crece unos 10–25 GB al año |
-| Almacén de objetos | 5–20 € | 5–30 € | 25–38 GB nuevos al mes; niveles de archivo para lo antiguo |
-| OCR | 0 € adicional | 0 € adicional | Tesseract dentro de los workers |
-| Observabilidad | 50–150 € | 50–150 € | Métricas, logs y trazas |
-| **Total técnico** | **≈ 510–925 €** | **≈ 540–965 €** | |
-| **Por correo** | **≈ 0,5–0,9 céntimos** | **≈ 0,4–0,6 céntimos** | |
-| Revisión humana (15 %, objetivo RNF-13) | ≈ 7.025 € (281 h) | ≈ 10.550 € (422 h) | §3.4 |
-| **Total con revisión** | **≈ 7.500–8.000 €** | **≈ 11.100–11.500 €** | |
-| **Por correo, con revisión** | **≈ 7,5–8 céntimos** | **≈ 7,4–7,7 céntimos** | |
-
-Las partidas de infraestructura son **órdenes de magnitud** de servicios gestionados equivalentes en la UE, sin ofertas concretas; se precisan cuando se decida la plataforma (D8, #28). Su incertidumbre no cambia las conclusiones, porque la revisión humana es más de diez veces mayor.
-
-### 3.2 Paso de 100.000 a 150.000 correos al mes
-
-- El **LLM y la revisión crecen de forma lineal** (×1,5).
-- La **infraestructura apenas cambia**: el mínimo de réplicas cubre los dos volúmenes (arquitectura §9.3); solo crecen el almacén de objetos y la base de datos.
-- Por eso el coste técnico por correo **baja** al crecer, y el coste total por correo lo marca el porcentaje en revisión.
-
-### 3.3 Sensibilidad
-
-Variación del coste del LLM en el escenario de referencia con 100.000 correos al mes (base: 62 $):
-
-| Cambio | Coste del LLM |
-|---|---|
-| Llega al LLM el 25 % de los correos operativos en lugar del 50 % | ≈ 31 $ |
-| Llega al LLM el 100 % | ≈ 124 $ |
-| El doble de tokens por llamada | ≈ 124 $ |
-| Escalado del 30 % en lugar del 10 % | ≈ 145 $ |
-| Todo lo anterior a la vez (100 %, el doble de tokens y un 30 % de escalado) | ≈ 580 $ |
-
-Incluso en el peor caso combinado, el LLM sigue por debajo del 10 % del coste de la revisión humana.
-
-### 3.4 Revisión humana
-
-| Porcentaje en revisión | 100.000 correos/mes | 150.000 correos/mes |
-|---|---|---|
-| 30 % (arranque) | 562 h ≈ 14.050 € | 844 h ≈ 21.100 € |
-| 15 % (objetivo RNF-13) | 281 h ≈ 7.025 € | 422 h ≈ 10.550 € |
-| 8 % (régimen maduro) | 150 h ≈ 3.750 € | 225 h ≈ 5.625 € |
-
-Horas calculadas en la [arquitectura §9.6](04_arquitectura.md#96-revisión-humana-el-cuello-de-botella-real), con C-08 y C-09.
-
-**Comparación con la situación actual (ilustrativa).** Hoy el equipo de operaciones lee todos los correos para actualizar el ERP. Si se supone el mismo minuto y medio por correo operativo, 75.000 correos al mes son unas 1.875 horas, unos **47.000 € al mes**. El sistema no elimina ese trabajo, pero lo concentra en el 15 % de los casos que lo necesitan y deja trazado el resto. La cifra real depende de cómo trabaja hoy el equipo (P-06) y es la base del caso de negocio.
-
-## 4. Comparativa de proveedores de LLM (F2.7b)
-
-### 4.1 Precios oficiales
-
-Precios en dólares por millón de tokens, tarifa estándar, consultados el **23/11/2026** en las páginas oficiales (§6).
-
-| Proveedor | Modelo | Entrada | Entrada en caché | Salida | Lotes | Prima por residencia regional |
+| Proveedor | Modelo | Entrada | Entrada en caché | Salida | Lotes | Residencia en la UE |
 |---|---|---|---|---|---|---|
-| Anthropic | Claude Haiku 5.5 (hasta 100.000 tokens de entrada) | 0,10 | 0,01 | 0,50 | −50 % | API directa: sin opción UE; Bedrock y Google Cloud regionales: +10 % |
+| Anthropic | Claude Haiku 5.5 (hasta 100.000 tokens de entrada) | 0,10 | 0,01 | 0,50 | −50 % | API directa: no; Bedrock y Google Cloud con endpoint regional: +10 % |
 | Anthropic | Claude Sonnet 5.5 | 2,00 | 0,10 | 10,00 | −50 % | Igual |
-| OpenAI | GPT-5.4 nano | 0,20 | 0,02 | 1,25 | −50 % | +10 % (procesamiento regional) |
+| OpenAI | GPT-5.4 nano | 0,20 | 0,02 | 1,25 | −50 % | Procesamiento regional: +10 % |
 | OpenAI | GPT-5.4 mini | 0,75 | 0,075 | 4,50 | −50 % | +10 % |
 | OpenAI | GPT-6.2 sol | 2,00 | 0,10 | 10,00 | −50 % | +10 % |
 | Google | Gemini 3.5 Flash-Lite | 0,30 | 0,03 | 2,50 | −50 % | Regiones de la UE en Vertex AI |
-| Google | Gemini 3.8 Flash (precio desde el 01/01/2027; hasta el 31/12/2026, 0,75 / 3,75) | 1,50 | 0,15 | 7,50 | −50 % | Igual |
+| Google | Gemini 3.8 Flash (desde el 01/01/2027; hasta el 31/12/2026, 0,75 / 3,75) | 1,50 | 0,15 | 7,50 | −50 % | Igual |
 | Mistral | Mistral Small 4 | 0,15 | 0,015 | 0,60 | −50 % | Proveedor europeo |
 | Mistral | Mistral Large 4 | 0,70 | 0,07 | 2,10 | −50 % | Igual |
-| Autoalojado | Modelo abierto de 4 a 8 mil millones de parámetros en una GPU NVIDIA L4 (Scaleway, París) | — | — | — | — | Infraestructura propia en la UE; 0,75 € por GPU y hora |
 
-Se comparan dos gamas por proveedor: un modelo **pequeño** para el flujo normal y uno **intermedio** para el escalado ([ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md), control 6). Los modelos de gama alta (por ejemplo, Claude Opus 5.5 a 4 / 20 $ o GPT-6.2 astra a 8 / 40 $) no se justifican para extracción con esquema y se dejan fuera.
+Para cada proveedor se comparan dos gamas: un modelo **pequeño** para el flujo normal y uno **intermedio** para el escalado ([ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md), control 6). Los modelos de gama alta (por ejemplo, Claude Opus 5.5 a 4 / 20 $ o GPT-6.2 astra a 8 / 40 $) no se justifican para extracción con esquema.
 
-### 4.2 Coste mensual del LLM por modelo
+### 3.2 Coste mensual por modelo
 
 Con los supuestos C-01 a C-06 y residencia en la UE:
 
@@ -128,43 +72,110 @@ Con los supuestos C-01 a C-06 y residencia en la UE:
 | GPT-6.2 sol | 8,49 $ | 318 $ | 478 $ |
 | Claude Sonnet 5.5 | 11,04 $ | 414 $ | 621 $ |
 
-### 4.3 Escenarios
+### 3.3 Escenarios
 
 | Escenario (modelo principal + 10 % de escalado) | 100.000 correos/mes | 150.000 correos/mes |
 |---|---|---|
 | **Referencia:** Claude Haiku 5.5 + Claude Sonnet 5.5 (Bedrock o Google Cloud, región de la UE) | 62 $ | 94 $ |
 | **Europeo:** Mistral Small 4 + Mistral Large 4 | 28 $ | 42 $ |
-| Conservador: GPT-5.4 mini + GPT-6.2 sol | 165 $ | 248 $ |
+| GPT-5.4 nano + GPT-5.4 mini | 49 $ | 75 $ |
+| Gemini 3.5 Flash-Lite + Gemini 3.8 Flash (2027) | 81 $ | 122 $ |
 | Conservador: Gemini 3.8 Flash (2027) + Claude Sonnet 5.5 | 262 $ | 393 $ |
-| **Autoalojado:** 2 GPU L4 24 horas al día (alta disponibilidad) | ≈ 1.095 € | ≈ 1.095 € |
-| Autoalojado: 1 GPU L4 en horario laboral (22 días × 12 h) + API de respaldo fuera de horario | ≈ 200 € + API | ≈ 200 € + API |
 | **Sin cascada:** todo el correo (≈ 6.500 tokens de entrada y 500 de salida) a Claude Sonnet 5.5 | ≈ 2.574 $ | ≈ 3.861 $ |
 
-Lecturas:
-
-- Entre los escenarios con API, la diferencia es de unos 200 $ al mes como mucho: **el precio no decide**.
-- El autoalojado con alta disponibilidad cuesta entre 4 y 40 veces más que la API a este volumen, según el escenario con el que se compare, y suma la operación de las GPU. Solo se justifica si los datos no pueden salir del entorno de EShipping (P-10) o como respaldo ante la caída de un proveedor.
+- Entre los escenarios con modelos pequeños, la diferencia es de unos 50 $ al mes: **el precio no decide el proveedor**; deciden la calidad medida y el cumplimiento ([ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md)).
+- Sin cascada, el coste se multiplica por unas 40. El argumento principal de la cascada sigue siendo la fiabilidad y la auditabilidad ([ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md)), pero el ahorro también es real.
 - Los descuentos por lotes (−50 %) no se aplican al flujo normal por el plazo de RNF-03 (arquitectura §7.1); sí a los reprocesados y a las evaluaciones.
 
-### 4.4 Criterios no económicos
+**Sensibilidad** del escenario de referencia con 100.000 correos al mes (base: 62 $):
 
-| Criterio | Anthropic (API directa) | Anthropic en Bedrock o Google Cloud | OpenAI | Google (Vertex AI) | Mistral | Autoalojado |
-|---|---|---|---|---|---|---|
-| Residencia de la inferencia en la UE | No (solo `global` o `us`) | Sí, endpoint regional (+10 %); disponibilidad del modelo en región de la UE a confirmar | Sí, procesamiento regional (+10 %) | Sí, regiones de la UE | Proveedor europeo; región y contrato de tratamiento a confirmar | Sí, total |
-| Uso de los datos para entrenar | No sin permiso expreso | Lo rige el proveedor de nube, que es el encargado del tratamiento | No verificado en esta consulta; se revisa en el contrato | Nivel de pago: «el contenido no se usa para mejorar los productos» | No verificado en esta consulta | No aplica |
-| Retención | Sin retención del contenido por defecto (salvo los modelos de la gama Fable y Mythos); retención cero bajo acuerdo; la API por lotes retiene 29 días | Política del proveedor de nube | Se revisa en el contrato | Se revisa en el contrato | Se revisa en el contrato | Propia |
-| Salida con esquema JSON | Sí | Sí | Sí | Sí | Sí | Sí, con el motor de inferencia |
-| Calidad esperada en extracción en español e inglés | A medir | A medir | A medir | A medir | A medir | Menor (modelos de 4 a 8 mil millones de parámetros); se mide en la PoC (D9) |
-| Dependencia | Un proveedor | Proveedor + nube | Un proveedor | Un proveedor | Un proveedor | Ninguna externa; operación propia |
+| Cambio | Coste del LLM |
+|---|---|
+| Llega al LLM el 25 % de los correos operativos en lugar del 50 % | ≈ 31 $ |
+| Llega al LLM el 100 % | ≈ 124 $ |
+| El doble de tokens por llamada | ≈ 124 $ |
+| Escalado del 30 % en lugar del 10 % | ≈ 145 $ |
+| Todo lo anterior a la vez | ≈ 580 $ |
 
-La calidad **no se puede comparar con los datos reales** sin enviarlos a cada proveedor, y eso requiere autorización (CLAUDE.md, ADR-0005). Por eso el [ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md) decide con una prueba sobre datos sintéticos y, si EShipping lo autoriza, sobre una muestra real con contrato de tratamiento.
+### 3.4 Criterios no económicos
 
-## 5. Conclusiones para el diseño
+| Criterio | Anthropic (API directa) | Anthropic en Bedrock o Google Cloud | OpenAI | Google (Vertex AI) | Mistral |
+|---|---|---|---|---|---|
+| Inferencia en la UE | No (solo `global` o `us`) | Sí, endpoint regional (+10 %); disponibilidad del modelo concreto en región de la UE a confirmar | Sí, procesamiento regional (+10 %) | Sí, regiones de la UE | Proveedor europeo; región y contrato de tratamiento a confirmar |
+| Uso de los datos para entrenar | No sin permiso expreso | Lo rige el proveedor de nube, que es el encargado del tratamiento | No verificado en esta consulta; se revisa en el contrato | Nivel de pago: «el contenido no se usa para mejorar los productos» | No verificado en esta consulta |
+| Retención | Sin retención del contenido por defecto (salvo los modelos Fable y Mythos); retención cero bajo acuerdo; la API por lotes retiene 29 días | Política del proveedor de nube | Se revisa en el contrato | Se revisa en el contrato | Se revisa en el contrato |
+| Salida con esquema JSON | Sí | Sí | Sí | Sí | Sí |
+| Calidad en extracción en español e inglés | A medir en la evaluación (ADR-0010) | A medir | A medir | A medir | A medir |
 
-1. El coste del sistema lo marca la **revisión humana**: las métricas que importan son el porcentaje en revisión y el tiempo por elemento, y la interfaz de revisión merece tanto cuidado como la extracción.
-2. El LLM es barato con modelos pequeños: esto permite **ser prudente** (umbrales altos, escalado al modelo superior en caso de duda) sin un impacto apreciable en el coste.
-3. La **residencia en la UE** condiciona más que el precio: con Claude implica ir por un proveedor de nube con endpoint regional.
-4. El modelo de costes se recalcula en F4.4 (#42) con los tokens y el porcentaje por escalón medidos en la PoC.
+La calidad no se puede comparar con los datos reales sin enviarlos a cada proveedor, y eso requiere autorización (ADR-0002, ADR-0005).
+
+## 4. Requisitos de máquina
+
+### 4.1 Recursos por rol
+
+A partir del cómputo en el pico ([arquitectura §9.3](04_arquitectura.md#93-cómputo-por-etapa-en-el-pico)): incluso con 300.000 correos al mes, el procesado sin LLM ocupa menos de 1,5 núcleos. Los recursos los fijan la **memoria de cada proceso** y la **disponibilidad** (dos réplicas por rol), no la carga.
+
+| Rol ([ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md)) | Réplicas | CPU por réplica | Memoria por réplica | Por qué |
+|---|---|---|---|---|
+| `ingest` (conector de buzón) | 2 | 0,5 vCPU | 0,5 GB | Limitado por la API del buzón |
+| `parse` (parseo y división) | 2 | 0,5 vCPU | 1 GB | Correos de hasta ≈ 130.000 caracteres y adjuntos en memoria |
+| `document` (texto de PDF y OCR) | 2 | 1 vCPU | 2 GB | Tesseract y el renderizado de páginas a imagen son la etapa con más CPU y memoria |
+| `extract` (cascada, pasarela de LLM) | 2 | 0,5 vCPU | 1 GB | Reglas, diccionarios (UN/LOCODE, buques) y el modelo clásico en memoria; el LLM es externo |
+| `reconcile` (asociación y reconciliación) | 2 | 0,5 vCPU | 1 GB | Acceso a la base de datos |
+| `erp-sync` (sincronización del ERP) | 1 | 0,5 vCPU | 0,5 GB | Proceso programado |
+| `api` (API y aplicación de revisión) | 2 | 1 vCPU | 1 GB | Usuarios del equipo de operaciones |
+| **Total aplicación** | 13 procesos | **≈ 9 vCPU** | **≈ 15 GB** | |
+
+Las colas se implementan sobre PostgreSQL (`SELECT … FOR UPDATE SKIP LOCKED`): con unas decenas de tareas por minuto no hace falta un servidor de colas aparte. Si D8 elige un servicio de colas gestionado, el cambio es un adaptador del puerto `TaskQueue`.
+
+### 4.2 Máquinas
+
+| Máquina | Cantidad | Tipo de referencia (Hetzner) | Recursos por máquina | Uso |
+|---|---|---|---|---|
+| Servidor de aplicación | 2 | CCX23 (vCPU dedicada) | 4 vCPU, 16 GB, 160 GB NVMe | Todos los roles en contenedores, repartidos entre las dos máquinas: si una cae, la otra sigue procesando |
+| Servidor de base de datos | 2 | CCX13 (vCPU dedicada) | 2 vCPU, 8 GB, 80 GB NVMe | PostgreSQL principal y réplica en espera (alta disponibilidad y lecturas de la interfaz y la analítica) |
+| Servidor de monitorización | 1 | CPX32 | 4 vCPU, 8 GB, 160 GB NVMe | Métricas, logs, trazas y alertas (§5 de la arquitectura) |
+| Almacenamiento de objetos | 1 | Object Storage | 1 TB y 1 TB de tráfico de salida incluidos | Correos originales y adjuntos |
+
+Notas de dimensionamiento:
+
+- Se usan vCPU **dedicadas** en aplicación y base de datos para tener un rendimiento predecible; la monitorización puede ir en vCPU compartida.
+- Los dos servidores de aplicación suman 8 vCPU y 32 GB frente a unos 9 vCPU y 15 GB solicitados: la CPU solicitada es una reserva, no un consumo (el consumo en el pico es inferior a 1,5 núcleos) y hay margen de memoria para picos de OCR.
+- **Base de datos:** crece unos 10–25 GB al año con 100.000 correos (arquitectura §9.5); los 80 GB del disco local bastan para unos 3 años, y después se añade un volumen o se archivan particiones.
+- **Almacenamiento de objetos:** 300 GB al año con 100.000 correos y 450 GB con 150.000; el terabyte incluido cubre entre 2 y 3 años. Después, unos 6,50 € por terabyte adicional al mes.
+- **Copias de seguridad** de la base de datos en el almacenamiento de objetos, en otra ubicación del mismo proveedor.
+
+### 4.3 GPU (solo si el LLM se autoaloja)
+
+| Requisito | Valor | Por qué |
+|---|---|---|
+| Modelo | Abierto, de 4 a 8 mil millones de parámetros | Los de la PoC (`qwen3.5:4b`, `gemma4:e4b`, `llama3.2:3b`, D9) o uno algo mayor si la evaluación lo pide |
+| Memoria de la GPU | 24 GB | Un modelo de 8 mil millones de parámetros ocupa unos 16 GB en 16 bits y unos 5 GB cuantizado a 4 bits; el resto queda para la caché de contexto de varias peticiones simultáneas |
+| Rendimiento necesario | Unas 3–4 peticiones simultáneas y unos 1.500 tokens por segundo de lectura de entrada en el pico con 300.000 correos al mes (arquitectura §9.4) | Al alcance de una GPU de esta gama con un servidor de inferencia con agrupación de peticiones (por ejemplo, vLLM); se comprueba en F4.4 |
+| Réplicas | 2 para alta disponibilidad, o 1 con la API como respaldo | — |
+| Tipo de referencia | NVIDIA L4 de 24 GB (por ejemplo, Scaleway L4-1-24G en París a 0,75 € por hora) | ≈ 548 € al mes por GPU las 24 horas; ≈ 1.095 € con dos |
+
+Con el LLM autoalojado, la GPU es la partida más cara de la infraestructura: entre 4 y 40 veces lo que cuesta la API en los escenarios de §3.3.
+
+## 5. Coste técnico mensual
+
+Precios de Hetzner sin IVA (C-08) y escenario de referencia del LLM (C-07: 1 $ = 0,90 €):
+
+| Partida | 100.000 correos/mes | 150.000 correos/mes | 300.000 correos/mes |
+|---|---|---|---|
+| 2 servidores de aplicación (CCX23, 86,49 € cada uno) | 172,98 € | 172,98 € | 259,47 € (3 servidores) |
+| 2 servidores de base de datos (CCX13, 43,49 € cada uno) | 86,98 € | 86,98 € | 86,98 € (tamaño mayor si hace falta) |
+| 1 servidor de monitorización (CPX32) | 35,99 € | 35,99 € | 35,99 € |
+| Almacenamiento de objetos (1 TB incluido) | 6,49 € | 6,49 € | 6,49 € a 12,96 € |
+| **Infraestructura** | **≈ 302 €** | **≈ 302 €** | **≈ 395 €** |
+| LLM (escenario de referencia) | ≈ 56 € (62 $) | ≈ 85 € (94 $) | ≈ 170 € (188 $) |
+| **Total técnico** | **≈ 360 €** | **≈ 390 €** | **≈ 565 €** |
+| **Por correo** | **≈ 0,36 céntimos** | **≈ 0,26 céntimos** | **≈ 0,19 céntimos** |
+| Alternativa: LLM autoalojado (2 GPU L4) en lugar de la API | ≈ 1.400 € | ≈ 1.400 € | ≈ 1.490 € |
+
+- La infraestructura es **casi fija**: el paso de 100.000 a 150.000 correos no cambia ninguna máquina, y el de 150.000 a 300.000 añade un servidor de aplicación. Solo el LLM crece de forma lineal.
+- Con servicios gestionados de un proveedor de nube grande (base de datos, colas y monitorización gestionadas) la infraestructura cuesta más a cambio de menos operación; la elección se hace en D8 (#28). No cambia el dimensionamiento de §4.
+- No incluye el IVA, la transferencia por encima de la incluida, las copias de seguridad fuera del proveedor ni el trabajo de operación.
 
 ## 6. Fuentes (consultadas el 23/11/2026)
 
@@ -177,7 +188,9 @@ La calidad **no se puede comparar con los datos reales** sin enviarlos a cada pr
 | Google: precios de la API de Gemini | <https://aistudio.google.com/docs/pricing> |
 | Mistral: precios | <https://docs.mistral.ai/models/pricing> |
 | Mistral: API por lotes | <https://docs.mistral.ai/capabilities/batch> |
-| Scaleway: precios de GPU | <https://www.scaleway.com/en/pricing/gpu> |
+| Hetzner: servidores en la nube (vCPU dedicada y compartida) | <https://www.hetzner.com/cloud/general-purpose/>, <https://www.hetzner.com/cloud/regular-performance/> |
+| Hetzner: almacenamiento de objetos | <https://www.hetzner.com/storage/object-storage> |
+| Scaleway: GPU (la página no admite lectura automática; el precio se tomó de su página oficial a través del buscador) | <https://www.scaleway.com/en/pricing/gpu> |
 
 Los precios cambian con frecuencia; antes de contratar se vuelven a consultar.
 
@@ -185,4 +198,4 @@ Los precios cambian con frecuencia; antes de contratar se vuelven a consultar.
 
 | Versión | Fecha | Cambios |
 |---|---|---|
-| 0.1.0 | 23/11/2026 | Primera versión: supuestos, coste mensual y por correo a 100.000 y 150.000 correos, sensibilidad, revisión humana y comparativa de proveedores con precios oficiales |
+| 0.1.0 | 23/11/2026 | Primera versión: coste del LLM por proveedor y escenario con precios oficiales, requisitos de máquina por rol, máquinas de referencia y coste técnico mensual a 100.000, 150.000 y 300.000 correos |

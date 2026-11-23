@@ -11,7 +11,7 @@ El [ADR-0008](0008-estrategia-de-ia-cascada-por-etapa.md) limita el LLM al texto
 
 La comparativa de [costes §4](../06_costes.md#4-comparativa-de-proveedores-de-llm-f27b) muestra que:
 
-- con modelos pequeños, el LLM cuesta entre 20 y 260 $ al mes con 100.000 correos, frente a unos 7.000 € de revisión humana;
+- con modelos pequeños, el LLM cuesta entre 20 y 260 $ al mes con 100.000 correos, y la diferencia entre los escenarios con modelos pequeños es de unos 50 $ al mes;
 - la API directa de Anthropic no ofrece hoy residencia en la UE (solo `global` y `us`); Claude con residencia en la UE pasa por Amazon Bedrock o Google Cloud con endpoint regional (+10 %);
 - OpenAI cobra un 10 % por el procesamiento regional, Google ofrece regiones de la UE en Vertex AI y Mistral es un proveedor europeo.
 
@@ -19,7 +19,7 @@ La comparativa de [costes §4](../06_costes.md#4-comparativa-de-proveedores-de-l
 
 - **Cumplimiento:** residencia en la UE, contrato de tratamiento de datos, sin uso de los datos para entrenar y retención mínima (RNF-30, RNF-31, S-10).
 - **Calidad** de extracción con esquema JSON en correos en español e inglés mezclados (RNF-11).
-- **Coste**, secundario a este volumen.
+- **Coste**, secundario a este volumen (los modelos pequeños cuestan decenas de dólares al mes).
 - **Independencia:** poder cambiar de proveedor (puerto `LLMClient`) y tener un respaldo si uno falla.
 - **Operación:** latencia compatible con RNF-03 y límites de uso suficientes (unos 90.000 tokens por minuto en el pico con 300.000 correos al mes, arquitectura §9.4).
 
@@ -72,7 +72,7 @@ Añadir otro candidato a la evaluación no cambia nada más del sistema.
 
 ### Un único proveedor por precio
 - ✅ Simple.
-- ❌ El ahorro es de unos 200 $ al mes como mucho; una calidad un punto menor cuesta más en horas de revisión que todo el LLM.
+- ❌ El ahorro es de unas decenas de dólares al mes; una calidad algo menor envía más casos a revisión, y eso pesa más que el precio por token.
 
 ### Un único proveedor por reputación de calidad
 - ✅ Probablemente la mejor calidad.
