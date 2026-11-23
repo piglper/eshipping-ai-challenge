@@ -16,6 +16,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Fiabilidad (`docs/07_fiabilidad.md`): métricas, confianza calibrada con vigilancia diaria y recalibración semanal y por evento, umbrales por campo, auditoría continua y límites estadísticos de la PoC.
 - Modelo de datos (`docs/05_modelo_datos.md`): entrada y observaciones inmutables, proyecciones recalculables, linaje y bitemporalidad.
 - Diagramas de secuencia de los flujos principales (`docs/04_arquitectura.md` §12).
+- Aprendizaje continuo (`docs/08_aprendizaje_continuo.md`): mecanismos, control de calidad de las etiquetas, reversibilidad y gobernanza.
 
 ### Changed
 - Plan 1.10.0: F2 completa y PoC recortada (Streamlit mínima, OCR solo si sobra tiempo); calendario ajustado.
