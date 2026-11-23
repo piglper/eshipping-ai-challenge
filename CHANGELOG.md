@@ -10,6 +10,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Arquitectura (`docs/04_arquitectura.md`): impulsores, C4 niveles 1 a 3, funcionamiento de la canalización (prioridades, idempotencia, fallos, configuración versionada) y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes.
 - ADR-0007: monolito modular hexagonal desplegado como workers por etapa detrás de colas.
 - ADR-0008: estrategia de IA (D5), cascada de técnicas por etapa con el LLM acotado al texto libre y controles sobre su salida (entrada mínima, esquema JSON, cita verificada, confianza calibrada).
+- ADR-0009: política de resolución de discrepancias (D6), con autoridad de la fuente por campo, valor vigente, tolerancias, veredictos, regla «ERP más reciente», coherencia interna del ERP y prioridades.
 
 ### Changed
 - Plan 1.10.0: F2 completa y PoC recortada (Streamlit mínima, OCR solo si sobra tiempo); calendario ajustado.

@@ -22,3 +22,4 @@ Cada decisión relevante, técnica o de proyecto, se documenta como un *Architec
 | [0006](0006-modelo-de-eventos-basado-en-dcsa.md) | Modelo de eventos basado en el estándar DCSA | Aceptado | 2026-11-22 |
 | [0007](0007-monolito-modular-con-workers-por-etapa.md) | Monolito modular desplegado como workers por etapa detrás de colas | Aceptado | 2026-11-23 |
 | [0008](0008-estrategia-de-ia-cascada-por-etapa.md) | Estrategia de IA: cascada de técnicas por etapa, con el LLM acotado al texto libre | Aceptado | 2026-11-23 |
+| [0009](0009-politica-de-resolucion-de-discrepancias.md) | Política de resolución de discrepancias: autoridad por campo, estado del dato, frescura y escalado | Aceptado | 2026-11-23 |
