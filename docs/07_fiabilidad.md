@@ -15,7 +15,7 @@
 ## 1. Resumen
 
 - **Fiable significa que lo que el sistema acepta sin revisión es correcto** con una probabilidad conocida y alta. Se prioriza la precisión sobre la cobertura (S-06): un dato erróneo aceptado es peor que un dato enviado a revisión.
-- Cada dato lleva una **confianza calibrada**, que es la probabilidad estimada de que sea correcto. No es la que declara el modelo, sino un modelo por campo sobre señales comprobables (§3).
+- Cada dato lleva una **confianza calibrada**, que es la probabilidad estimada de que sea correcto. No es la que declara el modelo, sino un modelo por campo sobre señales comprobables, vigilado a diario y recalibrado cada semana y tras cada cambio (§3).
 - Cada campo tiene un **objetivo de precisión** y un **umbral** que lo garantiza con un margen estadístico. Por encima del umbral, el dato se acepta; por debajo, va a revisión; muy por debajo, no se propone (§4).
 - Lo aceptado automáticamente se **audita por muestreo** de forma continua. Si la precisión auditada cae por debajo del objetivo, el umbral de ese campo se endurece de forma automática y solo una persona lo puede relajar (§5).
 - **Límite honesto de la PoC:** el gold standard (38 correos y 89 comparaciones) no permite demostrar una precisión del 98 %. Aunque no hubiera ningún error, el límite inferior del intervalo de confianza sería del 95,9 %. Hacen falta unos 190 casos sin errores por campo para el 98 % y unos 765 para el 99,5 % (§6).
@@ -96,7 +96,15 @@ La confianza de cada valor se calcula a partir de señales que se pueden comprob
 - **Arranque (sin datos):** una tabla de confianzas iniciales por escalón y señal, **conservadora a propósito** (por ejemplo, ningún valor del LLM supera el umbral de un campo crítico sin el acuerdo de otra señal). Con ella, la cobertura automática inicial es baja y la revisión alta (el 30 % de arranque de la [arquitectura §9.6](04_arquitectura.md#96-revisión-humana-el-cuello-de-botella-real)).
 - **Con datos:** por cada campo, una **regresión logística** sobre las señales, entrenada con los valores revisados y auditados (correcto o incorrecto). Es simple, explicable y se calibra bien; si la curva de calibración lo pide, se ajusta con regresión isotónica.
 - **Cuándo se pasa de la tabla al modelo:** cuando un campo tiene al menos 200 valores etiquetados con al menos 20 errores. Por debajo, el modelo no es fiable.
-- **Recalibración:** mensual, y siempre que cambie la versión de un extractor, un prompt, un modelo o una plantilla, porque la calibración es de una versión concreta.
+- **Ritmo de recalibración.** Con 100.000 correos al mes hay datos de sobra para no esperar un mes: con un 15 % en revisión salen unos 11.000 elementos revisados al mes (unos 2.600 a la semana), más la auditoría. La frecuencia la limita la parte alta de la curva, donde están los umbrales: los elementos revisados son, por construcción, los de confianza baja o media, y la parte alta solo se puede calibrar con la **auditoría aleatoria** (unas 100 muestras por campo crítico a la semana, §5.2). Por eso hay tres ritmos:
+
+| Ritmo | Qué se hace | Con qué datos | Efecto |
+|---|---|---|---|
+| **Diario** | Vigilancia de la calibración por campo y estrato (ECE y acierto por tramo de confianza) | Todo lo revisado y auditado del día | Solo alertas; no cambia nada |
+| **Semanal** | Recalibración automática de cada campo | Ventana móvil de 4 semanas (unas 400 muestras de auditoría por campo crítico en la parte alta y miles de revisiones en la parte media) | El modelo nuevo es un **candidato**: se aplica si mejora la calibración en un conjunto separado y no empeora la precisión en lo aceptado |
+| **Inmediato, por evento** | Recalibración del estrato afectado | Datos posteriores al evento, con sobremuestreo de auditoría (§5.1) | Cuando cambia la versión de un extractor, un prompt, un modelo o una plantilla, o salta una alerta de deriva. Mientras no hay datos suficientes, se aplica el freno automático (§5.3) |
+
+Recalibrar más a menudo que cada semana la parte alta no aporta: con tan pocas muestras, los umbrales oscilarían por ruido estadístico y no por cambios reales. Los campos o estratos con mucho volumen en la parte media se pueden recalibrar con más frecuencia sin ese problema.
 
 ### 3.3 Cómo se comprueba la calibración
 
