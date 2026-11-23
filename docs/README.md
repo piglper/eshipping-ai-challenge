@@ -17,7 +17,8 @@
 | [07_fiabilidad.md](07_fiabilidad.md) | Métricas, confianza calibrada, umbrales y auditoría | F2 | 🔄 Borrador |
 | [08_aprendizaje_continuo.md](08_aprendizaje_continuo.md) | Aprendizaje continuo sin aprender de errores | F2 | 🔄 Borrador |
 | [09_seguridad.md](09_seguridad.md) | Seguridad, privacidad y servicios externos | F2 | 🔄 Borrador |
-| `10_evaluacion.md` | Resultados de la evaluación de la PoC | F4 | ⏳ |
+| [10_diseno_poc.md](10_diseno_poc.md) | Diseño de la PoC: qué se implementa, qué se simplifica y orden de implementación | F2 | 🔄 Borrador |
+| `11_evaluacion.md` | Resultados de la evaluación de la PoC | F4 | ⏳ |
 | `00_resumen_ejecutivo.md` | Resumen ejecutivo | F5 | ⏳ |
 
 > Ningún documento contiene datos reales de EShipping. Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md).
