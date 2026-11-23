@@ -7,6 +7,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Requisitos funcionales y no funcionales con prioridad, cobertura en la PoC y criterio de aceptación; supuestos y preguntas para EShipping (`docs/02_requisitos.md`).
+- Glosario de dominio (`docs/glosario.md`).
 - Metodología y cifras agregadas del gold standard (`docs/01_analisis_datos.md` §6), con siete veredictos frente al ERP. El gold standard en sí solo existe en local.
 - Ambigüedades A-25 a A-29 (ofertas de buques, fechas mal escritas, precintos con formato de contenedor, ERP más reciente que los correos y significado de `Despacho`).
 
