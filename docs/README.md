@@ -13,7 +13,7 @@
 | [glosario.md](glosario.md) | Glosario de dominio | F1 | 🔄 Borrador |
 | [04_arquitectura.md](04_arquitectura.md) | Arquitectura (C4), funcionamiento de la canalización y análisis de capacidad | F2 | 🔄 Borrador |
 | `05_modelo_datos.md` | Modelo de datos y linaje | F2 | ⏳ |
-| `06_costes.md` | Estimación de costes (100.000 y 150.000 correos) | F2, F4 | ⏳ |
+| [06_costes.md](06_costes.md) | Coste mensual y por correo (100.000 y 150.000 correos) y comparativa de proveedores de LLM | F2, F4 | 🔄 Borrador |
 | `07_fiabilidad.md` | Medición de la fiabilidad | F2 | ⏳ |
 | `08_aprendizaje_continuo.md` | Aprendizaje continuo | F2 | ⏳ |
 | `09_seguridad.md` | Seguridad, privacidad y servicios externos | F2 | ⏳ |

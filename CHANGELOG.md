@@ -11,6 +11,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - ADR-0007: monolito modular hexagonal desplegado como workers por etapa detrás de colas.
 - ADR-0008: estrategia de IA (D5), cascada de técnicas por etapa con el LLM acotado al texto libre y controles sobre su salida (entrada mínima, esquema JSON, cita verificada, confianza calibrada).
 - ADR-0009: política de resolución de discrepancias (D6), con autoridad de la fuente por campo, valor vigente, tolerancias, veredictos, regla «ERP más reciente», coherencia interna del ERP y prioridades.
+- Costes y comparativa de proveedores de LLM (`docs/06_costes.md`), con precios oficiales consultados el 23/11/2026.
+- ADR-0010: proveedor de LLM de producción (D5b), lista corta con residencia en la UE y elección por evaluación.
 
 ### Changed
 - Plan 1.10.0: F2 completa y PoC recortada (Streamlit mínima, OCR solo si sobra tiempo); calendario ajustado.
