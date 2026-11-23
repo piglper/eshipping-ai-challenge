@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.7.0 |
+| Versión | 1.8.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 22/11/2026 |
@@ -428,7 +428,7 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 | 7 · Aprendizaje continuo sin aprender de errores | `08_aprendizaje_continuo.md` | F2 | ⏳ |
 | 3 · Ambigüedad entre fuentes | `03_taxonomia_y_ambiguedades.md`, ADR-0006, ADR de reconciliación | F1, F2 | 🔄 |
 | 4 · Declarar el envío a servicios externos | `09_seguridad.md`, presentación | F2, F5 | ⏳ |
-| 5.1–5.7 · Capacidades del sistema | `02_requisitos.md` (RF-01…RF-07) | F1 | ⏳ |
+| 5.1–5.7 · Capacidades del sistema | `02_requisitos.md` (RF-01…RF-73, RNF-01…RNF-44) | F1 | ✅ |
 
 ---
 
@@ -473,3 +473,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.5.0 | 22/11/2026 | P. Iglesias Peral | F0.7 cerrada con el tablero de Projects. F0.10: candidatos locales elegidos (`qwen3.5:4b`, `gemma4:e4b`, `llama3.2:3b`), los únicos de 3–8B de las familias recientes que caben en 16 GB. Primer entregable de F1: `docs/01_analisis_datos.md`. Hallazgo que afecta al diseño: la clave de asociación es el **booking** (en 37 de 38 asuntos), no el expediente (7 de 38) | #5, #7, #8, #9 |
 | 1.6.0 | 22/11/2026 | P. Iglesias Peral | F1.4 y F1.5 en un único entregable (`docs/03_taxonomia_y_ambiguedades.md`). Nueva decisión: modelo de eventos DCSA (ADR-0006), que afecta a F2.3 y F3.1 | #11, #12 |
 | 1.7.0 | 22/11/2026 | P. Iglesias Peral | F1.3: gold standard en dos niveles (correo y expediente) con siete veredictos frente al ERP, incluido `ERP_NEWER` porque el ERP es posterior a los correos. Etiquetado asistido por Claude Code, pendiente de revisión humana; las métricas de F4 serán provisionales hasta entonces (nuevo riesgo R10) | #10 |
+| 1.8.0 | 22/11/2026 | P. Iglesias Peral | F1.6 y F1.7: `docs/02_requisitos.md` con 43 RF y 20 RNF (MoSCoW, cobertura en la PoC y criterio de aceptación), 10 supuestos y 13 preguntas; glosario. Supuesto S-01 explícito: el volumen del enunciado se interpreta como mensual | #13, #14 |
