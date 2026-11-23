@@ -1,3 +1,3 @@
 """Extraction of operational events from shipping emails and reconciliation with the ERP."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

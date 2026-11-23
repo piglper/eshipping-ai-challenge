@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.8.0 |
+| Versión | 1.9.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
-| Última actualización | 22/11/2026 |
+| Última actualización | 23/11/2026 |
 | Documentos relacionados | [Índice de ADR](adr/README.md) · [CHANGELOG](../CHANGELOG.md) · [Índice de documentación](README.md) |
 
 > Documento vivo. Cada cambio se registra en el [historial de revisiones](#15-historial-de-revisiones) y cada decisión relevante en un [ADR](adr/README.md). No contiene datos reales.
@@ -113,7 +113,7 @@ gantt
     axisFormat %a %d
     section Fases
     F0 Entorno y proceso      :done,    f0, 2026-11-21, 1d
-    F1 Descubrimiento         :         f1, 2026-11-21, 1.5d
+    F1 Descubrimiento         :done,    f1, 2026-11-21, 1.5d
     F2 Diseño                 :         f2, after f1, 1d
     F3 PoC                    :         f3, after f2, 1d
     F4 Evaluación             :         f4, after f3, 0.5d
@@ -474,3 +474,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.6.0 | 22/11/2026 | P. Iglesias Peral | F1.4 y F1.5 en un único entregable (`docs/03_taxonomia_y_ambiguedades.md`). Nueva decisión: modelo de eventos DCSA (ADR-0006), que afecta a F2.3 y F3.1 | #11, #12 |
 | 1.7.0 | 22/11/2026 | P. Iglesias Peral | F1.3: gold standard en dos niveles (correo y expediente) con siete veredictos frente al ERP, incluido `ERP_NEWER` porque el ERP es posterior a los correos. Etiquetado asistido por Claude Code, pendiente de revisión humana; las métricas de F4 serán provisionales hasta entonces (nuevo riesgo R10) | #10 |
 | 1.8.0 | 22/11/2026 | P. Iglesias Peral | F1.6 y F1.7: `docs/02_requisitos.md` con 43 RF y 20 RNF (MoSCoW, cobertura en la PoC y criterio de aceptación), 10 supuestos y 13 preguntas; glosario. Supuesto S-01 explícito: el volumen del enunciado se interpreta como mensual | #13, #14 |
+| 1.9.0 | 23/11/2026 | P. Iglesias Peral | Revisión de fase de F1, cerrada con `v0.2.0`. Criterios de salida: correos inventariados y requisitos con identificador y criterio de aceptación, cumplidos; gold standard completo pero pendiente de revisión humana (R10 sigue abierto). Retraso de medio día sobre el calendario: F2 se hace de forma compacta, priorizando arquitectura y capacidad, estrategia de IA (D5), discrepancias (D6), costes y diseño de la PoC, para empezar F3 el martes 24/11 por la mañana | #57 |
