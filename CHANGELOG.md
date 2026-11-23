@@ -6,13 +6,15 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-23
+
+Cierre de la fase F1 (descubrimiento y análisis).
+
 ### Added
 - Requisitos funcionales y no funcionales con prioridad, cobertura en la PoC y criterio de aceptación; supuestos y preguntas para EShipping (`docs/02_requisitos.md`).
 - Glosario de dominio (`docs/glosario.md`).
 - Metodología y cifras agregadas del gold standard (`docs/01_analisis_datos.md` §6), con siete veredictos frente al ERP. El gold standard en sí solo existe en local.
 - Ambigüedades A-25 a A-29 (ofertas de buques, fechas mal escritas, precintos con formato de contenedor, ERP más reciente que los correos y significado de `Despacho`).
-
-### Added
 - Taxonomía de correos (9 clases) y de eventos con el modelo DCSA, y catálogo de 24 ambigüedades con su regla de resolución propuesta (`docs/03_taxonomia_y_ambiguedades.md`).
 - ADR-0006: modelo de eventos basado en el estándar DCSA.
 
@@ -42,6 +44,7 @@ Cierre de la fase F0 (entorno y proceso).
 - `.gitignore` que excluye datos reales (`data/`, `*.csv`, `*.eml`, `*.msg`), entornos virtuales y secretos.
 - Hook de pre-commit (`.githooks/pre-commit`) que bloquea commits con ficheros confidenciales.
 
-[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/piglper/eshipping-ai-challenge/releases/tag/v0.0.1
