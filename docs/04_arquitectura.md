@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.2 |
+| Versión | 0.2.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
-| Tareas | F2.1 (#15), F2.1b (#16) |
+| Tareas | F2.1 (#15), F2.1b (#16), F2.2 (#17) |
 | Decisiones | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md), [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md), [ADR-0009](adr/0009-politica-de-resolucion-de-discrepancias.md); pendientes D7 (#27) y D8 (#28) |
 | Fuentes | [Requisitos](02_requisitos.md), [análisis de datos](01_analisis_datos.md), [taxonomía y ambigüedades](03_taxonomia_y_ambiguedades.md), [plan §7](PLAN.md#7-estándares-de-arquitectura) |
 
@@ -455,7 +455,193 @@ Criterio de salida de F2: cada requisito de F1 está cubierto por un componente.
 | D7: almacenamiento de producción (propuesta: PostgreSQL + almacén de objetos) | Pendiente | #27 |
 | D8: plataforma de despliegue y servicio de colas | Pendiente | #28 |
 
-Los diagramas de secuencia de los flujos principales se añaden en F2.2 (#17).
+## 12. Flujos principales (F2.2)
+
+Cinco flujos cubren el ciclo completo: de un correo a un evento (12.1), de una discrepancia a su revisión (12.2), de una corrección al aprendizaje (12.3), la sincronización del ERP (12.4) y el reprocesado tras un cambio de versión (12.5). Los nombres de las tablas son los del [modelo de datos](05_modelo_datos.md).
+
+### 12.1 Ingesta → evento
+
+Un correo nuevo de una naviera con un cambio de salida (sintético).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant MB as Buzón
+    participant IN as ingest
+    participant OS as Almacén de objetos
+    participant Q as Colas
+    participant PA as parse
+    participant DO as document
+    participant EX as extract
+    participant GW as Pasarela de LLM
+    participant RE as reconcile
+    participant DB as Base de datos
+
+    MB->>IN: Notificación de correo nuevo
+    IN->>MB: Descarga del original
+    IN->>OS: Guarda el original (clave por hash)
+    IN->>DB: Inserta mail (si Message-ID y hash no existen)
+    IN->>Q: Encola parse
+    Q->>PA: Tarea parse
+    PA->>OS: Lee el original
+    PA->>PA: Desempaqueta, limpia y divide el hilo
+    PA->>DB: Inserta los mensajes nuevos (los citados ya vistos se enlazan, no se repiten)
+    PA->>OS: Guarda cuerpos limpios y adjuntos
+    PA->>Q: Encola document (por adjunto) y extract (por mensaje nuevo)
+    Q->>DO: Tarea document
+    DO->>DO: Texto del PDF, OCR si no hay capa de texto, plantilla oficial
+    DO->>DB: Inserta document y sus observaciones de plantilla
+    Q->>EX: Tarea extract
+    EX->>EX: Triaje por reglas (prioridad urgente por cambio de salida)
+    EX->>EX: Clasificación, extractores deterministas y plantillas
+    alt Quedan campos sin resolver
+        EX->>GW: Mensaje nuevo limpio y campos pendientes
+        GW->>GW: Límite de tasa, caché por hash, presupuesto
+        GW-->>EX: Valores en JSON con su cita
+        EX->>EX: Valida la cita en el texto y las reglas de dominio
+    end
+    EX->>EX: Normaliza y calcula la confianza calibrada
+    EX->>Q: Encola reconcile con prioridad urgente
+    Q->>RE: Tarea reconcile (primero el carril urgente)
+    RE->>DB: Busca el expediente en shipment_alias (booking, expediente, contenedor...)
+    RE->>DB: Inserta association y las observaciones (solo inserción)
+    RE->>RE: Bloqueo por expediente y proyección del valor vigente (ADR-0009)
+    RE->>DB: Actualiza field_state y calcula el veredicto frente a la última lectura del ERP
+```
+
+Si no hay clave de asociación segura, el paso de asociación crea una tarea de revisión de tipo `association` y las observaciones quedan pendientes hasta que se resuelve (RF-45). Si el LLM no está disponible, el circuito abierto deja la tarea en la cola y los campos deterministas siguen su camino (§7.3).
+
+### 12.2 Discrepancia → revisión
+
+La proyección da una salida distinta de la del ERP.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant RE as reconcile
+    participant DB as Base de datos
+    participant NO as Notificador
+    participant UI as Aplicación de revisión
+    actor OP as Operativo
+    participant ERP as ERP
+
+    RE->>DB: Lee field_state y la última lectura del ERP (read_at)
+    RE->>RE: Tolerancias, regla «ERP más reciente», regla de error claro
+    alt MATCH, NOT_IN_ERP, MAIL_MISSING o ERP_NEWER
+        RE->>DB: Guarda el veredicto sin tarea (entra en el muestreo de auditoría)
+    else ERP_ERROR, ERP_MISSING o DISCREPANCY
+        RE->>RE: Prioridad P1 a P3 (campo crítico, horas hasta el evento)
+        RE->>DB: Guarda verdict y crea review_task
+        opt P1 (urgente)
+            RE->>NO: Aviso agrupado por expediente
+            NO-->>OP: Teams o correo con enlace a la tarea
+        end
+    end
+    OP->>UI: Abre la cola (ordenada por prioridad y fecha del evento)
+    UI->>DB: Tarea, candidatos, citas, fuentes y regla aplicada
+    UI-->>OP: Valor actual del ERP, valor propuesto y su evidencia
+    alt Acepta la propuesta
+        OP->>UI: Acepta
+        UI->>DB: correction (accept) y erp_change_proposal aprobada
+        OP->>ERP: Aplica el cambio (o exportación de propuestas, RF-64)
+    else Corrige el valor
+        OP->>UI: Valor correcto
+        UI->>DB: correction (correct) y observación de fuente humana
+    else Rechaza
+        OP->>UI: Rechaza con motivo
+        UI->>DB: correction (reject) con el motivo
+    end
+    UI->>RE: Encola la reconciliación del expediente
+```
+
+El sistema nunca escribe en el ERP (RF-55): la aplicación de revisión registra la decisión y el cambio lo aplica el operativo o una exportación aprobada.
+
+### 12.3 Corrección → aprendizaje
+
+Qué se hace con cada corrección validada (detalle en F2.8, `08_aprendizaje_continuo.md`).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant DB as Base de datos
+    participant LE as Proceso de aprendizaje (programado)
+    participant QA as Control de calidad
+    participant CFG as Configuración versionada
+    actor TE as Equipo técnico
+    participant EV as Evaluación
+
+    DB->>LE: Correcciones nuevas y muestras de auditoría
+    LE->>QA: Filtra las etiquetas
+    QA->>QA: Doble revisión del 10 %, reglas de coherencia, descarte de contradicciones
+    QA-->>LE: Etiquetas validadas
+    par Calibración (semanal)
+        LE->>LE: Reentrena la calibración por campo (ventana de 4 semanas)
+        LE->>EV: Candidato frente al conjunto separado
+        EV-->>LE: Mejora la calibración y no empeora la precisión
+        LE->>CFG: Nueva versión de la calibración
+    and Clasificador clásico
+        LE->>LE: Reentrena TF-IDF + regresión logística con las clases corregidas
+        LE->>EV: Evaluación de regresión
+        EV-->>LE: Resultado
+        LE->>CFG: Nueva versión si mejora
+    and Ejemplos para el LLM
+        LE->>CFG: Añade casos corregidos al banco de ejemplos por proveedor
+    and Plantillas y perfiles
+        LE->>TE: Propone una plantilla para un formato que llega a menudo al LLM
+        LE->>DB: Actualiza sender_profile (formato de fechas, fiabilidad)
+        TE->>CFG: Plantilla nueva con sus tests sintéticos (revisión por PR)
+    end
+    CFG->>CFG: Despliegue gradual con sobremuestreo de auditoría
+```
+
+Ningún cambio que afecte al resultado se aplica sin pasar por la evaluación y el despliegue gradual ([fiabilidad §7](07_fiabilidad.md#7-cambios-sin-regresiones)).
+
+### 12.4 Sincronización del ERP
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant SC as Programador
+    participant ES as erp-sync
+    participant ERP as ERP
+    participant DB as Base de datos
+    participant Q as Colas
+
+    SC->>ES: Ejecución periódica (o aviso de cambio si DEIWORLD lo permite, P-09)
+    ES->>ERP: Exportación o consulta de expedientes
+    ERP-->>ES: Filas
+    ES->>ES: Normaliza (espacios, fechas, números, puertos)
+    ES->>DB: Inserta erp_snapshot con read_at y sus erp_record
+    ES->>ES: Reglas de coherencia interna (ADR-0009 §5)
+    ES->>DB: Inserta erp_quality_issue si alguna falla
+    ES->>Q: Encola reconcile de los expedientes que han cambiado
+```
+
+Solo se reconcilian los expedientes cuya fila ha cambiado respecto a la lectura anterior (por el hash de la fila).
+
+### 12.5 Reprocesado tras un cambio de versión
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor TE as Equipo técnico
+    participant CFG as Configuración versionada
+    participant Q as Colas
+    participant EX as extract
+    participant RE as reconcile
+    participant DB as Base de datos
+
+    TE->>CFG: Despliega la versión N+1 (plantilla, regla, prompt o modelo)
+    TE->>Q: Reencola extract para un rango de fechas o un proveedor
+    Q->>EX: Tareas con la nueva versión
+    EX->>DB: Inserta observaciones nuevas (clave con la versión N+1)
+    EX->>DB: Marca como superseded las de la versión N del mismo mensaje
+    EX->>Q: Encola reconcile
+    Q->>RE: Recalcula field_state y veredictos
+    RE->>DB: Los veredictos que cambian pasan a superseded y se crean los nuevos
+```
+
+Como la clave de idempotencia incluye la versión, reprocesar con la misma versión no hace nada, y con una versión nueva no destruye la historia: se puede comparar lo que decía cada versión ([modelo de datos §6](05_modelo_datos.md#6-bitemporalidad)).
 
 ## Historial
 
@@ -464,3 +650,4 @@ Los diagramas de secuencia de los flujos principales se añaden en F2.2 (#17).
 | 0.1.0 | 23/11/2026 | Primera versión: impulsores, estilo, C4 niveles 1 a 3, funcionamiento de la canalización y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes |
 | 0.1.1 | 23/11/2026 | D5 aceptada (ADR-0008) |
 | 0.1.2 | 23/11/2026 | D6 aceptada (ADR-0009) |
+| 0.2.0 | 23/11/2026 | §12: diagramas de secuencia de los flujos principales (ingesta, revisión de discrepancias, aprendizaje, sincronización del ERP y reprocesado) |
