@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.2.0 |
+| Versión | 0.2.1 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -452,8 +452,8 @@ Criterio de salida de F2: cada requisito de F1 está cubierto por un componente.
 | Monolito modular con workers por etapa y colas | Aceptada | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md) |
 | D5: estrategia de IA y técnica por etapa | Aceptada | [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md) |
 | D6: política de resolución de discrepancias | Aceptada | [ADR-0009](adr/0009-politica-de-resolucion-de-discrepancias.md) |
-| D7: almacenamiento de producción (propuesta: PostgreSQL + almacén de objetos) | Pendiente | #27 |
-| D8: plataforma de despliegue y servicio de colas | Pendiente | #28 |
+| D7: almacenamiento de producción: PostgreSQL y almacén de objetos compatible con S3 | Aceptada | [ADR-0011](adr/0011-almacenamiento-postgresql-y-almacen-de-objetos.md) |
+| D8: contenedores portables en un servicio gestionado de la UE, colas sobre PostgreSQL | Aceptada | [ADR-0012](adr/0012-despliegue-en-contenedores-portables.md) |
 
 ## 12. Flujos principales (F2.2)
 
@@ -650,4 +650,5 @@ Como la clave de idempotencia incluye la versión, reprocesar con la misma versi
 | 0.1.0 | 23/11/2026 | Primera versión: impulsores, estilo, C4 niveles 1 a 3, funcionamiento de la canalización y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes |
 | 0.1.1 | 23/11/2026 | D5 aceptada (ADR-0008) |
 | 0.1.2 | 23/11/2026 | D6 aceptada (ADR-0009) |
+| 0.2.1 | 23/11/2026 | D7 y D8 aceptadas (ADR-0011 y ADR-0012) |
 | 0.2.0 | 23/11/2026 | §12: diagramas de secuencia de los flujos principales (ingesta, revisión de discrepancias, aprendizaje, sincronización del ERP y reprocesado) |

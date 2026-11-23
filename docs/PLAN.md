@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.18.0 |
+| Versión | 1.19.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -452,14 +452,14 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | D5 | Estrategia de IA: cascada de técnicas por etapa, con el LLM acotado al texto libre y nunca en la asociación ni en la reconciliación | [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md) |
 | D6 | Política de discrepancias: autoridad de la fuente por campo, el estado del dato (real sobre estimado) antes que la frescura, regla «ERP más reciente», prioridades P1–P3 y nunca escritura en el ERP sin validación | [ADR-0009](adr/0009-politica-de-resolucion-de-discrepancias.md) |
 | D5b | Proveedor de LLM de producción: lista corta de cuatro candidatos con residencia en la UE, elección por evaluación sobre el conjunto de referencia; escenario de referencia de costes con Claude Haiku 5.5 y escalado a Sonnet 5.5; autoalojado como contingencia | [ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md) |
+| D7 | Almacenamiento de producción: PostgreSQL (eventos como tabla de solo inserción, proyecciones, colas con `SKIP LOCKED`, particiones mensuales) y almacén de objetos compatible con S3 | [ADR-0011](adr/0011-almacenamiento-postgresql-y-almacen-de-objetos.md) |
+| D8 | Despliegue: imagen OCI única e infraestructura como código; referencia en un servicio gestionado de contenedores de la nube de EShipping en la UE, sin Kubernetes; alternativa con máquinas europeas y Docker Compose | [ADR-0012](adr/0012-despliegue-en-contenedores-portables.md) |
 
 ### 14.2 Decisiones abiertas
 
 | ID | Decisión | Opciones | Fase en que se decide |
 |---|---|---|---|
 | D9 | Modelos locales de la PoC | 2–3 candidatos; se elige por benchmark | F4 |
-| D7 | Almacenamiento de producción | PostgreSQL, almacén de eventos, data warehouse | F2 |
-| D8 | Plataforma de despliegue de referencia | Nube (AWS, Azure o GCP) o local | F2 |
 
 ---
 
@@ -488,3 +488,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.16.0 | 23/11/2026 | P. Iglesias Peral | F2.2: diagramas de secuencia en `docs/04_arquitectura.md` §12 (ingesta → evento, discrepancia → revisión, corrección → aprendizaje, sincronización del ERP y reprocesado tras un cambio de versión) | #17 |
 | 1.17.0 | 23/11/2026 | P. Iglesias Peral | F2.8: `docs/08_aprendizaje_continuo.md` con señales, mecanismos (calibración, clasificador clásico, ejemplos dinámicos para el LLM, inducción de plantillas, perfiles de remitente, alias), control de calidad de las etiquetas (doble revisión, casos de control, cuarentena, nunca de sus propias salidas), reversibilidad, gobernanza e indicadores | #24 |
 | 1.18.0 | 23/11/2026 | P. Iglesias Peral | F2.9: `docs/09_seguridad.md` con inventario y clasificación de datos, RGPD (papeles, base legal propuesta, EIPD, retención, derechos, transferencias), controles (acceso por rol, cifrado, secretos, red, auditoría, logs sin datos personales), seudonimización antes del LLM, amenazas propias (inyección de instrucciones, suplantación, adjuntos maliciosos, envenenamiento) y medidas de la PoC | #25 |
+| 1.19.0 | 23/11/2026 | P. Iglesias Peral | D7 decidida: PostgreSQL y almacén de objetos compatible con S3 (ADR-0011). D8 decidida: contenedores portables en un servicio gestionado de la UE, sin Kubernetes, con colas sobre PostgreSQL (ADR-0012) | #27, #28 |

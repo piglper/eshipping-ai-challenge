@@ -24,3 +24,5 @@ Cada decisión relevante, técnica o de proyecto, se documenta como un *Architec
 | [0008](0008-estrategia-de-ia-cascada-por-etapa.md) | Estrategia de IA: cascada de técnicas por etapa, con el LLM acotado al texto libre | Aceptado | 2026-11-23 |
 | [0009](0009-politica-de-resolucion-de-discrepancias.md) | Política de resolución de discrepancias: autoridad por campo, estado del dato, frescura y escalado | Aceptado | 2026-11-23 |
 | [0010](0010-proveedor-de-llm-de-produccion.md) | Proveedor de LLM de producción: lista corta con residencia en la UE y elección por evaluación | Aceptado | 2026-11-23 |
+| [0011](0011-almacenamiento-postgresql-y-almacen-de-objetos.md) | Almacenamiento de producción: PostgreSQL y almacén de objetos compatible con S3 | Aceptado | 2026-11-23 |
+| [0012](0012-despliegue-en-contenedores-portables.md) | Despliegue en contenedores portables sobre un servicio gestionado de la UE, sin Kubernetes | Aceptado | 2026-11-23 |
