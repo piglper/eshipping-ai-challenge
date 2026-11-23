@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-23
+
+Cierre de la fase F2 (diseño).
+
 ### Added
 - Arquitectura (`docs/04_arquitectura.md`): impulsores, C4 niveles 1 a 3, funcionamiento de la canalización (prioridades, idempotencia, fallos, configuración versionada) y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes.
 - ADR-0007: monolito modular hexagonal desplegado como workers por etapa detrás de colas.
@@ -63,7 +67,8 @@ Cierre de la fase F0 (entorno y proceso).
 - `.gitignore` que excluye datos reales (`data/`, `*.csv`, `*.eml`, `*.msg`), entornos virtuales y secretos.
 - Hook de pre-commit (`.githooks/pre-commit`) que bloquea commits con ficheros confidenciales.
 
-[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/piglper/eshipping-ai-challenge/releases/tag/v0.0.1
