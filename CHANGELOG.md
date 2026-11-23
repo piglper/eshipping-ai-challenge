@@ -6,6 +6,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+- Arquitectura (`docs/04_arquitectura.md`): impulsores, C4 niveles 1 a 3, funcionamiento de la canalización (prioridades, idempotencia, fallos, configuración versionada) y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes.
+- ADR-0007: monolito modular hexagonal desplegado como workers por etapa detrás de colas.
+
+### Changed
+- Plan 1.10.0: F2 completa y PoC recortada (Streamlit mínima, OCR solo si sobra tiempo); calendario ajustado.
+
 ## [0.2.0] - 2026-11-23
 
 Cierre de la fase F1 (descubrimiento y análisis).

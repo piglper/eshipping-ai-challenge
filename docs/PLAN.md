@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.9.0 |
+| Versión | 1.10.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -100,9 +100,9 @@ Recepción: jueves 19/11/2026. Plazo de la empresa: jueves 26/11. **Objetivo int
 |---|---|---|---|---|
 | F0. Entorno y proceso | Sáb 21/11 | `F0 · Entorno` | Repositorio, proceso y plan aprobados | `v0.1.0` |
 | F1. Descubrimiento y análisis | Sáb 21 – Dom 22/11 (mañana) | `F1 · Descubrimiento` | Datos entendidos, requisitos y gold standard | `v0.2.0` |
-| F2. Diseño | Dom 22/11 (tarde) – Lun 23/11 (mañana) | `F2 · Diseño` | Arquitectura y ADR cerrados | `v0.3.0` |
-| F3. Implementación de la PoC | Lun 23/11 (tarde) – Mar 24/11 (mañana) | `F3 · PoC` | Pipeline de extremo a extremo funcionando | `v0.4.0` |
-| F4. Evaluación y pruebas | Mar 24/11 (tarde) | `F4 · Evaluación` | Métricas finales, costes recalibrados | `v0.5.0` |
+| F2. Diseño | Dom 22/11 (tarde) – Mar 24/11 (mañana) | `F2 · Diseño` | Arquitectura y ADR cerrados | `v0.3.0` |
+| F3. Implementación de la PoC | Mar 24/11 | `F3 · PoC` | Pipeline de extremo a extremo funcionando | `v0.4.0` |
+| F4. Evaluación y pruebas | Mar 24/11 (noche) – Mié 25/11 (mañana) | `F4 · Evaluación` | Métricas finales, costes recalibrados | `v0.5.0` |
 | F5. Documentación y entrega | Mié 25/11 | `F5 · Entrega` | **Todo terminado** | `v1.0.0` |
 | F6. Cierre | Tras el proceso de selección | — | Datos reales eliminados | — |
 
@@ -114,8 +114,8 @@ gantt
     section Fases
     F0 Entorno y proceso      :done,    f0, 2026-11-21, 1d
     F1 Descubrimiento         :done,    f1, 2026-11-21, 1.5d
-    F2 Diseño                 :         f2, after f1, 1d
-    F3 PoC                    :         f3, after f2, 1d
+    F2 Diseño                 :         f2, 2026-11-23, 1.5d
+    F3 PoC                    :         f3, after f2, 0.75d
     F4 Evaluación             :         f4, after f3, 0.5d
     F5 Documentación y entrega:         f5, 2026-11-25, 1d
     Colchón                   :crit,    b,  2026-11-26, 1d
@@ -199,6 +199,8 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F3.8 | CLI (`ingest`, `process`, `report`, `evaluate`) |
 | F3.9 | Interfaz Streamlit: expedientes, línea temporal de eventos, discrepancias, validar o corregir |
 | F3.10 | Datos sintéticos en `data_sample/` para la demo pública y los tests |
+
+**Alcance recortado (revisión 1.10.0):** para no reducir el diseño (F2), la PoC se recorta en lo que menos aporta a la valoración: la interfaz Streamlit (F3.9) se limita a la vista del expediente, la lista de discrepancias y una corrección simple; el OCR (F3.2) se queda en detectar y marcar los PDF escaneados, y se implementa solo si sobra tiempo. El resto de tareas se mantiene.
 
 **Entregables:** el código en `src/`, los tests en `tests/` y la demo reproducible con `data_sample/`.
 
@@ -446,6 +448,7 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | D2, D3 | Entrega en presentación PDF o HTML con acceso opcional al repositorio; PoC con CLI y Streamlit | [ADR-0004](adr/0004-formato-entrega-e-interfaz-poc.md) |
 | D1 | LLM local (Ollama) en la PoC, optimizado para eficiencia; comparativa de proveedores de pago para producción | [ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md) |
 | — | Modelo de eventos basado en DCSA (tipo + clasificador planificado, estimado o real), con extensiones para aduanas e incidencias | [ADR-0006](adr/0006-modelo-de-eventos-basado-en-dcsa.md) |
+| — | Monolito modular hexagonal desplegado como workers por etapa detrás de colas | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md) |
 
 ### 14.2 Decisiones abiertas
 
@@ -475,3 +478,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.7.0 | 22/11/2026 | P. Iglesias Peral | F1.3: gold standard en dos niveles (correo y expediente) con siete veredictos frente al ERP, incluido `ERP_NEWER` porque el ERP es posterior a los correos. Etiquetado asistido por Claude Code, pendiente de revisión humana; las métricas de F4 serán provisionales hasta entonces (nuevo riesgo R10) | #10 |
 | 1.8.0 | 22/11/2026 | P. Iglesias Peral | F1.6 y F1.7: `docs/02_requisitos.md` con 43 RF y 20 RNF (MoSCoW, cobertura en la PoC y criterio de aceptación), 10 supuestos y 13 preguntas; glosario. Supuesto S-01 explícito: el volumen del enunciado se interpreta como mensual | #13, #14 |
 | 1.9.0 | 23/11/2026 | P. Iglesias Peral | Revisión de fase de F1, cerrada con `v0.2.0`. Criterios de salida: correos inventariados y requisitos con identificador y criterio de aceptación, cumplidos; gold standard completo pero pendiente de revisión humana (R10 sigue abierto). Retraso de medio día sobre el calendario: F2 se hace de forma compacta, priorizando arquitectura y capacidad, estrategia de IA (D5), discrepancias (D6), costes y diseño de la PoC, para empezar F3 el martes 24/11 por la mañana | #57 |
+| 1.10.0 | 23/11/2026 | P. Iglesias Peral | Se revoca el plan compacto de F2 de la revisión 1.9.0: F2 se hace completa y se recorta la PoC (Streamlit mínima y OCR solo si sobra tiempo; ver F3). Calendario: F2 hasta el martes 24/11 por la mañana, F3 el martes y F4 hasta el miércoles por la mañana. Primer entregable de F2: `docs/04_arquitectura.md` (C4 y capacidad) y ADR-0007. Hallazgo de la capacidad: el cómputo no es el cuello de botella (menos de 1,5 núcleos en el pico a 300.000 correos al mes); lo son la revisión humana, el coste del LLM y la frescura del ERP | #15, #16 |
