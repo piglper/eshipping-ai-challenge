@@ -11,7 +11,7 @@
 | [02_requisitos.md](02_requisitos.md) | Requisitos funcionales y no funcionales, supuestos y preguntas para EShipping | F1 | 🔄 Borrador |
 | [03_taxonomia_y_ambiguedades.md](03_taxonomia_y_ambiguedades.md) | Taxonomía de correos y eventos (DCSA) y catálogo de ambigüedades | F1 | 🔄 Borrador |
 | [glosario.md](glosario.md) | Glosario de dominio | F1 | 🔄 Borrador |
-| `04_arquitectura.md` | Arquitectura (C4) y flujos | F2 | ⏳ |
+| [04_arquitectura.md](04_arquitectura.md) | Arquitectura (C4), funcionamiento de la canalización y análisis de capacidad | F2 | 🔄 Borrador |
 | `05_modelo_datos.md` | Modelo de datos y linaje | F2 | ⏳ |
 | `06_costes.md` | Estimación de costes (100.000 y 150.000 correos) | F2, F4 | ⏳ |
 | `07_fiabilidad.md` | Medición de la fiabilidad | F2 | ⏳ |

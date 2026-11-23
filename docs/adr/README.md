@@ -20,3 +20,4 @@ Cada decisión relevante, técnica o de proyecto, se documenta como un *Architec
 | [0004](0004-formato-entrega-e-interfaz-poc.md) | Formato de entrega e interfaz de la PoC | Aceptado | 2026-11-21 |
 | [0005](0005-llm-local-ollama-en-la-poc.md) | LLM local (Ollama) en la PoC y comparativa de proveedores de pago | Aceptado | 2026-11-21 |
 | [0006](0006-modelo-de-eventos-basado-en-dcsa.md) | Modelo de eventos basado en el estándar DCSA | Aceptado | 2026-11-22 |
+| [0007](0007-monolito-modular-con-workers-por-etapa.md) | Monolito modular desplegado como workers por etapa detrás de colas | Aceptado | 2026-11-23 |
