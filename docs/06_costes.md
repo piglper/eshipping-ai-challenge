@@ -126,7 +126,7 @@ A partir del cómputo en el pico ([arquitectura §9.3](04_arquitectura.md#93-có
 | `api` (API y aplicación de revisión) | 2 | 1 vCPU | 1 GB | Usuarios del equipo de operaciones |
 | **Total aplicación** | 13 procesos | **≈ 9 vCPU** | **≈ 15 GB** | |
 
-Las colas se implementan sobre PostgreSQL (`SELECT … FOR UPDATE SKIP LOCKED`): con unas decenas de tareas por minuto no hace falta un servidor de colas aparte. Si D8 elige un servicio de colas gestionado, el cambio es un adaptador del puerto `TaskQueue`.
+Las colas se implementan sobre PostgreSQL (`SELECT … FOR UPDATE SKIP LOCKED`): con unas decenas de tareas por minuto no hace falta un servidor de colas aparte. El [ADR-0012](adr/0012-despliegue-en-contenedores-portables.md) mantiene esta opción; pasar a un servicio de colas gestionado es un adaptador del puerto `TaskQueue`.
 
 ### 4.2 Máquinas
 
@@ -174,7 +174,7 @@ Precios de Hetzner sin IVA (C-08) y escenario de referencia del LLM (C-07: 1 $ =
 | Alternativa: LLM autoalojado (2 GPU L4) en lugar de la API | ≈ 1.400 € | ≈ 1.400 € | ≈ 1.490 € |
 
 - La infraestructura es **casi fija**: el paso de 100.000 a 150.000 correos no cambia ninguna máquina, y el de 150.000 a 300.000 añade un servidor de aplicación. Solo el LLM crece de forma lineal.
-- Con servicios gestionados de un proveedor de nube grande (base de datos, colas y monitorización gestionadas) la infraestructura cuesta más a cambio de menos operación; la elección se hace en D8 (#28). No cambia el dimensionamiento de §4.
+- Con servicios gestionados de un proveedor de nube grande (base de datos, colas y monitorización gestionadas) la infraestructura cuesta más a cambio de menos operación; la plataforma de referencia la fija el [ADR-0012](adr/0012-despliegue-en-contenedores-portables.md). No cambia el dimensionamiento de §4.
 - No incluye el IVA, la transferencia por encima de la incluida, las copias de seguridad fuera del proveedor ni el trabajo de operación.
 
 ## 6. Fuentes (consultadas el 23/11/2026)
