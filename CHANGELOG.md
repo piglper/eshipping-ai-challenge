@@ -13,6 +13,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - ADR-0009: política de resolución de discrepancias (D6), con autoridad de la fuente por campo, valor vigente, tolerancias, veredictos, regla «ERP más reciente», coherencia interna del ERP y prioridades.
 - Costes (`docs/06_costes.md`): coste del LLM por proveedor y escenario con precios oficiales consultados el 23/11/2026, requisitos de máquina por rol y coste técnico mensual a 100.000, 150.000 y 300.000 correos.
 - ADR-0010: proveedor de LLM de producción (D5b), lista corta con residencia en la UE y elección por evaluación.
+- Fiabilidad (`docs/07_fiabilidad.md`): métricas, confianza calibrada, umbrales por campo, auditoría continua y límites estadísticos de la PoC.
 
 ### Changed
 - Plan 1.10.0: F2 completa y PoC recortada (Streamlit mínima, OCR solo si sobra tiempo); calendario ajustado.
