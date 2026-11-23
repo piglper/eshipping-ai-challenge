@@ -12,7 +12,7 @@
 | [03_taxonomia_y_ambiguedades.md](03_taxonomia_y_ambiguedades.md) | Taxonomía de correos y eventos (DCSA) y catálogo de ambigüedades | F1 | 🔄 Borrador |
 | [glosario.md](glosario.md) | Glosario de dominio | F1 | 🔄 Borrador |
 | [04_arquitectura.md](04_arquitectura.md) | Arquitectura (C4), funcionamiento de la canalización y análisis de capacidad | F2 | 🔄 Borrador |
-| `05_modelo_datos.md` | Modelo de datos y linaje | F2 | ⏳ |
+| [05_modelo_datos.md](05_modelo_datos.md) | Modelo de datos, linaje y bitemporalidad | F2 | 🔄 Borrador |
 | [06_costes.md](06_costes.md) | Coste del LLM por proveedor, requisitos de máquina y coste técnico mensual y por correo | F2, F4 | 🔄 Borrador |
 | [07_fiabilidad.md](07_fiabilidad.md) | Métricas, confianza calibrada, umbrales y auditoría | F2 | 🔄 Borrador |
 | `08_aprendizaje_continuo.md` | Aprendizaje continuo | F2 | ⏳ |
