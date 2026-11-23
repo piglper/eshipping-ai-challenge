@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.20.0 |
+| Versión | 1.21.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -114,7 +114,7 @@ gantt
     section Fases
     F0 Entorno y proceso      :done,    f0, 2026-11-21, 1d
     F1 Descubrimiento         :done,    f1, 2026-11-21, 1.5d
-    F2 Diseño                 :         f2, 2026-11-23, 1.5d
+    F2 Diseño                 :done,    f2, 2026-11-22, 1.5d
     F3 PoC                    :         f3, after f2, 0.75d
     F4 Evaluación             :         f4, after f3, 0.5d
     F5 Documentación y entrega:         f5, 2026-11-25, 1d
@@ -417,19 +417,19 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 
 | Requisito del enunciado | Entregable | Fase | Estado |
 |---|---|---|---|
-| 8 · Documento de arquitectura con diagrama | `04_arquitectura.md` | F2 | ⏳ |
-| 8 · Justificación técnica y alternativas descartadas | `docs/adr/` | F2 | ⏳ |
-| 8 · Estimación de costes | `06_costes.md` | F2, F4 | ⏳ |
-| 8 · Planteamiento de la medición de fiabilidad | `07_fiabilidad.md`, `11_evaluacion.md` | F2, F4 | ⏳ |
+| 8 · Documento de arquitectura con diagrama | `04_arquitectura.md` | F2 | ✅ |
+| 8 · Justificación técnica y alternativas descartadas | `docs/adr/` | F2 | ✅ |
+| 8 · Estimación de costes | `06_costes.md` | F2, F4 | 🔄 |
+| 8 · Planteamiento de la medición de fiabilidad | `07_fiabilidad.md`, `11_evaluacion.md` | F2, F4 | 🔄 |
 | 8 · PoC funcional que admite correos nuevos | `src/`, CLI, Streamlit | F3 | ⏳ |
-| 7 · Modelo de IA y por qué | ADR de la estrategia de IA | F2 | ⏳ |
-| 7 · Coste computacional y económico | `06_costes.md` | F2, F4 | ⏳ |
-| 7 · Datos obtenidos y estructura | `05_modelo_datos.md` | F2 | ⏳ |
-| 7 · Fiabilidad y baja confianza | `07_fiabilidad.md` | F2 | ⏳ |
-| 7 · Escalabilidad (100.000 → 150.000 correos al mes) | `04_arquitectura.md` (análisis de capacidad), `06_costes.md` | F2, F4 | ⏳ |
-| 7 · Aprendizaje continuo sin aprender de errores | `08_aprendizaje_continuo.md` | F2 | ⏳ |
-| 3 · Ambigüedad entre fuentes | `03_taxonomia_y_ambiguedades.md`, ADR-0006, ADR de reconciliación | F1, F2 | 🔄 |
-| 4 · Declarar el envío a servicios externos | `09_seguridad.md`, presentación | F2, F5 | ⏳ |
+| 7 · Modelo de IA y por qué | ADR de la estrategia de IA | F2 | ✅ |
+| 7 · Coste computacional y económico | `06_costes.md` | F2, F4 | 🔄 |
+| 7 · Datos obtenidos y estructura | `05_modelo_datos.md` | F2 | ✅ |
+| 7 · Fiabilidad y baja confianza | `07_fiabilidad.md` | F2 | ✅ |
+| 7 · Escalabilidad (100.000 → 150.000 correos al mes) | `04_arquitectura.md` (análisis de capacidad), `06_costes.md` | F2, F4 | 🔄 |
+| 7 · Aprendizaje continuo sin aprender de errores | `08_aprendizaje_continuo.md` | F2 | ✅ |
+| 3 · Ambigüedad entre fuentes | `03_taxonomia_y_ambiguedades.md`, ADR-0006, ADR de reconciliación | F1, F2 | ✅ |
+| 4 · Declarar el envío a servicios externos | `09_seguridad.md`, presentación | F2, F5 | 🔄 |
 | 5.1–5.7 · Capacidades del sistema | `02_requisitos.md` (RF-01…RF-73, RNF-01…RNF-44) | F1 | ✅ |
 
 ---
@@ -490,3 +490,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.18.0 | 23/11/2026 | P. Iglesias Peral | F2.9: `docs/09_seguridad.md` con inventario y clasificación de datos, RGPD (papeles, base legal propuesta, EIPD, retención, derechos, transferencias), controles (acceso por rol, cifrado, secretos, red, auditoría, logs sin datos personales), seudonimización antes del LLM, amenazas propias (inyección de instrucciones, suplantación, adjuntos maliciosos, envenenamiento) y medidas de la PoC | #25 |
 | 1.19.0 | 23/11/2026 | P. Iglesias Peral | D7 decidida: PostgreSQL y almacén de objetos compatible con S3 (ADR-0011). D8 decidida: contenedores portables en un servicio gestionado de la UE, sin Kubernetes, con colas sobre PostgreSQL (ADR-0012) | #27, #28 |
 | 1.20.0 | 23/11/2026 | P. Iglesias Peral | F2.10: `docs/10_diseno_poc.md` (alcance por componente, estructura del código, CLI, LLM local, datos sintéticos generados desde YAML porque el hook bloquea `.eml` y `.csv`, pruebas y orden de implementación de F3 con línea de recorte). La CLI añade `reconcile` y `run`. La evaluación pasa a `docs/11_evaluacion.md` | #26 |
+| 1.21.0 | 23/11/2026 | P. Iglesias Peral | Revisión de fase de F2, cerrada con `v0.3.0` antes de lo previsto (el calendario reservaba hasta el martes 24/11 por la mañana). Criterios de salida: cada requisito de F1 tiene componente (arquitectura §10) y cada decisión de F2 tiene su ADR aceptado (ADR-0007 a ADR-0012); solo queda abierta D9, que se decide en F4. Trazabilidad con el enunciado (§13) actualizada. Pendientes que pasan a F3 y F4: validar en GitHub cómo se dibujan los diagramas Mermaid y revisar el gold standard (R10) | #70 |
