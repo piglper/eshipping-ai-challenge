@@ -17,6 +17,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Modelo de datos (`docs/05_modelo_datos.md`): entrada y observaciones inmutables, proyecciones recalculables, linaje y bitemporalidad.
 - Diagramas de secuencia de los flujos principales (`docs/04_arquitectura.md` §12).
 - Aprendizaje continuo (`docs/08_aprendizaje_continuo.md`): mecanismos, control de calidad de las etiquetas, reversibilidad y gobernanza.
+- Diseño de la PoC (`docs/10_diseno_poc.md`): qué se implementa y qué se simplifica, estructura del código, interfaces, datos sintéticos y orden de implementación.
 - ADR-0011: almacenamiento de producción (D7), PostgreSQL y almacén de objetos compatible con S3.
 - ADR-0012: despliegue (D8), contenedores portables en un servicio gestionado de la UE, sin Kubernetes.
 - Seguridad y RGPD (`docs/09_seguridad.md`): datos, base legal y retención, controles, seudonimización antes del LLM y amenazas propias como la inyección de instrucciones.

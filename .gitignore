@@ -31,3 +31,6 @@ coverage.xml
 htmlcov/
 build/
 dist/
+
+# Datos sintéticos generados desde data_sample/spec/ (make sample)
+data_sample/build/

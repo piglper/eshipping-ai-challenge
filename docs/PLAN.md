@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.19.0 |
+| Versión | 1.20.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -181,7 +181,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F2.9 | Seguridad, privacidad y cumplimiento (RGPD, retención, seudonimización, proveedores externos) |
 | F2.10 | Diseño de la PoC: qué partes de la arquitectura se implementan y cuáles se simulan |
 
-**Entregables:** `docs/04_arquitectura.md`, `docs/05_modelo_datos.md`, `docs/06_costes.md`, `docs/07_fiabilidad.md`, `docs/08_aprendizaje_continuo.md`, `docs/09_seguridad.md` y los ADR correspondientes.
+**Entregables:** `docs/04_arquitectura.md`, `docs/05_modelo_datos.md`, `docs/06_costes.md`, `docs/07_fiabilidad.md`, `docs/08_aprendizaje_continuo.md`, `docs/09_seguridad.md`, `docs/10_diseno_poc.md` y los ADR correspondientes.
 
 **Criterios de salida:** cada requisito de F1 está cubierto por un componente, y cada decisión tiene su ADR en estado `Aceptado`.
 
@@ -196,7 +196,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F3.5 | Normalización y asociación correo → expediente |
 | F3.6 | Adaptador del ERP (CSV) y motor de reconciliación |
 | F3.7 | Persistencia (SQLite, con un esquema migrable a PostgreSQL) |
-| F3.8 | CLI (`ingest`, `process`, `report`, `evaluate`) |
+| F3.8 | CLI (`ingest`, `process`, `reconcile`, `run`, `report`, `evaluate`) |
 | F3.9 | Interfaz Streamlit: expedientes, línea temporal de eventos, discrepancias, validar o corregir |
 | F3.10 | Datos sintéticos en `data_sample/` para la demo pública y los tests |
 
@@ -217,7 +217,7 @@ Cada fase indica sus **tareas** (cada una será una issue de GitHub), sus **entr
 | F4.4b | **Benchmark de modelos locales** (2–3 candidatos de 3 a 8B parámetros, cuantizados): acierto frente al gold standard, latencia y memoria. Elección justificada |
 | F4.5 | Prueba de volumen sintético (por ejemplo, 10.000 correos generados): rendimiento por etapa y extrapolación al pico de 150.000 correos al mes |
 
-**Entregables:** `docs/10_evaluacion.md` e informe reproducible con `make evaluate`.
+**Entregables:** `docs/11_evaluacion.md` e informe reproducible con `make evaluate`.
 
 **Criterios de salida:** las métricas están documentadas con sus limitaciones (muestra pequeña, intervalos de confianza).
 
@@ -420,7 +420,7 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 | 8 · Documento de arquitectura con diagrama | `04_arquitectura.md` | F2 | ⏳ |
 | 8 · Justificación técnica y alternativas descartadas | `docs/adr/` | F2 | ⏳ |
 | 8 · Estimación de costes | `06_costes.md` | F2, F4 | ⏳ |
-| 8 · Planteamiento de la medición de fiabilidad | `07_fiabilidad.md`, `10_evaluacion.md` | F2, F4 | ⏳ |
+| 8 · Planteamiento de la medición de fiabilidad | `07_fiabilidad.md`, `11_evaluacion.md` | F2, F4 | ⏳ |
 | 8 · PoC funcional que admite correos nuevos | `src/`, CLI, Streamlit | F3 | ⏳ |
 | 7 · Modelo de IA y por qué | ADR de la estrategia de IA | F2 | ⏳ |
 | 7 · Coste computacional y económico | `06_costes.md` | F2, F4 | ⏳ |
@@ -489,3 +489,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.17.0 | 23/11/2026 | P. Iglesias Peral | F2.8: `docs/08_aprendizaje_continuo.md` con señales, mecanismos (calibración, clasificador clásico, ejemplos dinámicos para el LLM, inducción de plantillas, perfiles de remitente, alias), control de calidad de las etiquetas (doble revisión, casos de control, cuarentena, nunca de sus propias salidas), reversibilidad, gobernanza e indicadores | #24 |
 | 1.18.0 | 23/11/2026 | P. Iglesias Peral | F2.9: `docs/09_seguridad.md` con inventario y clasificación de datos, RGPD (papeles, base legal propuesta, EIPD, retención, derechos, transferencias), controles (acceso por rol, cifrado, secretos, red, auditoría, logs sin datos personales), seudonimización antes del LLM, amenazas propias (inyección de instrucciones, suplantación, adjuntos maliciosos, envenenamiento) y medidas de la PoC | #25 |
 | 1.19.0 | 23/11/2026 | P. Iglesias Peral | D7 decidida: PostgreSQL y almacén de objetos compatible con S3 (ADR-0011). D8 decidida: contenedores portables en un servicio gestionado de la UE, sin Kubernetes, con colas sobre PostgreSQL (ADR-0012) | #27, #28 |
+| 1.20.0 | 23/11/2026 | P. Iglesias Peral | F2.10: `docs/10_diseno_poc.md` (alcance por componente, estructura del código, CLI, LLM local, datos sintéticos generados desde YAML porque el hook bloquea `.eml` y `.csv`, pruebas y orden de implementación de F3 con línea de recorte). La CLI añade `reconcile` y `run`. La evaluación pasa a `docs/11_evaluacion.md` | #26 |
