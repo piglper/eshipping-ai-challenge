@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.1 |
+| Versión | 0.1.2 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -156,9 +156,19 @@ Con `make demo` se ejecuta todo sobre los datos sintéticos.
   - una fecha estimada que pasa a real;
   - una fecha ambigua (día-mes) y un correo de ruido;
   - un correo con instrucciones maliciosas para el LLM ([seguridad §6](09_seguridad.md#6-amenazas-propias-del-sistema)).
-- **El ERP sintético** tiene las mismas columnas que el real, con valores inventados y discrepancias sembradas para que aparezcan los siete veredictos.
+- **El ERP sintético** tiene las columnas relevantes para el cruce ([análisis §3.2](01_analisis_datos.md#32-columnas-relevantes-para-el-cruce)) y el mismo formato que el real (BOM, `;`, `dd/mm/aaaa`, coma decimal, espacios sobrantes), con valores inventados y discrepancias sembradas para que aparezcan los siete veredictos.
 - **Gold standard sintético** con el resultado esperado, en el mismo formato que el real.
-- **Cómo se guardan:** el hook de confidencialidad bloquea cualquier `.eml` o `.csv`, también en `data_sample/`, y no se debilita. Por eso los datos sintéticos se versionan como una **especificación en YAML** (`data_sample/spec/`) y un generador (`make sample`) crea los `.eml`, el CSV y el gold en `data_sample/build/`, que está ignorado por git. Los tests usan el mismo generador.
+- **Cómo se guardan:** el hook de confidencialidad bloquea cualquier `.eml` o `.csv`, también en `data_sample/`, y no se debilita. Por eso los datos sintéticos se versionan como una **especificación en YAML** (`data_sample/spec/`) y un generador (`make sample`) crea los `.eml`, el CSV y el gold en `data_sample/build/`, que está ignorado por git. Los tests usan el mismo generador (`eshipping_ai.synthetic`), cuya salida es determinista.
+
+**Implementado (F3.10):** `data_sample/spec/sample.yaml` con cuatro expedientes y un correo de ruido:
+
+| Expediente | Escenario | Veredictos que siembra |
+|---|---|---|
+| ES26900001 | Camino feliz; levante solo en los correos | `MATCH`, `ERP_MISSING`, `NOT_IN_ERP` |
+| ES26900002 | Roleo con cambio de buque y booking nuevo (alias); reenvío interno que cita el aviso de la naviera | `DISCREPANCY`, `MAIL_MISSING`, `MATCH` por alias |
+| ES26900003 | Salida real con errata día-mes en el ERP; carga en un rango; ETA del cliente (rango C) con fecha ambigua | `ERP_ERROR`, `MATCH` por rango, `MAIL_MISSING` |
+| ES26900004 | El ERP marca la salida como real después del último correo; llegada vacía en el ERP; correo con instrucciones maliciosas | `ERP_NEWER`, `ERP_MISSING` |
+| Ruido | Boletín sin relación con ningún expediente | Clase `OTR` |
 
 ## 8. Pruebas y calidad
 
@@ -208,5 +218,6 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.2 | 24/11/2026 | §7: datos sintéticos implementados (cuatro expedientes y ruido) y formato del ERP sintético |
 | 0.1.1 | 24/11/2026 | Estructura del dominio tal como se implementa en F3.1: `vocabulary.py` en lugar de `events.py`, y puertos `Clock` y `ObjectStore` |
 | 0.1.0 | 23/11/2026 | Primera versión: alcance por componente, estructura del código, funcionamiento, CLI y Streamlit, LLM local, datos sintéticos generados desde YAML, pruebas y orden de implementación |

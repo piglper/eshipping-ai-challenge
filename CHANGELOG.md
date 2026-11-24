@@ -10,6 +10,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Modelo de dominio (`src/eshipping_ai/domain/`): vocabulario (clases de correo, eventos DCSA, clasificadores, roles y rangos de fuente, veredictos), identificadores con validación ISO 6346, entidades inmutables de las tres capas del modelo de datos con sus reglas de coherencia, y puertos de la arquitectura hexagonal.
 - Contrato de capas con `import-linter` en `make lint` y en el CI.
 - Dependencia de ejecución `pydantic` 2.14.4; de desarrollo, `import-linter` 2.17.
+- Datos sintéticos (`data_sample/spec/sample.yaml`) y generador determinista (`eshipping_ai.synthetic`, `make sample`): cuatro expedientes inventados y un correo de ruido que siembran los siete veredictos, con correos contenedores `.eml`, ERP en CSV con el formato del real y gold en el mismo formato que el real.
+- Dependencias `pyyaml` 6.0.4 y, de desarrollo, `types-pyyaml`.
 
 ### Fixed
 - Seguridad: un remitente que no pasa SPF, DKIM o DMARC recibe el rol `customer`, coherente con el ADR-0009.
