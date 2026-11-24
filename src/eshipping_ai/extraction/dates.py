@@ -20,6 +20,8 @@ YEAR_WINDOW_BEFORE = timedelta(days=60)
 YEAR_WINDOW_AFTER = timedelta(days=180)
 _TWO_DIGIT_YEAR_BASE = 2000
 _APPROX_LOOKBACK = 18
+_ADJACENT_GAP = 3
+"""A relative word right before an explicit date ("hoy 22/09") is only a label of it."""
 
 _TIME = r"(?:(?:\s+a\s+las|\s+at|\s*,|\s+)\s*(?P<{p}h>[01]?\d|2[0-3]):(?P<{p}min>[0-5]\d))?"
 _NUMERIC = (
@@ -270,7 +272,16 @@ def find_dates(text: str, anchor: date, *, month_first: bool | None = None) -> l
                     span_end=match.end(),
                 )
             )
-    return sorted(mentions, key=lambda mention: mention.span_start)
+    ordered = sorted(mentions, key=lambda mention: mention.span_start)
+    return [
+        mention
+        for index, mention in enumerate(ordered)
+        if not (
+            mention.relative
+            and index + 1 < len(ordered)
+            and ordered[index + 1].span_start - mention.span_end <= _ADJACENT_GAP
+        )
+    ]
 
 
 def _same_year_or_next(end: date, start: date) -> date:
