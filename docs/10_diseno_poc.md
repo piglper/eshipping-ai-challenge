@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.2 |
+| Versión | 0.1.3 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -69,14 +69,15 @@ src/eshipping_ai/
 │   ├── review.py            # ApplyCorrection
 │   └── evaluate.py          # Evaluate (frente a un gold standard)
 ├── extraction/              # Escalones de la cascada (puros, sin E/S)
+│   ├── thread.py            # División del hilo, fecha de cada mensaje, limpieza y hash (F3.2)
 │   ├── triage.py
 │   ├── rules.py             # Extractores deterministas
 │   ├── templates.py         # Plantillas YAML
 │   ├── llm_extractor.py     # Prompt, esquema y verificación de la cita
 │   └── confidence.py        # Tabla de confianzas iniciales
 ├── adapters/
-│   ├── mail_folder.py       # FolderMailSource (.msg con extract-msg, .eml con la biblioteca estándar)
-│   ├── pdf_text.py          # Texto de PDF
+│   ├── mail_files.py        # FolderMailSource y MailFileParser (.msg con extract-msg, .eml con la biblioteca estándar)
+│   ├── pdf_text.py          # Texto de PDF con pypdf
 │   ├── ollama_client.py     # OllamaClient (HTTP)
 │   ├── fake_llm.py          # FakeLLMClient para los tests
 │   ├── erp_csv.py           # CsvErpGateway
@@ -218,6 +219,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.3 | 24/11/2026 | Ingesta implementada (F3.2): `thread.py` y `mail_files.py`; el cuerpo de un correo contenedor no cuenta como mensaje |
 | 0.1.2 | 24/11/2026 | §7: datos sintéticos implementados (cuatro expedientes y ruido) y formato del ERP sintético |
 | 0.1.1 | 24/11/2026 | Estructura del dominio tal como se implementa en F3.1: `vocabulary.py` en lugar de `events.py`, y puertos `Clock` y `ObjectStore` |
 | 0.1.0 | 23/11/2026 | Primera versión: alcance por componente, estructura del código, funcionamiento, CLI y Streamlit, LLM local, datos sintéticos generados desde YAML, pruebas y orden de implementación |
