@@ -6,7 +6,8 @@ replies do not repeat it. A thread with no identifier at all is noise (RF-12); o
 identifiers is associated with the shipments of the index (see ``associate``). Each
 message is classified and its candidates become observations, one per associated shipment,
 with the zone that its confidence earns (docs/07_fiabilidad.md §4). What the rules cannot
-read is left for the next tier of the cascade.
+read is asked to the LLM, only for the fields still pending and with its quote checked
+(``llm_extractor``); without a model it is left for an operator.
 
 The evidence of an observation points into the text the rules read: ``Asunto: <subject>``,
 a line break and the clean body for a message, or the text of the attachment for a document.
@@ -14,7 +15,7 @@ a line break and the clean body for a message, or the text of the attachment for
 
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import tzinfo
+from datetime import date, tzinfo
 
 from eshipping_ai.application.associate import Match, find_shipments, learn_aliases
 from eshipping_ai.domain.model import (
@@ -30,6 +31,8 @@ from eshipping_ai.domain.ports import (
     AliasStore,
     Clock,
     InboxReader,
+    LLMClient,
+    LLMError,
     ObjectStore,
     ObservationStore,
     ProcessingStore,
@@ -40,6 +43,7 @@ from eshipping_ai.domain.senders import SenderDirectory
 from eshipping_ai.domain.vocabulary import (
     AssociationStatus,
     ExtractionTier,
+    MailClass,
     SourceRole,
     Zone,
 )
@@ -49,6 +53,12 @@ from eshipping_ai.extraction.events import (
     Identifiers,
     extract_candidates,
     find_identifiers,
+)
+from eshipping_ai.extraction.llm_extractor import (
+    PROMPT_VERSION,
+    build_request,
+    parse_response,
+    pending_fields,
 )
 from eshipping_ai.extraction.thread import clean_body
 
@@ -74,6 +84,11 @@ class ProcessReport:
     observations: int = 0
     zones: Counter[str] = field(default_factory=Counter)
     classes: Counter[str] = field(default_factory=Counter)
+    tiers: Counter[str] = field(default_factory=Counter)
+    llm_calls: int = 0
+    llm_input_tokens: int = 0
+    llm_output_tokens: int = 0
+    llm_rejected: Counter[str] = field(default_factory=Counter)
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,6 +126,7 @@ class ProcessMessages:
         config: ReconciliationConfig,
         senders: SenderDirectory,
         local_tz: tzinfo,
+        llm: LLMClient | None = None,
     ) -> None:
         """Create the use case.
 
@@ -124,6 +140,8 @@ class ProcessMessages:
             config: Discrepancy policy, for the authority of each source.
             senders: Roles and date order of the senders.
             local_tz: Time zone of the places of the events (A-11).
+            llm: Model for what the rules leave pending; without it the cascade stops at
+                the rules and what is pending is left for an operator (``--no-llm``).
         """
         self._inbox = inbox
         self._objects = objects
@@ -133,6 +151,7 @@ class ProcessMessages:
         self._clock = clock
         self._config = config
         self._senders = senders
+        self._llm = llm
         self._tz = local_tz
 
     def run(self) -> ProcessReport:
@@ -199,15 +218,15 @@ class ProcessMessages:
             seen.add(item.message.message_id)
             read = texts[item.message.message_id]
             report.messages += 1
-            self._classify(item, read, report)
+            mail_class = self._classify(item, read, report)
             if identifiers.is_empty:
                 report.noise += 1
             elif not matches:
                 report.unassociated += 1
             else:
-                self._extract(item, read, matches, identifiers, report)
+                self._extract(item, read, mail_class, matches, identifiers, report)
 
-    def _classify(self, item: ThreadMessage, read: _Texts, report: ProcessReport) -> None:
+    def _classify(self, item: ThreadMessage, read: _Texts, report: ProcessReport) -> MailClass:
         classifications = [
             Classification(
                 message_id=item.message.message_id,
@@ -220,12 +239,15 @@ class ProcessMessages:
             for match in classify(read.subject, read.body)
         ]
         self._processing.add_classifications(classifications)
-        report.classes[next(c.mail_class for c in classifications if c.is_primary).value] += 1
+        primary = next(c.mail_class for c in classifications if c.is_primary)
+        report.classes[primary.value] += 1
+        return primary
 
-    def _extract(
+    def _extract(  # noqa: PLR0913, PLR0917 - the message and the context it is read in
         self,
         item: ThreadMessage,
         read: _Texts,
+        mail_class: MailClass,
         matches: list[Match],
         identifiers: Identifiers,
         report: ProcessReport,
@@ -249,7 +271,12 @@ class ProcessMessages:
             candidates = extract_candidates(
                 text, message.sent_at.date(), self._tz, month_first=profile.month_first
             )
-            for candidate in candidates:
+            versioned = [(candidate, EXTRACTOR_VERSION) for candidate in candidates]
+            if document_id is None:
+                versioned += self._ask_llm(
+                    text, message.sent_at.date(), mail_class, candidates, report
+                )
+            for candidate, version in versioned:
                 if (
                     candidate.field == "booking"
                     and candidate.value in identifiers.previous_bookings
@@ -257,11 +284,38 @@ class ProcessMessages:
                     continue  # the thread says it was replaced (A-20): an alias, not a value
                 for match in matches:
                     observation = self._observation(
-                        candidate, text, item, document_id, match, profile.role
+                        candidate, text, item, document_id, match, profile.role, version
                     )
                     new = self._observations.add_observations([observation])
                     report.observations += new
                     report.zones[observation.zone.value] += new
+                    report.tiers[candidate.tier.value] += new
+
+    def _ask_llm(
+        self,
+        text: str,
+        sent_on: date,
+        mail_class: MailClass,
+        found: list[Candidate],
+        report: ProcessReport,
+    ) -> list[tuple[Candidate, str]]:
+        """Ask the model only for the fields the rules left pending (ADR-0008)."""
+        fields = pending_fields(mail_class, found, text)
+        if self._llm is None or not fields:
+            return []
+        request = build_request(text, fields, sent_on)
+        report.llm_calls += 1
+        try:
+            response = self._llm.complete(request)
+        except LLMError:
+            report.llm_rejected["call_failed"] += 1
+            return []
+        report.llm_input_tokens += response.input_tokens
+        report.llm_output_tokens += response.output_tokens
+        outcome = parse_response(response, text, fields, sent_on, self._tz)
+        report.llm_rejected.update(outcome.rejected)
+        version = f"{PROMPT_VERSION}:{response.model}"
+        return [(candidate, version) for candidate in outcome.candidates]
 
     def _observation(  # noqa: PLR0913, PLR0917 - everything the observation records
         self,
@@ -271,6 +325,7 @@ class ProcessMessages:
         document_id: str | None,
         match: Match,
         role: SourceRole,
+        extractor_version: str,
     ) -> Observation:
         message = item.message
         confidence = min(candidate.confidence, match.confidence)
@@ -298,8 +353,8 @@ class ProcessMessages:
             known_at=message.sent_at,
             recorded_at=self._clock.now(),
             provenance=Provenance(
-                tier=ExtractionTier.RULE,
-                extractor_version=EXTRACTOR_VERSION,
+                tier=candidate.tier,
+                extractor_version=extractor_version,
                 config_version=self._config.version,
             ),
             confidence=confidence,

@@ -3,7 +3,7 @@ PYTHON ?= python3.14
 VENV   := .venv
 BIN    := $(VENV)/bin
 
-.PHONY: help setup lint format typecheck test check sample migrate demo
+.PHONY: help setup lint format typecheck test check sample migrate demo demo-llm
 
 help: ## Muestra esta ayuda
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -43,6 +43,12 @@ ESHIPPING := $(BIN)/python -m eshipping_ai.entrypoints.cli --workdir $(DEMO_DIR)
 
 demo: sample ## Demo de extremo a extremo sobre los datos sintéticos (sin LLM)
 	rm -rf $(DEMO_DIR)
-	$(ESHIPPING) run data_sample/build/mails --erp data_sample/build/erp.csv
+	$(ESHIPPING) run data_sample/build/mails --erp data_sample/build/erp.csv --no-llm
+	$(ESHIPPING) report
+	$(ESHIPPING) evaluate --gold data_sample/build/gold.json
+
+demo-llm: sample ## La demo con el escalón del LLM (Ollama en local; MODEL=<modelo>)
+	rm -rf $(DEMO_DIR)
+	$(ESHIPPING) run data_sample/build/mails --erp data_sample/build/erp.csv $(if $(MODEL),--model $(MODEL))
 	$(ESHIPPING) report
 	$(ESHIPPING) evaluate --gold data_sample/build/gold.json

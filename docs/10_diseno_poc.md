@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.9 |
+| Versión | 0.2.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -32,7 +32,7 @@ No pretende demostrar los objetivos de precisión de producción: con el gold st
 | Clasificador | 🟡 Simplificado | Reglas y LLM; el clasificador clásico (TF-IDF + regresión logística) se queda en el diseño, porque con 38 correos no hay con qué entrenarlo |
 | Extractores deterministas | ✅ Implementado | Identificadores, contenedores con ISO 6346, fechas con su precisión, UN/LOCODE y buques con un diccionario reducido |
 | Plantillas | 🟡 Simplificado | Una o dos plantillas de PDF de booking frecuentes, en YAML |
-| Extractor LLM | ✅ Implementado | Ollama en local, esquema JSON impuesto, temperatura 0, solo los campos pendientes y la cita verificada en el texto |
+| Extractor LLM | ✅ Implementado | Ollama en local, esquema JSON impuesto (o en las instrucciones si el modelo no lo admite), temperatura 0, solo los campos pendientes y con pista en el texto, y cita verificada en el texto (`extraction/llm_extractor.py`) |
 | Normalizador y validador | ✅ Implementado | Pydantic y reglas de dominio |
 | Confianza | 🟡 Simplificado | Tabla de confianzas iniciales por escalón y señal ([fiabilidad §3.2](07_fiabilidad.md#32-modelo-de-calibración)); sin calibración aprendida |
 | Asociación | ✅ Implementado | Por los identificadores de todo el hilo, del más fuerte al más débil: expediente, booking (vigente o sustituido), B/L y contenedor. Un identificador de varios expedientes va a revisión; un expediente seguro enseña al índice los bookings y contenedores nuevos (`application/associate.py`) |
@@ -81,12 +81,12 @@ src/eshipping_ai/
 │   ├── locations.py         # Puertos y UN/LOCODE; tabla reducida de ejemplo (F3.3)
 │   ├── equipment.py         # Número y tipo de contenedores a código ISO y TEU (F3.3)
 │   ├── templates.py         # Plantillas YAML
-│   ├── llm_extractor.py     # Prompt, esquema y verificación de la cita
+│   ├── llm_extractor.py     # Campos pendientes, prompt, esquema y verificación de la cita (F3.4)
 │   └── confidence.py        # Tabla de confianzas iniciales
 ├── adapters/
 │   ├── mail_files.py        # FolderMailSource y MailFileParser (.msg con extract-msg, .eml con la biblioteca estándar)
 │   ├── pdf_text.py          # Texto de PDF con pypdf
-│   ├── ollama_client.py     # OllamaClient (HTTP)
+│   ├── ollama_client.py     # OllamaClient (HTTP, biblioteca estándar; esquema impuesto o en las instrucciones)
 │   ├── fake_llm.py          # FakeLLMClient para los tests
 │   ├── erp_csv.py           # CsvErpGateway (lectura del CSV y normalización)
 │   ├── config_yaml.py       # Carga de config/reconciliation.yaml
@@ -144,9 +144,9 @@ flowchart LR
 | `eshipping report [--shipment <id>] [--format md\|json]` | Campos de cada expediente, lo urgente primero, con valor de los correos, valor del ERP, veredicto, regla y cita |
 | `eshipping evaluate --gold <json> [--verbose]` | Acierto del veredicto por campo frente al gold standard (F4 añade precisión y cobertura por campo) |
 
-Opciones comunes: `--workdir` (base de datos y almacén de objetos; `data/output/` por defecto, ignorado por git), `--config`, `--tz` y `--now`, que fija el reloj y el momento de lectura del ERP para repetir un día. `ESHIPPING_DATABASE_URL` cambia la base de datos sin tocar nada más. La opción `--no-llm` llega con el escalón del LLM (#32); hasta entonces la cascada se detiene en las reglas.
+Opciones comunes: `--workdir` (base de datos y almacén de objetos; `data/output/` por defecto, ignorado por git), `--config`, `--tz` y `--now`, que fija el reloj y el momento de lectura del ERP para repetir un día. `ESHIPPING_DATABASE_URL` cambia la base de datos sin tocar nada más. `process` y `run` aceptan `--no-llm`, `--model` y `--ollama-url` (o `OLLAMA_HOST`).
 
-Con `make demo` se ejecuta todo sobre los datos sintéticos, con el reloj del 07/10/2026 a las 08:00, y se evalúa frente a su gold.
+Con `make demo` se ejecuta todo sobre los datos sintéticos sin LLM, con el reloj del 07/10/2026 a las 08:00, y se evalúa frente a su gold; `make demo-llm MODEL=<modelo>` hace lo mismo con el escalón del LLM.
 
 ### 5.2 Streamlit (alcance recortado)
 
@@ -158,8 +158,16 @@ Con `make demo` se ejecuta todo sobre los datos sintéticos, con el reloj del 07
 
 - **Ollama** en local, en un Mac M5 con 16 GB ([ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md)).
 - **Candidatos:** dos o tres modelos abiertos de 3 a 8B parámetros, cuantizados; se fijan y se comparan en F4.4b (D9, #43).
-- **Una llamada por mensaje** con los campos pendientes; prompt con prefijo fijo (instrucciones y esquema) y el mensaje nuevo limpio; salida con esquema JSON por campo: valor, clasificador, cita literal.
-- **Validación:** la cita tiene que aparecer en el texto; si no, el valor se descarta y se cuenta como cita no verificada.
+- **Una llamada por mensaje** con los campos pendientes: los que la clase del mensaje hace esperables, que las reglas no han encontrado y de los que el texto tiene alguna pista (una confirmación de booking sin una palabra sobre cut-offs no los pregunta). Prompt con prefijo fijo (instrucciones y esquema) y el mensaje nuevo limpio, hasta 12.000 caracteres; salida con esquema JSON por hecho: campo, valor, clasificador y cita literal.
+- **Esquema impuesto o en las instrucciones:** con Ollama 0.40, `llama3.2:3b` admite el esquema en `format`; `qwen3.5:4b` y `gemma4:e4b` responden 501 y el adaptador pasa a poner el esquema en las instrucciones y a extraer el objeto JSON de la respuesta. La validación es la misma en los dos casos.
+- **Validación determinista** (nada de la respuesta se da por bueno):
+  - la cita tiene que estar en el texto (solo se toleran cambios de espacios y mayúsculas);
+  - el valor sale de la cita: una fecha escrita en ella, con al menos dos palabras de contexto, y sin que el vocabulario de las reglas atribuya la cita a otro campo (una «ETD» no puede ser una llegada); un buque que aparece en ella; un número de contenedores que es uno de sus números;
+  - una fecha plausible para la fecha del mensaje (de −60 a +180 días);
+  - lo que falla se descarta y se cuenta por motivo (`llm_rejected`).
+- **Confianza fija por escalón** (0,85, zona de revisión): nunca es la que declara el modelo. El estado PLN/EST/ACT del modelo solo vale para fechas; un nombre de buque o un número de contenedores es una estimación, como en las reglas, y un buque citado junto a un roleo es un cambio de buque.
+- **Inyección de instrucciones:** el correo malicioso sintético llega al LLM (su asunto dice «booking»). Si el modelo obedece, la cita atribuye la fecha a otro campo y se descarta; y aunque pasara, el remitente es desconocido, su autoridad es la mínima y el valor queda pendiente de confirmación. Lo prueban los tests con un modelo falso que obedece.
+- **Sin modelo:** con `--no-llm` (o si Ollama no responde y se usa esa opción) la cascada se detiene en las reglas; sin la opción, la CLI se niega a empezar si Ollama no tiene el modelo, en lugar de procesar a medias. El modelo por defecto es `llama3.2:3b`, provisional hasta el benchmark de F4 (D9).
 - **Banco de ejemplos:** las correcciones validadas del mismo remitente se añaden como ejemplos (hasta tres).
 - **Puerto `LLMClient`:** cambiar a un proveedor de la lista del [ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md) es un adaptador nuevo, sin tocar el resto.
 
@@ -233,6 +241,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.0 | 24/11/2026 | Escalón del LLM implementado (F3.4): campos pendientes con pista en el texto, validación determinista de la cita y del valor, confianza fija por escalón, esquema en las instrucciones para los modelos que no admiten `format`, modelo por defecto `llama3.2:3b` (provisional, D9) y `make demo-llm` |
 | 0.1.9 | 24/11/2026 | CLI implementada (F3.8): `process` y `reconcile` reciben el ERP (la asociación necesita el índice sembrado antes de procesar), opciones comunes `--workdir` y `--now`, `--no-llm` se pospone al escalón del LLM y `make demo` |
 | 0.1.8 | 24/11/2026 | Asociación con alias y `ProcessMessages` implementados (F3.5, parte 2): directorio de remitentes (`config/senders.yaml`) en el dominio, índice de alias sembrado con el ERP y ampliado con lo que enseñan los hilos, y tablas `classification` y `association` (migración 0002). La evidencia de una observación apunta al texto que leen las reglas (`Asunto: …` + cuerpo, o el texto del adjunto) |
 | 0.1.7 | 24/11/2026 | Reglas de extracción implementadas (F3.5, parte 1): `classify.py` y `events.py` en lugar de `triage.py` y `rules.py`; el ruido se decide con el contexto del hilo |

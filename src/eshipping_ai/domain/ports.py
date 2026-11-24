@@ -168,11 +168,19 @@ class DocumentParser(Protocol):
         ...
 
 
+class LLMError(RuntimeError):
+    """The language model could not answer; the message stays for the next tier."""
+
+
 class LLMClient(Protocol):
     """Language model with structured output (ADR-0005, ADR-0010)."""
 
     def complete(self, request: LLMRequest) -> LLMResponse:
-        """Run one call and return output that already matches the requested schema."""
+        """Run one call and return output that already matches the requested schema.
+
+        Raises:
+            LLMError: If the model is unreachable or its answer is not valid JSON.
+        """
         ...
 
 
