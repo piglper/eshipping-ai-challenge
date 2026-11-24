@@ -196,7 +196,16 @@ class ObservationStore(Protocol):
     def observations_for(
         self, shipment_id: str, as_of: datetime | None = None
     ) -> Sequence[Observation]:
-        """Return the observations of a shipment, as they were known at a given time."""
+        """Return the observations of a shipment, as they were known at a given time.
+
+        With ``as_of``, only what the sources had said (``known_at``) and the system had
+        recorded (``recorded_at``) by then is returned, and an observation superseded
+        later is returned as active (RF-61).
+        """
+        ...
+
+    def mark_superseded(self, observation_id: str, superseded_by: str, at: datetime) -> None:
+        """Mark an observation as superseded by another; the only change allowed to one."""
         ...
 
 
@@ -229,6 +238,14 @@ class ProjectionStore(Protocol):
 
     def save_verdicts(self, verdicts: Iterable[Verdict]) -> None:
         """Store verdicts; the previous verdict of the same field becomes superseded."""
+        ...
+
+    def field_states_for(self, shipment_id: str) -> Sequence[FieldState]:
+        """Return the current projection of a shipment."""
+        ...
+
+    def verdicts_for(self, shipment_id: str) -> Sequence[Verdict]:
+        """Return the verdicts of a shipment that are not superseded."""
         ...
 
 

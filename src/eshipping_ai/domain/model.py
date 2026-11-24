@@ -260,9 +260,18 @@ class Observation(DomainModel):
 
     @property
     def idempotency_key(self) -> str:
-        """Key that makes re-processing with the same extractor version a no-op."""
+        """Key that makes re-processing with the same extractor version a no-op.
+
+        It includes the shipment because one message can speak about several (A-19).
+        """
         source = self.message_id or self.document_id
-        parts = (source, self.field, self.value, self.provenance.extractor_version)
+        parts = (
+            source,
+            self.shipment_id,
+            self.field,
+            self.value,
+            self.provenance.extractor_version,
+        )
         return hashlib.sha256("\x1f".join(str(part) for part in parts).encode()).hexdigest()
 
 

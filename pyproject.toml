@@ -13,7 +13,9 @@ dynamic = ["version"]
 # Las dependencias de ejecución se añaden en F3, solo cuando se necesitan y con versión fijada.
 dependencies = [
     "extract-msg==0.58.3",
+    "alembic==1.20.1",
     "pydantic==2.14.4",
+    "sqlalchemy==2.1.9",
     "pypdf==7.1.1",
     "pyyaml==6.0.4",
 ]
@@ -71,6 +73,7 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "D", "ANN", "PLR2004"]
+"migrations/**" = ["D", "ANN", "E501", "ERA", "N999", "INP001", "RUF012", "I001", "UP", "PLR"]
 
 # --- import-linter ----------------------------------------------------------
 # Regla de dependencias de la arquitectura hexagonal (RNF-40, arquitectura §6.3):
