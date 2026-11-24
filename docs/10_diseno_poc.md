@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.8 |
+| Versión | 0.1.9 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -69,8 +69,9 @@ src/eshipping_ai/
 │   ├── seed.py              # Siembra del índice de alias con el ERP (F3.5)
 │   ├── process.py           # ProcessMessages: clasifica, asocia y extrae las observaciones de cada hilo (F3.5)
 │   ├── reconcile.py         # ReconcileShipment
+│   ├── report.py            # Vista del expediente: valor, veredicto, regla y cita (F3.8)
 │   ├── review.py            # ApplyCorrection
-│   └── evaluate.py          # Evaluate (frente a un gold standard)
+│   └── evaluate.py          # Acierto del veredicto frente a un gold standard (F3.8; F4 lo amplía)
 ├── extraction/              # Escalones de la cascada (puros, sin E/S)
 │   ├── thread.py            # División del hilo, fecha de cada mensaje, limpieza y hash (F3.2)
 │   ├── classify.py          # Clasificación por reglas y triaje: carril urgente y ruido (F3.5)
@@ -92,10 +93,12 @@ src/eshipping_ai/
 │   ├── sql_schema.py        # Esquema relacional portable SQLite/PostgreSQL (F3.7)
 │   ├── sql_repository.py    # SqlRepository: todos los almacenes del dominio sobre SQLAlchemy
 │   ├── object_store.py      # Carpeta local con claves por hash
+│   ├── clock.py             # SystemClock y FixedClock (F3.8)
+│   ├── log_notifier.py      # LogNotifier: avisos urgentes al log sin contenido (F3.8)
 │   ├── queue_inprocess.py   # InProcessQueue
 │   └── notifier_log.py      # LogNotifier
 └── entrypoints/
-    ├── cli.py               # eshipping ingest | process | report | evaluate
+    ├── cli.py               # eshipping ingest | process | reconcile | run | report | evaluate (F3.8)
     └── streamlit_app.py     # Vista para operativos
 
 config/                      # Configuración versionada (sin datos reales)
@@ -135,13 +138,15 @@ flowchart LR
 | Orden | Qué hace |
 |---|---|
 | `eshipping ingest <carpeta>` | Ingesta, desempaquetado, limpieza y división de los hilos |
-| `eshipping process [--no-llm] [--model <nombre>]` | Clasificación y extracción de los mensajes pendientes |
-| `eshipping reconcile --erp <csv>` | Lectura del ERP, asociación, proyección y veredictos |
+| `eshipping process --erp <csv> [--senders <yaml>]` | Siembra del índice de alias con el ERP, clasificación, asociación y extracción de los mensajes pendientes |
+| `eshipping reconcile --erp <csv>` | Lectura del ERP, proyección del valor vigente, veredictos y avisos urgentes |
 | `eshipping run <carpeta> --erp <csv>` | Las tres anteriores en orden |
-| `eshipping report [--shipment <id>] [--format md\|json]` | Expedientes, línea temporal, discrepancias por prioridad, con citas y reglas |
-| `eshipping evaluate --gold <json>` | Métricas agregadas frente al gold standard |
+| `eshipping report [--shipment <id>] [--format md\|json]` | Campos de cada expediente, lo urgente primero, con valor de los correos, valor del ERP, veredicto, regla y cita |
+| `eshipping evaluate --gold <json> [--verbose]` | Acierto del veredicto por campo frente al gold standard (F4 añade precisión y cobertura por campo) |
 
-Con `make demo` se ejecuta todo sobre los datos sintéticos.
+Opciones comunes: `--workdir` (base de datos y almacén de objetos; `data/output/` por defecto, ignorado por git), `--config`, `--tz` y `--now`, que fija el reloj y el momento de lectura del ERP para repetir un día. `ESHIPPING_DATABASE_URL` cambia la base de datos sin tocar nada más. La opción `--no-llm` llega con el escalón del LLM (#32); hasta entonces la cascada se detiene en las reglas.
+
+Con `make demo` se ejecuta todo sobre los datos sintéticos, con el reloj del 07/10/2026 a las 08:00, y se evalúa frente a su gold.
 
 ### 5.2 Streamlit (alcance recortado)
 
@@ -228,6 +233,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.9 | 24/11/2026 | CLI implementada (F3.8): `process` y `reconcile` reciben el ERP (la asociación necesita el índice sembrado antes de procesar), opciones comunes `--workdir` y `--now`, `--no-llm` se pospone al escalón del LLM y `make demo` |
 | 0.1.8 | 24/11/2026 | Asociación con alias y `ProcessMessages` implementados (F3.5, parte 2): directorio de remitentes (`config/senders.yaml`) en el dominio, índice de alias sembrado con el ERP y ampliado con lo que enseñan los hilos, y tablas `classification` y `association` (migración 0002). La evidencia de una observación apunta al texto que leen las reglas (`Asunto: …` + cuerpo, o el texto del adjunto) |
 | 0.1.7 | 24/11/2026 | Reglas de extracción implementadas (F3.5, parte 1): `classify.py` y `events.py` en lugar de `triage.py` y `rules.py`; el ruido se decide con el contexto del hilo |
 | 0.1.6 | 24/11/2026 | Persistencia implementada (F3.7): `sql_schema.py` y `sql_repository.py`, migraciones de Alembic en `migrations/` |
