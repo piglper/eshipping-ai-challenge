@@ -98,7 +98,7 @@ Cada lectura se conserva. La reconciliación siempre indica qué lectura usó, y
 
 | Entidad | Qué es | Campos principales |
 |---|---|---|
-| `classification` | Clases de un mensaje | `message_id`, `class`, `is_primary`, `confidence`, `tier`, `extractor_version`, `config_version` |
+| `classification` | Clases de un mensaje | `message_id`, `class`, `is_primary`, `confidence`, `tier`, `extractor_version` (en la PoC, clave `message_id` + `class` + `extractor_version`) |
 | `association` | Un mensaje asociado a un expediente | `message_id`, `shipment_id`, `method` (`booking`, `operation`, `container`, `bl`, `thread_ref`, `human`), `matched_value`, `confidence`, `status` (`auto`, `in_review`, `confirmed`, `rejected`), `config_version` |
 
 Un mensaje puede asociarse a varios expedientes (A-19); cada observación indica a qué expediente pertenece.

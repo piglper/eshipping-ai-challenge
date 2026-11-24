@@ -114,6 +114,27 @@ message_document = Table(
     Column("document_id", String(40), ForeignKey("document.document_id"), primary_key=True),
 )
 
+classification = Table(
+    "classification",
+    metadata,
+    Column("message_id", String(40), ForeignKey("message.message_id"), primary_key=True),
+    Column("mail_class", String(8), primary_key=True),
+    Column("extractor_version", String(40), primary_key=True),
+    Column("is_primary", Boolean, nullable=False),
+    Column("payload", JSON, nullable=False),
+)
+
+association = Table(
+    "association",
+    metadata,
+    Column("message_id", String(40), ForeignKey("message.message_id"), primary_key=True),
+    Column("shipment_id", String(40), primary_key=True),
+    Column("method", String(20), nullable=False),
+    Column("status", String(20), nullable=False),
+    Column("payload", JSON, nullable=False),
+    Index("ix_association_shipment", "shipment_id"),
+)
+
 erp_snapshot = Table(
     "erp_snapshot",
     metadata,

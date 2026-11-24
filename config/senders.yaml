@@ -1,0 +1,10 @@
+# Directorio de remitentes por dominio (RF-73). Sintético: el de producción lo mantiene
+# operaciones y no se versiona con datos reales. Un remitente desconocido es un cliente.
+# month_first indica el orden de «09/10»: false = día/mes; sin valor, la fecha queda ambigua.
+version: "2026.11.24-1"
+default: {role: customer}
+domains:
+  naviera-ficticia.example: {role: carrier, month_first: false}
+  transportes-inventados.example: {role: haulier, month_first: false}
+  aduanas-ejemplo.example: {role: customs_agent, month_first: false}
+  eshipping-sintetico.example: {role: internal, month_first: false}
