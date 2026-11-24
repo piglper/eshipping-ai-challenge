@@ -20,6 +20,7 @@ Requisitos: Python 3.14 y `make`.
 ```bash
 make setup    # entorno virtual, dependencias de desarrollo y hooks (bloqueo de datos reales incluido)
 make check    # lint, tipos y tests, igual que el CI
+make sample   # genera los datos sintéticos en data_sample/build/ (correos .eml, ERP en CSV y gold)
 ```
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.

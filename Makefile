@@ -3,7 +3,7 @@ PYTHON ?= python3.14
 VENV   := .venv
 BIN    := $(VENV)/bin
 
-.PHONY: help setup lint format typecheck test check
+.PHONY: help setup lint format typecheck test check sample
 
 help: ## Muestra esta ayuda
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -30,3 +30,6 @@ test: ## Tests con cobertura
 	$(BIN)/pytest --cov --cov-report=term-missing
 
 check: lint typecheck test ## Todo lo que comprueba el CI
+
+sample: ## Genera los datos sintéticos en data_sample/build/
+	$(BIN)/python -m eshipping_ai.synthetic

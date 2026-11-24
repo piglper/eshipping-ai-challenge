@@ -13,6 +13,7 @@ dynamic = ["version"]
 # Las dependencias de ejecución se añaden en F3, solo cuando se necesitan y con versión fijada.
 dependencies = [
     "pydantic==2.14.4",
+    "pyyaml==6.0.4",
 ]
 
 [dependency-groups]
@@ -23,6 +24,7 @@ dev = [
     "pytest==9.2.0",
     "pytest-cov==7.1.0",
     "ruff==0.17.6",
+    "types-pyyaml==6.0.12.20261103",
 ]
 
 [tool.hatch.version]
