@@ -6,6 +6,14 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+- Modelo de dominio (`src/eshipping_ai/domain/`): vocabulario (clases de correo, eventos DCSA, clasificadores, roles y rangos de fuente, veredictos), identificadores con validación ISO 6346, entidades inmutables de las tres capas del modelo de datos con sus reglas de coherencia, y puertos de la arquitectura hexagonal.
+- Contrato de capas con `import-linter` en `make lint` y en el CI.
+- Dependencia de ejecución `pydantic` 2.14.4; de desarrollo, `import-linter` 2.17.
+
+### Fixed
+- Seguridad: un remitente que no pasa SPF, DKIM o DMARC recibe el rol `customer`, coherente con el ADR-0009.
+
 ## [0.3.0] - 2026-11-23
 
 Cierre de la fase F2 (diseño).

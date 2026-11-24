@@ -11,10 +11,13 @@ authors = [{ name = "Pablo Iglesias Peral" }]
 license = "LicenseRef-Proprietary"
 dynamic = ["version"]
 # Las dependencias de ejecución se añaden en F3, solo cuando se necesitan y con versión fijada.
-dependencies = []
+dependencies = [
+    "pydantic==2.14.4",
+]
 
 [dependency-groups]
 dev = [
+    "import-linter==2.17",
     "mypy==2.4.1",
     "pre-commit==4.7.0",
     "pytest==9.2.0",
@@ -64,6 +67,24 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "D", "ANN", "PLR2004"]
+
+# --- import-linter ----------------------------------------------------------
+# Regla de dependencias de la arquitectura hexagonal (RNF-40, arquitectura §6.3):
+# cada capa solo puede importar las que tiene debajo.
+
+[tool.importlinter]
+root_package = "eshipping_ai"
+
+[[tool.importlinter.contracts]]
+name = "Capas de la arquitectura hexagonal"
+type = "layers"
+layers = [
+    "eshipping_ai.entrypoints",
+    "eshipping_ai.adapters",
+    "eshipping_ai.application",
+    "eshipping_ai.extraction",
+    "eshipping_ai.domain",
+]
 
 # --- mypy -------------------------------------------------------------------
 

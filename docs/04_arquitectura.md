@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.2.1 |
+| Versión | 0.2.2 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -238,7 +238,7 @@ flowchart TB
     adapters -. "implementan" .-> d3
 ```
 
-Regla de dependencias (RNF-40): `domain` no importa nada de `application` ni de `adapters`, y `application` no importa `adapters`. Se comprobará en el CI con contratos de importación (`import-linter`) desde F3.1 (#29).
+Regla de dependencias (RNF-40): `domain` no importa nada de `application` ni de `adapters`, y `application` no importa `adapters`. Se comprueba en el CI con un contrato de capas de `import-linter` (`pyproject.toml`, desde F3.1, #29).
 
 ## 7. Funcionamiento de la canalización
 
@@ -650,5 +650,6 @@ Como la clave de idempotencia incluye la versión, reprocesar con la misma versi
 | 0.1.0 | 23/11/2026 | Primera versión: impulsores, estilo, C4 niveles 1 a 3, funcionamiento de la canalización y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes |
 | 0.1.1 | 23/11/2026 | D5 aceptada (ADR-0008) |
 | 0.1.2 | 23/11/2026 | D6 aceptada (ADR-0009) |
+| 0.2.2 | 24/11/2026 | La regla de dependencias ya se comprueba en el CI con `import-linter` |
 | 0.2.1 | 23/11/2026 | D7 y D8 aceptadas (ADR-0011 y ADR-0012) |
 | 0.2.0 | 23/11/2026 | §12: diagramas de secuencia de los flujos principales (ingesta, revisión de discrepancias, aprendizaje, sincronización del ERP y reprocesado) |

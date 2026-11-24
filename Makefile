@@ -17,6 +17,7 @@ setup: ## Crea el entorno, instala dependencias y activa los hooks
 lint: ## Lint y comprobación de formato
 	$(BIN)/ruff check .
 	$(BIN)/ruff format --check .
+	$(BIN)/lint-imports
 
 format: ## Aplica el formato y las correcciones automáticas
 	$(BIN)/ruff check --fix .

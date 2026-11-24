@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.1.1 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -57,11 +57,11 @@ No pretende demostrar los objetivos de precisión de producción: con el gold st
 src/eshipping_ai/
 ├── domain/                  # Sin dependencias externas (salvo Pydantic)
 │   ├── model.py             # Mail, Message, Document, Shipment, Observation, FieldState, Verdict, Correction
-│   ├── events.py            # Tipos de evento DCSA y clasificadores PLN/EST/ACT (ADR-0006)
-│   ├── identifiers.py       # Contenedor ISO 6346, booking, B/L, expediente (validación y normalización)
+│   ├── vocabulary.py        # Clases de correo, eventos DCSA, clasificadores, roles, veredictos (ADR-0006, ADR-0009)
+│   ├── identifiers.py       # Contenedor ISO 6346, referencias, UN/LOCODE (validación y normalización)
 │   ├── policy.py            # Autoridad por campo, proyección del valor vigente (ADR-0009 §1-§3)
 │   ├── comparison.py        # Tolerancias, veredictos y prioridades (ADR-0009 §4-§6)
-│   └── ports.py             # MailSource, DocumentParser, LLMClient, ERPGateway, Repository, Notifier, TaskQueue
+│   └── ports.py             # Clock, MailSource, ObjectStore, DocumentParser, LLMClient, ERPGateway, Repository, Notifier, TaskQueue
 ├── application/             # Casos de uso; solo dependen del dominio
 │   ├── ingest.py            # IngestMail
 │   ├── process.py           # ProcessMessage: triaje, clasificación, cascada de extracción
@@ -208,4 +208,5 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.1 | 24/11/2026 | Estructura del dominio tal como se implementa en F3.1: `vocabulary.py` en lugar de `events.py`, y puertos `Clock` y `ObjectStore` |
 | 0.1.0 | 23/11/2026 | Primera versión: alcance por componente, estructura del código, funcionamiento, CLI y Streamlit, LLM local, datos sintéticos generados desde YAML, pruebas y orden de implementación |
