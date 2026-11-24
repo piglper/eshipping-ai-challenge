@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.6 |
+| Versión | 0.1.7 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -70,7 +70,8 @@ src/eshipping_ai/
 │   └── evaluate.py          # Evaluate (frente a un gold standard)
 ├── extraction/              # Escalones de la cascada (puros, sin E/S)
 │   ├── thread.py            # División del hilo, fecha de cada mensaje, limpieza y hash (F3.2)
-│   ├── triage.py
+│   ├── classify.py          # Clasificación por reglas y triaje: carril urgente y ruido (F3.5)
+│   ├── events.py            # De hallazgos a candidatos de observación: campo, estado PLN/EST/ACT y evidencia (F3.5)
 │   ├── references.py        # Contenedores ISO 6346, bookings, expedientes y B/L, con su contexto (F3.3)
 │   ├── dates.py             # Fechas con precisión, rangos, año inferido y orden día-mes (F3.3)
 │   ├── locations.py         # Puertos y UN/LOCODE; tabla reducida de ejemplo (F3.3)
@@ -224,6 +225,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.7 | 24/11/2026 | Reglas de extracción implementadas (F3.5, parte 1): `classify.py` y `events.py` en lugar de `triage.py` y `rules.py`; el ruido se decide con el contexto del hilo |
 | 0.1.6 | 24/11/2026 | Persistencia implementada (F3.7): `sql_schema.py` y `sql_repository.py`, migraciones de Alembic en `migrations/` |
 | 0.1.5 | 24/11/2026 | Reconciliación implementada (F3.6): política de discrepancias, comparación con el ERP, adaptador del CSV y `config/reconciliation.yaml` |
 | 0.1.4 | 24/11/2026 | Extractores deterministas implementados (F3.3): `references.py`, `dates.py`, `locations.py` y `equipment.py` en lugar de un único `rules.py`; el triaje queda para el caso de uso de procesado |
