@@ -220,6 +220,13 @@ def _state(classifier: object) -> EventClassifier:
         return EventClassifier.ESTIMATED
 
 
+def _lines_around(text: str, span: tuple[int, int]) -> str:
+    """The lines a quote spans and the one before, where a wrapped label may be."""
+    start = text.rfind("\n", 0, max(text.rfind("\n", 0, span[0]), 0)) + 1
+    end = text.find("\n", span[1])
+    return text[start : len(text) if end == -1 else end]
+
+
 def _vessel_name(value: str) -> str:
     """Vessel name without a voyage (``/ 205N``) or a prefix (``M/V``), in upper case."""
     name = _VESSEL_PREFIX_RE.sub("", value.strip()).split("/")[0]
@@ -298,7 +305,7 @@ def parse_response(
                 field=name,
                 event_type=(
                     EventType.VESSEL_CHANGE
-                    if name == "vessel" and _VESSEL_CHANGE_RE.search(text[span[0] : span[1]])
+                    if name == "vessel" and _VESSEL_CHANGE_RE.search(_lines_around(text, span))
                     else _FIELDS[name][0]
                 ),
                 # The state applies to events in time; a name or a count is an estimate,

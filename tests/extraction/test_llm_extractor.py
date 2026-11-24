@@ -1,7 +1,7 @@
 from datetime import UTC, date
 
 from eshipping_ai.domain.ports import LLMResponse
-from eshipping_ai.domain.vocabulary import EventClassifier, ExtractionTier, MailClass
+from eshipping_ai.domain.vocabulary import EventClassifier, EventType, ExtractionTier, MailClass
 from eshipping_ai.extraction.events import extract_candidates
 from eshipping_ai.extraction.llm_extractor import (
     MAX_INPUT_CHARS,
@@ -158,3 +158,15 @@ def test_an_unknown_state_is_read_as_an_estimate() -> None:
         UTC,
     )
     assert outcome.candidates[0].classifier is EventClassifier.ESTIMATED
+
+
+def test_a_vessel_named_next_to_a_rollover_is_a_vessel_change() -> None:
+    text = "Asunto: RV: aviso\nla carga se ha\nroleado al CELESTE FICTICIA. Gracias."
+    outcome = parse_response(
+        answer(fact("vessel", "CELESTE FICTICIA", "CELESTE FICTICIA")), text, ("vessel",), SENT, UTC
+    )
+    assert outcome.candidates[0].event_type is EventType.VESSEL_CHANGE
+    plain = parse_response(
+        answer(fact("vessel", "AURORA FICTICIA", "AURORA FICTICIA")), TEXT, ("vessel",), SENT, UTC
+    )
+    assert plain.candidates[0].event_type is EventType.DEPARTURE
