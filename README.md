@@ -45,4 +45,4 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
 
 ## Estado
 
-Fase F3 (PoC): ingesta, extracción por reglas, asociación, reconciliación y CLI implementadas. Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).
+Fase F3 (PoC) cerrada con `v0.4.0`: canalización de extremo a extremo con CLI, escalón del LLM local y vista para operativos. Siguiente: F4 (evaluación). Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).
