@@ -48,7 +48,7 @@ _DISCLAIMER_RE = re.compile(
     re.IGNORECASE,
 )
 
-_MONTHS = {
+MONTHS = {
     name: number
     for number, names in enumerate(
         [
@@ -168,7 +168,7 @@ def parse_header_date(value: str, default_tz: tzinfo) -> datetime | None:
         if match is None:
             continue
         groups = match.groupdict()
-        month = int(groups["m"]) if "m" in groups else _MONTHS.get(groups["month"].lower())
+        month = int(groups["m"]) if "m" in groups else MONTHS.get(groups["month"].lower())
         if month is None:
             continue
         hour = int(groups["h"])

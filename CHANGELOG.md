@@ -7,6 +7,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Extractores deterministas (F3.3): identificadores con contexto (contenedores con dígito de control ISO 6346, bookings con alias anterior, expedientes completos y truncados, B/L), fechas con precisión (rangos, aproximadas, relativas, año inferido y orden día-mes marcado como ambiguo salvo perfil de remitente), puertos con UN/LOCODE y rol (carga o descarga), y equipo con código ISO y TEU. Todos devuelven la posición del hallazgo para citarlo como evidencia.
 - Ingesta (F3.2): lectura de carpetas de `.eml` y `.msg`, desempaquetado de correos incrustados, división de cada hilo en mensajes fechados por su propia cabecera, limpieza de firmas, avisos legales e imágenes, deduplicación de mensajes citados por hash, texto de los PDF (los escaneados se marcan sin OCR) y almacén de objetos local con claves por hash. El cuerpo de un correo contenedor no cuenta como mensaje.
 - Puertos `MailParser` y `ParsedMail`; `Repository` se divide en `InboxStore`, `ObservationStore`, `AliasStore`, `ErpStore` y `ProjectionStore`.
 - Dependencias `extract-msg` 0.58.3 y `pypdf` 7.1.1.

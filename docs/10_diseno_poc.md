@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.3 |
+| Versión | 0.1.4 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -71,7 +71,10 @@ src/eshipping_ai/
 ├── extraction/              # Escalones de la cascada (puros, sin E/S)
 │   ├── thread.py            # División del hilo, fecha de cada mensaje, limpieza y hash (F3.2)
 │   ├── triage.py
-│   ├── rules.py             # Extractores deterministas
+│   ├── references.py        # Contenedores ISO 6346, bookings, expedientes y B/L, con su contexto (F3.3)
+│   ├── dates.py             # Fechas con precisión, rangos, año inferido y orden día-mes (F3.3)
+│   ├── locations.py         # Puertos y UN/LOCODE; tabla reducida de ejemplo (F3.3)
+│   ├── equipment.py         # Número y tipo de contenedores a código ISO y TEU (F3.3)
 │   ├── templates.py         # Plantillas YAML
 │   ├── llm_extractor.py     # Prompt, esquema y verificación de la cita
 │   └── confidence.py        # Tabla de confianzas iniciales
@@ -219,6 +222,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.4 | 24/11/2026 | Extractores deterministas implementados (F3.3): `references.py`, `dates.py`, `locations.py` y `equipment.py` en lugar de un único `rules.py`; el triaje queda para el caso de uso de procesado |
 | 0.1.3 | 24/11/2026 | Ingesta implementada (F3.2): `thread.py` y `mail_files.py`; el cuerpo de un correo contenedor no cuenta como mensaje |
 | 0.1.2 | 24/11/2026 | §7: datos sintéticos implementados (cuatro expedientes y ruido) y formato del ERP sintético |
 | 0.1.1 | 24/11/2026 | Estructura del dominio tal como se implementa en F3.1: `vocabulary.py` en lugar de `events.py`, y puertos `Clock` y `ObjectStore` |
