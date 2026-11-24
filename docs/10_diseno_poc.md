@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.4 |
+| Versión | 0.1.5 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -59,8 +59,8 @@ src/eshipping_ai/
 │   ├── model.py             # Mail, Message, Document, Shipment, Observation, FieldState, Verdict, Correction
 │   ├── vocabulary.py        # Clases de correo, eventos DCSA, clasificadores, roles, veredictos (ADR-0006, ADR-0009)
 │   ├── identifiers.py       # Contenedor ISO 6346, referencias, UN/LOCODE (validación y normalización)
-│   ├── policy.py            # Autoridad por campo, proyección del valor vigente (ADR-0009 §1-§3)
-│   ├── comparison.py        # Tolerancias, veredictos y prioridades (ADR-0009 §4-§6)
+│   ├── policy.py            # Configuración, rango de cada fuente y valor vigente de un campo (ADR-0009 §1-§3)
+│   ├── comparison.py        # Tolerancias, reglas A y B, coherencia del ERP, veredictos y prioridades (ADR-0009 §4-§6)
 │   └── ports.py             # Clock, MailSource, ObjectStore, DocumentParser, LLMClient, ERPGateway, Repository, Notifier, TaskQueue
 ├── application/             # Casos de uso; solo dependen del dominio
 │   ├── ingest.py            # IngestMail
@@ -83,7 +83,8 @@ src/eshipping_ai/
 │   ├── pdf_text.py          # Texto de PDF con pypdf
 │   ├── ollama_client.py     # OllamaClient (HTTP)
 │   ├── fake_llm.py          # FakeLLMClient para los tests
-│   ├── erp_csv.py           # CsvErpGateway
+│   ├── erp_csv.py           # CsvErpGateway (lectura del CSV y normalización)
+│   ├── config_yaml.py       # Carga de config/reconciliation.yaml
 │   ├── sqlite_repository.py # SqlAlchemyRepository
 │   ├── object_store.py      # Carpeta local con claves por hash
 │   ├── queue_inprocess.py   # InProcessQueue
@@ -222,6 +223,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.5 | 24/11/2026 | Reconciliación implementada (F3.6): política de discrepancias, comparación con el ERP, adaptador del CSV y `config/reconciliation.yaml` |
 | 0.1.4 | 24/11/2026 | Extractores deterministas implementados (F3.3): `references.py`, `dates.py`, `locations.py` y `equipment.py` en lugar de un único `rules.py`; el triaje queda para el caso de uso de procesado |
 | 0.1.3 | 24/11/2026 | Ingesta implementada (F3.2): `thread.py` y `mail_files.py`; el cuerpo de un correo contenedor no cuenta como mensaje |
 | 0.1.2 | 24/11/2026 | §7: datos sintéticos implementados (cuatro expedientes y ruido) y formato del ERP sintético |
