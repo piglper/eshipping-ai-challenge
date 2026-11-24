@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.1.1 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -109,7 +109,7 @@ Es la entidad central. Una observación es **lo que una fuente dijo sobre un hec
 
 | Grupo | Campos | Notas |
 |---|---|---|
-| Identidad | `observation_id`, `shipment_id`, `idempotency_key` | Clave: (mensaje o documento, campo, valor normalizado, versión del extractor) |
+| Identidad | `observation_id`, `shipment_id`, `idempotency_key` | Clave: (mensaje o documento, expediente, campo, valor normalizado, versión del extractor); incluye el expediente porque un mensaje puede hablar de varios (A-19) |
 | Qué | `event_type` (DCSA: `DEPA`, `ARRI`, `STUF`, `CUS-REL`…), `classifier` (`PLN`, `EST`, `ACT`), `field` (por ejemplo, `vessel_departure.time`, `vessel.name`, `container.number`) | Modelo del [ADR-0006](adr/0006-modelo-de-eventos-basado-en-dcsa.md) |
 | Valor | `value` (normalizado), `value_raw` (texto original), `event_time`, `event_time_end` (rangos), `time_precision` (`datetime`, `date`, `range`, `approx`), `timezone`, `location_unlocode`, `location_raw`, `vessel`, `voyage`, `equipment` | Tipado por campo en el dominio (F3.1) |
 | Fuente | `message_id` o `document_id`, `source_role`, `source_rank` (A, B o C para ese campo) | El rol es el del autor original (A-16) |
@@ -228,4 +228,5 @@ Las direcciones de los remitentes y las citas cortas pueden contener datos perso
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.1 | 24/11/2026 | La clave de idempotencia de la observación incluye el expediente (un mensaje puede hablar de varios); esquema de la PoC en `adapters/sql_schema.py` con las columnas consultadas como columnas y el resto de la entidad en una columna `payload` JSON |
 | 0.1.0 | 23/11/2026 | Primera versión: tres capas, entidades, linaje, bitemporalidad con cuatro fechas, tablas operativas y almacenamiento físico |

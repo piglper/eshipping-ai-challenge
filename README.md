@@ -20,6 +20,7 @@ Requisitos: Python 3.14 y `make`.
 ```bash
 make setup    # entorno virtual, dependencias de desarrollo y hooks (bloqueo de datos reales incluido)
 make check    # lint, tipos y tests, igual que el CI
+make migrate  # crea o actualiza la base de datos con las migraciones de Alembic
 make sample   # genera los datos sintéticos en data_sample/build/ (correos .eml, ERP en CSV y gold)
 ```
 

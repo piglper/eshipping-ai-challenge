@@ -52,7 +52,7 @@ def observation(  # noqa: PLR0913 - a builder with one knob per attribute
         event_time = at(value[:10], 0)
     tier = ExtractionTier.HUMAN if role is SourceRole.HUMAN_REVIEW else ExtractionTier.RULE
     data: dict[str, Any] = {
-        "observation_id": f"obs-{field}-{value}-{known}-{role}-{classifier}",
+        "observation_id": f"obs-{shipment}-{field}-{value}-{known}-{role}-{classifier}",
         "shipment_id": shipment,
         "message_id": "msg-1",
         "event_type": event_type,

@@ -68,6 +68,7 @@ def test_idempotency_key_depends_on_source_field_value_and_version() -> None:
     base = observation()
     assert base.idempotency_key == observation(observation_id="obs-2").idempotency_key
     assert base.idempotency_key != observation(value="2026-09-23").idempotency_key
+    assert base.idempotency_key != observation(shipment_id="shp-2").idempotency_key
     newer = Provenance(tier=ExtractionTier.RULE, extractor_version="2", config_version="c1")
     assert base.idempotency_key != observation(provenance=newer).idempotency_key
 
