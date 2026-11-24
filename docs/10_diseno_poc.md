@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.2.0 |
+| Versión | 0.2.1 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -42,7 +42,7 @@ No pretende demostrar los objetivos de precisión de producción: con el gold st
 | Coherencia interna del ERP | ✅ Implementado | Reglas del ADR-0009 §5 |
 | Persistencia | ✅ Implementado | SQLite con el esquema del [modelo de datos](05_modelo_datos.md), SQLAlchemy; carpeta local como almacén de objetos |
 | Colas y workers | 🟡 Simplificado | Cola en proceso (`InProcessQueue`) detrás del puerto `TaskQueue`; las etapas se ejecutan en orden en un solo proceso |
-| Revisión y correcciones | 🟡 Simplificado | Streamlit: vista del expediente, lista de discrepancias y corrección simple (PLAN, revisión 1.10.0) |
+| Revisión y correcciones | 🟡 Simplificado | Streamlit (`make ui`): lista de discrepancias, vista del expediente con línea temporal y corrección simple como observación humana (`application/review.py`); sin cola de tareas ni doble revisión |
 | Aprendizaje | 🟡 Simplificado | Corrección como observación humana, banco de ejemplos para el LLM y orden día-mes por remitente ([aprendizaje §8](08_aprendizaje_continuo.md#8-en-la-poc)) |
 | Notificaciones | 🟡 Simplificado | `LogNotifier`: los avisos urgentes se escriben en el informe |
 | Seguridad | 🟡 Simplificado | Todo local, sin servicios externos, logs sin contenido ([seguridad §9](09_seguridad.md#9-en-la-poc-prueba-técnica)) |
@@ -70,7 +70,7 @@ src/eshipping_ai/
 │   ├── process.py           # ProcessMessages: clasifica, asocia y extrae las observaciones de cada hilo (F3.5)
 │   ├── reconcile.py         # ReconcileShipment
 │   ├── report.py            # Vista del expediente: valor, veredicto, regla y cita (F3.8)
-│   ├── review.py            # ApplyCorrection
+│   ├── review.py            # ApplyCorrection: aceptar, corregir o rechazar como observación (F3.9)
 │   └── evaluate.py          # Acierto del veredicto frente a un gold standard (F3.8; F4 lo amplía)
 ├── extraction/              # Escalones de la cascada (puros, sin E/S)
 │   ├── thread.py            # División del hilo, fecha de cada mensaje, limpieza y hash (F3.2)
@@ -99,7 +99,7 @@ src/eshipping_ai/
 │   └── notifier_log.py      # LogNotifier
 └── entrypoints/
     ├── cli.py               # eshipping ingest | process | reconcile | run | report | evaluate (F3.8)
-    └── streamlit_app.py     # Vista para operativos
+    └── streamlit_app.py     # Vista para operativos: discrepancias, expediente y corrección (F3.9)
 
 config/                      # Configuración versionada (sin datos reales)
 ├── reconciliation.yaml      # Autoridad, tolerancias, prioridades (ADR-0009)
@@ -153,6 +153,8 @@ Con `make demo` se ejecuta todo sobre los datos sintéticos sin LLM, con el relo
 1. **Lista de discrepancias**, por prioridad, con el veredicto, el valor del ERP y el propuesto.
 2. **Vista del expediente:** campos con su valor vigente, la línea temporal de observaciones (planificado, estimado y real) y la cita y la fuente de cada una.
 3. **Corrección simple:** aceptar, corregir o rechazar un valor; se guarda como observación humana y se vuelve a reconciliar el expediente.
+
+Una decisión nunca edita lo que dijo una fuente: aceptar o corregir añade una observación humana (rol `human_review`, rango A, que gana por la política), y rechazar marca como sustituida la observación que sostenía el valor, de modo que pasa a mandar la siguiente. La observación humana no tiene correo detrás: su fuente es la propia corrección (`correction:<id>`) y su evidencia, el motivo del operativo. Se arranca con `make ui` sobre la base de la demo; `ESHIPPING_WORKDIR`, `ESHIPPING_ERP` y `ESHIPPING_NOW` la apuntan a otra. Streamlit es un extra opcional (`pip install -e '.[ui]'`): la CLI no lo necesita.
 
 ## 6. LLM en la PoC
 
@@ -241,6 +243,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.1 | 24/11/2026 | Streamlit reducido implementado (F3.9): tres pestañas, correcciones como observaciones humanas o sustituciones (nunca ediciones) y nueva reconciliación del expediente; Streamlit como extra opcional |
 | 0.2.0 | 24/11/2026 | Escalón del LLM implementado (F3.4): campos pendientes con pista en el texto, validación determinista de la cita y del valor, confianza fija por escalón, esquema en las instrucciones para los modelos que no admiten `format`, modelo por defecto `llama3.2:3b` (provisional, D9) y `make demo-llm` |
 | 0.1.9 | 24/11/2026 | CLI implementada (F3.8): `process` y `reconcile` reciben el ERP (la asociación necesita el índice sembrado antes de procesar), opciones comunes `--workdir` y `--now`, `--no-llm` se pospone al escalón del LLM y `make demo` |
 | 0.1.8 | 24/11/2026 | Asociación con alias y `ProcessMessages` implementados (F3.5, parte 2): directorio de remitentes (`config/senders.yaml`) en el dominio, índice de alias sembrado con el ERP y ampliado con lo que enseñan los hilos, y tablas `classification` y `association` (migración 0002). La evidencia de una observación apunta al texto que leen las reglas (`Asunto: …` + cuerpo, o el texto del adjunto) |

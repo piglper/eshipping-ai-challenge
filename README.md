@@ -23,6 +23,7 @@ make check    # lint, tipos y tests, igual que el CI
 make migrate  # crea o actualiza la base de datos con las migraciones de Alembic
 make sample   # genera los datos sintéticos en data_sample/build/ (correos .eml, ERP en CSV y gold)
 make demo     # demo de extremo a extremo sobre los datos sintéticos: run, report y evaluate
+make ui       # vista para operativos en Streamlit sobre la base de la demo
 ```
 
 Uso de la CLI sobre cualquier carpeta de correos `.msg` o `.eml` (ver [diseño de la PoC §5.1](docs/10_diseno_poc.md#51-cli)):
