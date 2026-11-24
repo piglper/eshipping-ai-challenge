@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-24
+
+Cierre de la fase F3 (PoC): canalización de extremo a extremo con CLI, escalón del LLM local y vista para operativos.
+
 ### Added
 - Vista para operativos en Streamlit (F3.9, `make ui`): discrepancias de todos los expedientes por prioridad, vista del expediente con sus campos y la línea temporal de observaciones (estado, fuente y rango, escalón, zona y cita) y corrección simple. `ApplyCorrection`: aceptar o corregir añade una observación humana y rechazar sustituye la observación ganadora; nunca se edita lo que dijo una fuente, y el expediente se reconcilia de nuevo. Streamlit 1.66.1 como extra opcional `ui`.
 - Escalón del LLM (F3.4, ADR-0008): `OllamaClient` (biblioteca estándar, esquema JSON impuesto con `format` o, si el modelo no lo admite, en las instrucciones; temperatura 0) y `FakeLLMClient`. Solo se pregunta por los campos que la clase del mensaje hace esperables, que las reglas no han encontrado y de los que el texto tiene pista. Cada valor se valida de forma determinista: la cita existe en el texto, la fecha está escrita en ella con contexto y sin que las reglas la atribuyan a otro campo, la fecha es plausible, el buque y el número de contenedores salen de la cita. Lo que falla se descarta y se cuenta por motivo. La confianza es fija por escalón (zona de revisión). `--no-llm`, `--model` y `--ollama-url` en la CLI y `make demo-llm`.
@@ -92,7 +96,8 @@ Cierre de la fase F0 (entorno y proceso).
 - `.gitignore` que excluye datos reales (`data/`, `*.csv`, `*.eml`, `*.msg`), entornos virtuales y secretos.
 - Hook de pre-commit (`.githooks/pre-commit`) que bloquea commits con ficheros confidenciales.
 
-[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.0.1...v0.1.0
