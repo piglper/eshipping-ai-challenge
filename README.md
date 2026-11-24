@@ -22,6 +22,15 @@ make setup    # entorno virtual, dependencias de desarrollo y hooks (bloqueo de 
 make check    # lint, tipos y tests, igual que el CI
 make migrate  # crea o actualiza la base de datos con las migraciones de Alembic
 make sample   # genera los datos sintéticos en data_sample/build/ (correos .eml, ERP en CSV y gold)
+make demo     # demo de extremo a extremo sobre los datos sintéticos: run, report y evaluate
+```
+
+Uso de la CLI sobre cualquier carpeta de correos `.msg` o `.eml` (ver [diseño de la PoC §5.1](docs/10_diseno_poc.md#51-cli)):
+
+```bash
+eshipping run <carpeta> --erp <export.csv> --senders <remitentes.yaml>
+eshipping report --format md
+eshipping evaluate --gold <gold.json> --verbose
 ```
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
@@ -35,4 +44,4 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
 
 ## Estado
 
-Fase F0 (entorno y proceso). Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).
+Fase F3 (PoC): ingesta, extracción por reglas, asociación, reconciliación y CLI implementadas. Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).

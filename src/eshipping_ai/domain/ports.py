@@ -294,6 +294,10 @@ class ProjectionStore(Protocol):
         """Return the verdicts of a shipment that are not superseded."""
         ...
 
+    def shipment_ids(self) -> Sequence[str]:
+        """Return the shipments that have a projection, in order."""
+        ...
+
 
 class Repository(
     InboxStore,
