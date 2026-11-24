@@ -3,7 +3,7 @@ PYTHON ?= python3.14
 VENV   := .venv
 BIN    := $(VENV)/bin
 
-.PHONY: help setup lint format typecheck test check sample migrate demo demo-llm
+.PHONY: help setup lint format typecheck test check sample migrate demo demo-llm ui
 
 help: ## Muestra esta ayuda
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -52,3 +52,7 @@ demo-llm: sample ## La demo con el escalón del LLM (Ollama en local; MODEL=<mod
 	$(ESHIPPING) run data_sample/build/mails --erp data_sample/build/erp.csv $(if $(MODEL),--model $(MODEL))
 	$(ESHIPPING) report
 	$(ESHIPPING) evaluate --gold data_sample/build/gold.json
+
+ui: ## Vista para operativos en Streamlit sobre la base de la demo (ESHIPPING_WORKDIR para otra)
+	ESHIPPING_WORKDIR=$${ESHIPPING_WORKDIR:-$(DEMO_DIR)} ESHIPPING_ERP=$${ESHIPPING_ERP:-data_sample/build/erp.csv} \
+	ESHIPPING_NOW=$${ESHIPPING_NOW:-$(DEMO_NOW)} $(BIN)/streamlit run src/eshipping_ai/entrypoints/streamlit_app.py --client.toolbarMode viewer
