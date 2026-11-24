@@ -10,6 +10,12 @@ from eshipping_ai.entrypoints.cli import main
 NOW = "2026-10-07T08:00:00+02:00"
 
 
+@pytest.fixture(autouse=True)
+def no_local_ollama(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The CLI tests never reach a local Ollama, so they behave as in the CI."""
+    monkeypatch.setenv("OLLAMA_HOST", "http://127.0.0.1:9")
+
+
 def cli(workdir: Path, *args: str) -> str:
     out = io.StringIO()
     assert main(["--workdir", str(workdir), "--now", NOW, *args], out) == 0
@@ -33,7 +39,12 @@ def test_run_ingests_processes_and_reconciles(ran: tuple[Path, str]) -> None:
 def test_running_again_adds_nothing(ran: tuple[Path, str], synthetic_dir: Path) -> None:
     workdir, _ = ran
     output = cli(
-        workdir, "run", str(synthetic_dir / "mails"), "--erp", str(synthetic_dir / "erp.csv")
+        workdir,
+        "run",
+        str(synthetic_dir / "mails"),
+        "--erp",
+        str(synthetic_dir / "erp.csv"),
+        "--no-llm",
     )
     assert "mails_new=0" in output and "observations=0" in output
 
