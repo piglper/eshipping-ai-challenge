@@ -13,6 +13,7 @@ from typing import Protocol
 from pydantic import AwareDatetime, Field, NonNegativeInt
 
 from eshipping_ai.domain.model import (
+    Document,
     DomainModel,
     ErpRecord,
     ErpSnapshot,
@@ -35,6 +36,28 @@ class RawMail(DomainModel):
     content: bytes
     received_at: AwareDatetime
     mailbox: str
+
+
+class Attachment(DomainModel):
+    """A file attached to a mail (images used as signatures are dropped by the parser)."""
+
+    filename: str
+    mime_type: str
+    content: bytes
+
+
+class ParsedMail(DomainModel):
+    """A mail decoded from its file format: headers, bodies, attachments and embedded mails."""
+
+    sender: str
+    recipients: tuple[str, ...]
+    sent_at: AwareDatetime | None
+    subject: str
+    rfc_message_id: str | None
+    text_body: str
+    html_body: str | None = None
+    attachments: tuple[Attachment, ...] = ()
+    embedded: tuple[ParsedMail, ...] = ()
 
 
 class ParsedDocument(DomainModel):
@@ -111,6 +134,14 @@ class ObjectStore(Protocol):
         ...
 
 
+class MailParser(Protocol):
+    """Decodes mail files (``.eml``, ``.msg``) into :class:`ParsedMail`."""
+
+    def parse(self, content: bytes, filename: str) -> ParsedMail:
+        """Decode a mail file; embedded mails are returned in ``embedded``."""
+        ...
+
+
 class DocumentParser(Protocol):
     """Text extraction from attachments."""
 
@@ -135,20 +166,28 @@ class ERPGateway(Protocol):
         ...
 
 
-class Repository(Protocol):
-    """Persistence of the domain entities (docs/05_modelo_datos.md)."""
+class InboxStore(Protocol):
+    """Persistence of the input layer: mails, messages and documents."""
 
     def add_mail(self, mail: Mail) -> bool:
         """Store a mail; return False if it was already stored (idempotency)."""
         ...
 
-    def find_message_by_hash(self, content_hash: str) -> Message | None:
-        """Return the message with that content hash, if it is already known."""
+    def add_message(self, message: Message, mail_id: str, depth: int) -> bool:
+        """Store a message and link it to the mail it appears in.
+
+        The link is always created; the return value is False if the message (identified
+        by its content hash) was already stored, so a quoted message is stored once.
+        """
         ...
 
-    def add_message(self, message: Message, mail_id: str, depth: int) -> bool:
-        """Store a message and link it to the mail it appears in; False if already known."""
+    def add_document(self, document: Document, message_id: str) -> bool:
+        """Store an attachment once per content and link it to a message."""
         ...
+
+
+class ObservationStore(Protocol):
+    """Persistence of observations, which are never updated in place."""
 
     def add_observations(self, observations: Iterable[Observation]) -> int:
         """Insert observations, skipping those already stored; return how many were new."""
@@ -160,6 +199,10 @@ class Repository(Protocol):
         """Return the observations of a shipment, as they were known at a given time."""
         ...
 
+
+class AliasStore(Protocol):
+    """The association index: identifiers under which each shipment is known."""
+
     def find_aliases(self, alias_type: AliasType, value: str) -> Sequence[ShipmentAlias]:
         """Return the shipments known under an identifier."""
         ...
@@ -168,9 +211,17 @@ class Repository(Protocol):
         """Register a new identifier for a shipment."""
         ...
 
+
+class ErpStore(Protocol):
+    """Persistence of ERP reads."""
+
     def add_erp_snapshot(self, snapshot: ErpSnapshot, records: Iterable[ErpRecord]) -> None:
         """Store an ERP read with its rows."""
         ...
+
+
+class ProjectionStore(Protocol):
+    """Persistence of the recomputable conclusions."""
 
     def save_field_states(self, states: Iterable[FieldState]) -> None:
         """Replace the projection of the given fields."""
@@ -179,6 +230,13 @@ class Repository(Protocol):
     def save_verdicts(self, verdicts: Iterable[Verdict]) -> None:
         """Store verdicts; the previous verdict of the same field becomes superseded."""
         ...
+
+
+class Repository(InboxStore, ObservationStore, AliasStore, ErpStore, ProjectionStore, Protocol):
+    """Persistence of the domain entities (docs/05_modelo_datos.md).
+
+    Use cases depend on the narrow store they need; adapters implement the whole thing.
+    """
 
 
 class Notifier(Protocol):

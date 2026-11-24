@@ -79,7 +79,7 @@ def _container_mail(shipment: SpecShipment, spec: Spec) -> EmailMessage:
     container["Date"] = format_datetime(max(m.date for m in shipment.mails) + timedelta(hours=1))
     container["Subject"] = f"Expediente {shipment.operation}"
     container["Message-ID"] = f"<{shipment.operation}@synthetic.example>"
-    container.set_content(f"Correos del expediente {shipment.operation}.\n")
+    container.set_content("--\nArchivo de expedientes\n")
     for mail in shipment.mails:
         quoted = by_id[mail.quote] if mail.quote else None
         message_id = f"<{shipment.operation}.{mail.id}@synthetic.example>"
