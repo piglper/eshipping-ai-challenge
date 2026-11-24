@@ -13,6 +13,8 @@ from typing import Protocol
 from pydantic import AwareDatetime, Field, NonNegativeInt
 
 from eshipping_ai.domain.model import (
+    Association,
+    Classification,
     Document,
     DomainModel,
     ErpRecord,
@@ -58,6 +60,22 @@ class ParsedMail(DomainModel):
     html_body: str | None = None
     attachments: tuple[Attachment, ...] = ()
     embedded: tuple[ParsedMail, ...] = ()
+
+
+class ThreadMessage(DomainModel):
+    """A stored message as it appears in one mail, with its attachments."""
+
+    message: Message
+    depth: NonNegativeInt
+    documents: tuple[Document, ...] = ()
+    processed: bool = False
+
+
+class ThreadView(DomainModel):
+    """The messages of one mail, newest first: the context in which each one is read."""
+
+    mail: Mail
+    messages: tuple[ThreadMessage, ...]
 
 
 class ParsedDocument(DomainModel):
@@ -186,6 +204,34 @@ class InboxStore(Protocol):
         ...
 
 
+class InboxReader(Protocol):
+    """Read side of the input layer: which mails still have messages to process."""
+
+    def unprocessed_mail_ids(self) -> Sequence[str]:
+        """Return the mails with a message that has not been classified, oldest first."""
+        ...
+
+    def thread(self, mail_id: str) -> ThreadView:
+        """Return the messages of a mail, with their attachments and their state."""
+        ...
+
+
+class ProcessingStore(Protocol):
+    """Persistence of the classification and association of messages."""
+
+    def add_classifications(self, classifications: Iterable[Classification]) -> int:
+        """Insert classifications, skipping those already stored; return how many were new."""
+        ...
+
+    def add_associations(self, associations: Iterable[Association]) -> int:
+        """Insert associations, skipping those already stored; return how many were new."""
+        ...
+
+    def associations_for(self, shipment_id: str) -> Sequence[Association]:
+        """Return the messages associated with a shipment."""
+        ...
+
+
 class ObservationStore(Protocol):
     """Persistence of observations, which are never updated in place."""
 
@@ -249,7 +295,16 @@ class ProjectionStore(Protocol):
         ...
 
 
-class Repository(InboxStore, ObservationStore, AliasStore, ErpStore, ProjectionStore, Protocol):
+class Repository(
+    InboxStore,
+    InboxReader,
+    ProcessingStore,
+    ObservationStore,
+    AliasStore,
+    ErpStore,
+    ProjectionStore,
+    Protocol,
+):
     """Persistence of the domain entities (docs/05_modelo_datos.md).
 
     Use cases depend on the narrow store they need; adapters implement the whole thing.

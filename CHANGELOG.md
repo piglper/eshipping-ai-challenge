@@ -7,6 +7,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Asociación y procesado (F3.5, parte 2): `ProcessMessages` lee cada correo como un hilo, reúne los identificadores de todos sus mensajes y adjuntos (el booking suele estar solo en el asunto del último mensaje), decide el ruido con ese contexto, clasifica, asocia al expediente y guarda las observaciones con su zona de fiabilidad, rol de la fuente y evidencia. La asociación va del identificador más fuerte al más débil (expediente, booking vigente o sustituido, B/L, contenedor); un identificador de varios expedientes va a revisión y un expediente seguro enseña al índice los bookings y contenedores nuevos, de modo que un roleo con booking nuevo no parte el hilo. El booking que el hilo da por sustituido es alias, no valor. El índice de alias se siembra con el ERP.
+- Directorio de remitentes (`config/senders.yaml`, RF-73): rol y orden día-mes por dominio; un remitente desconocido es un cliente. Con el orden conocido, una fecha como `04/10` deja de ser ambigua.
+- Tablas `classification` y `association` con la migración 0002 y los puertos `InboxReader` y `ProcessingStore`.
 - Reglas de extracción (F3.5, parte 1): clasificación por palabras clave con las clases de la taxonomía, triaje (carril urgente y mensajes sin ningún identificador) y paso de los hallazgos a candidatos de observación. La palabra que acompaña a una fecha decide si es salida, llegada, cut-off, carga o levante, y el vocabulario de la línea decide si es planificada, estimada o real; si las reglas no lo saben, no adivinan. Se reconocen buque y viaje, el cambio de buque, el booking sustituido en un roleo (no es un candidato vigente), el número de contenedores y las listas de opciones sin confirmar (A-25). Cada candidato lleva su evidencia literal.
 - Persistencia (F3.7): `SqlRepository` sobre SQLAlchemy con todos los almacenes del dominio (SQLite en la PoC, PostgreSQL cambiando la URL), escrituras idempotentes, consulta «qué se sabía a fecha X» con `known_at` y `recorded_at`, sustitución de observaciones sin perder la historia y veredictos que sustituyen al anterior. Migraciones de Alembic (`make migrate`) comprobadas contra el esquema de la aplicación. Dependencias `sqlalchemy` 2.1.9 y `alembic` 1.20.1.
 - Reconciliación con el ERP (F3.6, ADR-0009): lectura del CSV con normalización de espacios, fechas e indicadores; valor vigente de cada campo (humano, real sobre estimado, frescura entre fuentes de autoridad, fuente informativa pendiente de confirmación y conflictos); comparación con tolerancias de fecha, rango y aproximada, alias de booking y similitud de buque; reglas A («ERP más reciente») y B («error claro»); coherencia interna del ERP; lectura antigua; los siete veredictos con prioridades P1 a P3 y aviso de lo urgente. Política en `config/reconciliation.yaml`. El sistema nunca escribe en el ERP.
@@ -21,6 +24,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Dependencias `pyyaml` 6.0.4 y, de desarrollo, `types-pyyaml`.
 
 ### Fixed
+- La evidencia de una fecha ya no empieza en mitad de una palabra.
 - La clave de idempotencia de una observación incluye el expediente: un mensaje que habla de varios expedientes perdía observaciones con el mismo campo y valor.
 - Seguridad: un remitente que no pasa SPF, DKIM o DMARC recibe el rol `customer`, coherente con el ADR-0009.
 

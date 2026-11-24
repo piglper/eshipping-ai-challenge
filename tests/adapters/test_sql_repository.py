@@ -18,6 +18,8 @@ from eshipping_ai.adapters.sql_repository import SqlRepository, create_schema
 from eshipping_ai.application.ingest import IngestMail
 from eshipping_ai.application.reconcile import ReconcileShipments
 from eshipping_ai.domain.model import (
+    Association,
+    Classification,
     Document,
     ErpRecord,
     ErpSnapshot,
@@ -30,6 +32,10 @@ from eshipping_ai.domain.model import (
 from eshipping_ai.domain.policy import project_field
 from eshipping_ai.domain.vocabulary import (
     AliasType,
+    AssociationMethod,
+    AssociationStatus,
+    ExtractionTier,
+    MailClass,
     ObservationStatus,
     Priority,
     VerdictCode,
@@ -320,3 +326,68 @@ def test_migrations_produce_the_schema_of_the_application(tmp_path: Path) -> Non
     finally:
         migrated.dispose()
         expected.dispose()
+
+
+def test_threads_to_process_follow_the_classification(engine: Engine, tmp_path: Path) -> None:
+    repo = SqlRepository(engine)
+    mail = Mail(
+        mail_id="mail-1",
+        rfc_message_id=None,
+        sha256=HASH,
+        mailbox="ops",
+        received_at=at("2026-09-20"),
+        raw_object_key="k",
+        size_bytes=1,
+    )
+    message = Message(
+        message_id="msg-1",
+        content_hash=HASH,
+        sender_address="a@b.example",
+        sent_at=at("2026-09-20"),
+        subject="s",
+        clean_body_key="k",
+        first_seen_mail_id="mail-1",
+    )
+    document = Document(
+        document_id="doc-1",
+        sha256="b" * 64,
+        filename="f.pdf",
+        mime_type="application/pdf",
+        object_key="k",
+        text_key="t",
+        has_text_layer=True,
+    )
+    repo.add_mail(mail)
+    repo.add_message(message, "mail-1", 0)
+    repo.add_document(document, "msg-1")
+    assert repo.unprocessed_mail_ids() == ["mail-1"]
+    view = repo.thread("mail-1")
+    assert [m.message.message_id for m in view.messages] == ["msg-1"]
+    assert view.messages[0].documents == (document,) and not view.messages[0].processed
+
+    classification = Classification(
+        message_id="msg-1",
+        mail_class=MailClass.BOOKING,
+        is_primary=True,
+        confidence=0.8,
+        tier=ExtractionTier.RULE,
+        extractor_version="v1",
+    )
+    assert repo.add_classifications([classification]) == 1
+    assert repo.add_classifications([classification]) == 0
+    assert repo.unprocessed_mail_ids() == []
+    assert repo.thread("mail-1").messages[0].processed
+
+    association = Association(
+        message_id="msg-1",
+        shipment_id="S1",
+        method=AssociationMethod.BOOKING,
+        matched_value="111",
+        confidence=0.98,
+        status=AssociationStatus.AUTO,
+    )
+    assert repo.add_associations([association]) == 1
+    assert repo.add_associations([association]) == 0
+    assert repo.associations_for("S1") == [association]
+    with pytest.raises(KeyError):
+        repo.thread("mail-unknown")

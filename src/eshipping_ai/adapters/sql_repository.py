@@ -16,6 +16,8 @@ from sqlalchemy.engine import RowMapping
 
 from eshipping_ai.adapters import sql_schema as t
 from eshipping_ai.domain.model import (
+    Association,
+    Classification,
     Document,
     ErpRecord,
     ErpSnapshot,
@@ -26,6 +28,7 @@ from eshipping_ai.domain.model import (
     ShipmentAlias,
     Verdict,
 )
+from eshipping_ai.domain.ports import ThreadMessage, ThreadView
 from eshipping_ai.domain.vocabulary import AliasType, ObservationStatus, VerdictStatus
 
 _OPEN_VERDICTS = (VerdictStatus.OPEN.value, VerdictStatus.PROPOSED.value)
@@ -98,6 +101,124 @@ class SqlRepository:
                     insert(t.message_document).values(message_id=message_id, document_id=stored_id)
                 )
             return known is None
+
+    # --- reading the input layer ----------------------------------------------------------
+
+    def unprocessed_mail_ids(self) -> Sequence[str]:
+        """Return the mails with a message that has not been classified, oldest first."""
+        classified = select(t.classification.c.message_id)
+        query = (
+            select(t.mail.c.mail_id)
+            .join(t.mail_message, t.mail_message.c.mail_id == t.mail.c.mail_id)
+            .where(t.mail_message.c.message_id.not_in(classified))
+            .group_by(t.mail.c.mail_id, t.mail.c.received_at)
+            .order_by(t.mail.c.received_at, t.mail.c.mail_id)
+        )
+        with self._engine.connect() as connection:
+            return list(connection.execute(query).scalars())
+
+    def thread(self, mail_id: str) -> ThreadView:
+        """Return the messages of a mail, newest first, with their attachments and state."""
+        with self._engine.connect() as connection:
+            mail = (
+                connection.execute(select(t.mail).where(t.mail.c.mail_id == mail_id))
+                .mappings()
+                .first()
+            )
+            if mail is None:
+                msg = f"unknown mail: {mail_id}"
+                raise KeyError(msg)
+            rows = (
+                connection.execute(
+                    select(t.message, t.mail_message.c.depth)
+                    .join(t.mail_message, t.mail_message.c.message_id == t.message.c.message_id)
+                    .where(t.mail_message.c.mail_id == mail_id)
+                    .order_by(t.mail_message.c.depth)
+                )
+                .mappings()
+                .all()
+            )
+            classified = set(
+                connection.execute(select(t.classification.c.message_id).distinct()).scalars()
+            )
+            documents = self._documents(connection, [row["message_id"] for row in rows])
+        messages = tuple(
+            ThreadMessage(
+                message=Message.model_validate({name: row[name] for name in Message.model_fields}),
+                depth=row["depth"],
+                documents=documents.get(row["message_id"], ()),
+                processed=row["message_id"] in classified,
+            )
+            for row in rows
+        )
+        return ThreadView(mail=Mail.model_validate(dict(mail)), messages=messages)
+
+    @staticmethod
+    def _documents(
+        connection: Connection, message_ids: Sequence[str]
+    ) -> dict[str, tuple[Document, ...]]:
+        rows = (
+            connection.execute(
+                select(t.message_document.c.message_id, t.document)
+                .join(t.document, t.document.c.document_id == t.message_document.c.document_id)
+                .where(t.message_document.c.message_id.in_(message_ids))
+                .order_by(t.document.c.document_id)
+            )
+            .mappings()
+            .all()
+        )
+        found: dict[str, list[Document]] = {}
+        for row in rows:
+            document = Document.model_validate({name: row[name] for name in Document.model_fields})
+            found.setdefault(row["message_id"], []).append(document)
+        return {message_id: tuple(items) for message_id, items in found.items()}
+
+    # --- classification and association ---------------------------------------------------
+
+    def add_classifications(self, classifications: Iterable[Classification]) -> int:
+        """Insert classifications, skipping those already stored; return how many were new."""
+        added = 0
+        with self._engine.begin() as connection:
+            for item in classifications:
+                keys = {
+                    "message_id": item.message_id,
+                    "mail_class": item.mail_class.value,
+                    "extractor_version": item.extractor_version,
+                }
+                if _exists(connection, t.classification, **keys):
+                    continue
+                connection.execute(
+                    insert(t.classification).values(
+                        **keys, is_primary=item.is_primary, payload=_payload(item)
+                    )
+                )
+                added += 1
+        return added
+
+    def add_associations(self, associations: Iterable[Association]) -> int:
+        """Insert associations, skipping those already stored; return how many were new."""
+        added = 0
+        with self._engine.begin() as connection:
+            for item in associations:
+                keys = {"message_id": item.message_id, "shipment_id": item.shipment_id}
+                if _exists(connection, t.association, **keys):
+                    continue
+                connection.execute(
+                    insert(t.association).values(
+                        **keys,
+                        method=item.method.value,
+                        status=item.status.value,
+                        payload=_payload(item),
+                    )
+                )
+                added += 1
+        return added
+
+    def associations_for(self, shipment_id: str) -> Sequence[Association]:
+        """Return the messages associated with a shipment."""
+        query = select(t.association.c.payload).where(t.association.c.shipment_id == shipment_id)
+        with self._engine.connect() as connection:
+            return [Association.model_validate(p) for p in connection.execute(query).scalars()]
 
     # --- observations -------------------------------------------------------------------
 

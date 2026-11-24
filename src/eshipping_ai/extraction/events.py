@@ -17,7 +17,12 @@ from eshipping_ai.extraction.classify import lists_offered_options
 from eshipping_ai.extraction.dates import DateMention, find_dates
 from eshipping_ai.extraction.equipment import find_equipment
 from eshipping_ai.extraction.locations import strip_accents
-from eshipping_ai.extraction.references import find_bookings, find_containers
+from eshipping_ai.extraction.references import (
+    find_bills_of_lading,
+    find_bookings,
+    find_containers,
+    find_operations,
+)
 
 _LABEL_LOOKBACK = 64
 _UNCERTAIN_ORDER_PENALTY = 0.25
@@ -134,6 +139,14 @@ def _classifier(label: str, line: str, default: EventClassifier) -> EventClassif
     return default
 
 
+def _word_start(text: str, start: int, limit: int) -> int:
+    """Move a start that fell in the middle of a word to the beginning of the next one."""
+    if start == 0 or text[start - 1].isspace():
+        return start
+    following = text.find(" ", start, limit)
+    return start if following == -1 else following + 1
+
+
 def _moment(day: date, at: time | None, tz: tzinfo) -> datetime:
     return datetime.combine(day, at or time(0), tzinfo=tz)
 
@@ -170,7 +183,7 @@ def _date_candidate(
         classifier=_classifier(label, plain[line_start:line_end], default),
         value=value,
         value_raw=mention.raw,
-        start=label_start,
+        start=_word_start(text, label_start, mention.span_start),
         end=mention.span_end,
         confidence=confidence,
         event_time=_moment(mention.start, mention.at, tz),
@@ -213,13 +226,16 @@ def _has_explicit_count(raw: str) -> bool:
     return re.match(r"\s*\d+\s*[x\u00d7]", raw, re.IGNORECASE) is not None
 
 
-def extract_candidates(text: str, anchor: date, tz: tzinfo = UTC) -> list[Candidate]:
+def extract_candidates(
+    text: str, anchor: date, tz: tzinfo = UTC, *, month_first: bool | None = None
+) -> list[Candidate]:
     """Find the candidate observations of a message.
 
     Args:
         text: Text of the message, subject included.
         anchor: Date of the message, for years and relative words.
         tz: Time zone of the place of the events (A-11), applied to every moment.
+        month_first: Date order of the sender, if its profile says it (RF-73).
 
     Returns:
         The candidates in order of appearance. Containers and previous bookings are not
@@ -229,7 +245,7 @@ def extract_candidates(text: str, anchor: date, tz: tzinfo = UTC) -> list[Candid
     offered = lists_offered_options(text)
     candidates = [
         found
-        for mention in find_dates(text, anchor)
+        for mention in find_dates(text, anchor, month_first=month_first)
         if (found := _date_candidate(mention, text, plain, tz, offered=offered))
     ]
     candidates += _vessel_candidates(text, offered=offered)
@@ -274,6 +290,33 @@ class Identifiers:
     bookings: tuple[str, ...]
     previous_bookings: tuple[str, ...]
     containers: tuple[str, ...]
+    operations: tuple[str, ...] = ()
+    bills_of_lading: tuple[str, ...] = ()
+
+    def merged(self, other: Identifiers) -> Identifiers:
+        """Union of two sets of identifiers, keeping the order of first appearance."""
+        return Identifiers(
+            bookings=_union(self.bookings, other.bookings),
+            previous_bookings=_union(self.previous_bookings, other.previous_bookings),
+            containers=_union(self.containers, other.containers),
+            operations=_union(self.operations, other.operations),
+            bills_of_lading=_union(self.bills_of_lading, other.bills_of_lading),
+        )
+
+    @property
+    def is_empty(self) -> bool:
+        """True if there is no identifier of any kind."""
+        return not (
+            self.bookings
+            or self.previous_bookings
+            or self.containers
+            or self.operations
+            or self.bills_of_lading
+        )
+
+
+def _union(first: tuple[str, ...], second: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys((*first, *second)))
 
 
 def find_identifiers(text: str) -> Identifiers:
@@ -292,4 +335,6 @@ def find_identifiers(text: str) -> Identifiers:
             dict.fromkeys(b.value for b in bookings if b.qualifier == "previous")
         ),
         containers=tuple(dict.fromkeys(c.value for c in find_containers(text) if c.valid)),
+        operations=tuple(dict.fromkeys(o.value for o in find_operations(text) if o.valid)),
+        bills_of_lading=tuple(dict.fromkeys(b.value for b in find_bills_of_lading(text))),
     )

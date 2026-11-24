@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.7 |
+| Versión | 0.1.8 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -35,7 +35,7 @@ No pretende demostrar los objetivos de precisión de producción: con el gold st
 | Extractor LLM | ✅ Implementado | Ollama en local, esquema JSON impuesto, temperatura 0, solo los campos pendientes y la cita verificada en el texto |
 | Normalizador y validador | ✅ Implementado | Pydantic y reglas de dominio |
 | Confianza | 🟡 Simplificado | Tabla de confianzas iniciales por escalón y señal ([fiabilidad §3.2](07_fiabilidad.md#32-modelo-de-calibración)); sin calibración aprendida |
-| Asociación | ✅ Implementado | Orden booking → expediente → contenedor → B/L → referencias del hilo, con alias |
+| Asociación | ✅ Implementado | Por los identificadores de todo el hilo, del más fuerte al más débil: expediente, booking (vigente o sustituido), B/L y contenedor. Un identificador de varios expedientes va a revisión; un expediente seguro enseña al índice los bookings y contenedores nuevos (`application/associate.py`) |
 | Proyección del valor vigente | ✅ Implementado | Política del [ADR-0009](adr/0009-politica-de-resolucion-de-discrepancias.md) desde `config/reconciliation.yaml` |
 | Lectura del ERP | ✅ Implementado | CSV con `read_at` (`CsvErpGateway`) |
 | Comparación y veredictos | ✅ Implementado | Los siete veredictos, tolerancias, regla «ERP más reciente» y prioridades P1–P3 |
@@ -61,10 +61,13 @@ src/eshipping_ai/
 │   ├── identifiers.py       # Contenedor ISO 6346, referencias, UN/LOCODE (validación y normalización)
 │   ├── policy.py            # Configuración, rango de cada fuente y valor vigente de un campo (ADR-0009 §1-§3)
 │   ├── comparison.py        # Tolerancias, reglas A y B, coherencia del ERP, veredictos y prioridades (ADR-0009 §4-§6)
+│   ├── senders.py           # Directorio de remitentes: rol y orden día-mes por dominio (RF-73)
 │   └── ports.py             # Clock, MailSource, ObjectStore, DocumentParser, LLMClient, ERPGateway, Repository, Notifier, TaskQueue
 ├── application/             # Casos de uso; solo dependen del dominio
 │   ├── ingest.py            # IngestMail
-│   ├── process.py           # ProcessMessage: triaje, clasificación, cascada de extracción
+│   ├── associate.py         # Asociación del hilo con alias y aprendizaje de alias nuevos (F3.5)
+│   ├── seed.py              # Siembra del índice de alias con el ERP (F3.5)
+│   ├── process.py           # ProcessMessages: clasifica, asocia y extrae las observaciones de cada hilo (F3.5)
 │   ├── reconcile.py         # ReconcileShipment
 │   ├── review.py            # ApplyCorrection
 │   └── evaluate.py          # Evaluate (frente a un gold standard)
@@ -225,6 +228,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.8 | 24/11/2026 | Asociación con alias y `ProcessMessages` implementados (F3.5, parte 2): directorio de remitentes (`config/senders.yaml`) en el dominio, índice de alias sembrado con el ERP y ampliado con lo que enseñan los hilos, y tablas `classification` y `association` (migración 0002). La evidencia de una observación apunta al texto que leen las reglas (`Asunto: …` + cuerpo, o el texto del adjunto) |
 | 0.1.7 | 24/11/2026 | Reglas de extracción implementadas (F3.5, parte 1): `classify.py` y `events.py` en lugar de `triage.py` y `rules.py`; el ruido se decide con el contexto del hilo |
 | 0.1.6 | 24/11/2026 | Persistencia implementada (F3.7): `sql_schema.py` y `sql_repository.py`, migraciones de Alembic en `migrations/` |
 | 0.1.5 | 24/11/2026 | Reconciliación implementada (F3.6): política de discrepancias, comparación con el ERP, adaptador del CSV y `config/reconciliation.yaml` |
