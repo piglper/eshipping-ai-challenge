@@ -19,7 +19,7 @@ def cli(workdir: Path, *args: str) -> str:
 @pytest.fixture
 def ran(synthetic_dir: Path, tmp_path: Path) -> tuple[Path, str]:
     erp = str(synthetic_dir / "erp.csv")
-    return tmp_path, cli(tmp_path, "run", str(synthetic_dir / "mails"), "--erp", erp)
+    return tmp_path, cli(tmp_path, "run", str(synthetic_dir / "mails"), "--erp", erp, "--no-llm")
 
 
 def test_run_ingests_processes_and_reconciles(ran: tuple[Path, str]) -> None:
@@ -66,7 +66,14 @@ def test_urgent_notices_are_logged_without_content(
     synthetic_dir: Path, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     with caplog.at_level(logging.WARNING):
-        cli(tmp_path, "run", str(synthetic_dir / "mails"), "--erp", str(synthetic_dir / "erp.csv"))
+        cli(
+            tmp_path,
+            "run",
+            str(synthetic_dir / "mails"),
+            "--erp",
+            str(synthetic_dir / "erp.csv"),
+            "--no-llm",
+        )
     assert [r.getMessage() for r in caplog.records] == [
         "urgent: shipment ES26900002: vessel=DISCREPANCY"
     ]
@@ -75,3 +82,11 @@ def test_urgent_notices_are_logged_without_content(
 def test_a_command_is_required(tmp_path: Path) -> None:
     with pytest.raises(SystemExit):
         main(["--workdir", str(tmp_path)])
+
+
+def test_without_ollama_the_run_stops_and_says_how_to_go_on(
+    synthetic_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = ["--workdir", str(tmp_path), "process", "--erp", str(synthetic_dir / "erp.csv")]
+    assert main([*args, "--ollama-url", "http://127.0.0.1:9"], io.StringIO()) == 2
+    assert "--no-llm" in capsys.readouterr().err

@@ -27,6 +27,8 @@ from eshipping_ai.adapters.erp_csv import CsvErpGateway
 from eshipping_ai.adapters.log_notifier import LogNotifier
 from eshipping_ai.adapters.mail_files import FolderMailSource, MailFileParser
 from eshipping_ai.adapters.object_store import LocalObjectStore
+from eshipping_ai.adapters.ollama_client import DEFAULT_URL as OLLAMA_URL
+from eshipping_ai.adapters.ollama_client import OllamaClient
 from eshipping_ai.adapters.pdf_text import PdfTextParser
 from eshipping_ai.adapters.sql_repository import SqlRepository, create_schema
 from eshipping_ai.application.evaluate import evaluate_verdicts
@@ -35,11 +37,12 @@ from eshipping_ai.application.process import ProcessMessages
 from eshipping_ai.application.reconcile import ReconcileShipments
 from eshipping_ai.application.report import ShipmentReport, shipment_report
 from eshipping_ai.application.seed import seed_aliases
-from eshipping_ai.domain.ports import Clock
+from eshipping_ai.domain.ports import Clock, LLMClient
 
 DEFAULT_WORKDIR = Path("data/output")
 DEFAULT_CONFIG = Path("config")
 DEFAULT_TZ = "Europe/Madrid"
+DEFAULT_MODEL = "llama3.2:3b"  # provisional: the model of the PoC is chosen in F4 (D9, #43)
 
 
 class Context:
@@ -92,7 +95,26 @@ def _ingest(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
     print(f"ingesta: {_summary(report)}", file=out)
 
 
+class UsageError(Exception):
+    """A run that cannot start as asked; the message says what to change."""
+
+
+def _llm(args: argparse.Namespace) -> LLMClient | None:
+    """The model of the LLM tier, or None with ``--no-llm``."""
+    if args.no_llm:
+        return None
+    client = OllamaClient(args.model, args.ollama_url)
+    if not client.available():
+        msg = (
+            f"Ollama no responde en {args.ollama_url} o no tiene el modelo {args.model}; "
+            "arráncalo (`ollama serve`, `ollama pull <modelo>`) o usa --no-llm"
+        )
+        raise UsageError(msg)
+    return client
+
+
 def _process(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
+    llm = _llm(args)
     snapshot, records = ctx.erp(args.erp).read()
     seed_aliases(records, ctx.repo, snapshot.read_at)
     report = ProcessMessages(
@@ -105,6 +127,7 @@ def _process(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
         load_reconciliation_config(ctx.config_dir / "reconciliation.yaml"),
         load_sender_directory(args.senders or ctx.config_dir / "senders.yaml"),
         ctx.tz,
+        llm,
     ).run()
     print(f"procesado: {_summary(report)}", file=out)
 
@@ -202,6 +225,15 @@ def _parser() -> argparse.ArgumentParser:
 
     def with_senders(command: argparse.ArgumentParser) -> None:
         command.add_argument("--senders", type=Path, help="directorio de remitentes (YAML)")
+        command.add_argument(
+            "--no-llm", action="store_true", help="la cascada se detiene en las reglas"
+        )
+        command.add_argument("--model", default=DEFAULT_MODEL, help="modelo de Ollama")
+        command.add_argument(
+            "--ollama-url",
+            default=os.environ.get("OLLAMA_HOST", OLLAMA_URL),
+            help="dirección del servidor de Ollama",
+        )
 
     ingest = commands.add_parser("ingest", help="ingesta, limpieza y división de los hilos")
     with_mails(ingest)
@@ -244,6 +276,9 @@ def main(argv: Sequence[str] | None = None, out: TextIO | None = None) -> int:
     ctx = Context(args)
     try:
         args.handler(ctx, args, out or sys.stdout)
+    except UsageError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
     finally:
         ctx.close()
     return 0
