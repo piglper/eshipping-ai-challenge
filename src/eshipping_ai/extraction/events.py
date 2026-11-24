@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, tzinfo
 
-from eshipping_ai.domain.vocabulary import EventClassifier, EventType, TimePrecision
+from eshipping_ai.domain.vocabulary import EventClassifier, EventType, ExtractionTier, TimePrecision
 from eshipping_ai.extraction.classify import lists_offered_options
 from eshipping_ai.extraction.dates import DateMention, find_dates
 from eshipping_ai.extraction.equipment import find_equipment
@@ -103,7 +103,8 @@ class Candidate:
 
     ``start`` and ``end`` delimit the evidence, the literal fragment that supports it.
     ``date_end``, ``at`` and ``precision`` are set for dates. ``offered`` marks values that
-    come from a list of options that has not been confirmed (A-25).
+    come from a list of options that has not been confirmed (A-25). ``tier`` is the step of
+    the cascade that found it.
     """
 
     field: str
@@ -120,6 +121,7 @@ class Candidate:
     voyage: str | None = None
     offered: bool = False
     ambiguous: bool = False
+    tier: ExtractionTier = ExtractionTier.RULE
 
 
 def _line_bounds(text: str, position: int) -> tuple[int, int]:
@@ -156,6 +158,19 @@ def _first_rule(label: str) -> tuple[str, EventType, EventClassifier] | None:
         if pattern.search(label):
             return field, event, default
     return None
+
+
+def label_field(label: str) -> str | None:
+    """The date field that the words of a label name, as the rules read them.
+
+    Args:
+        label: Words next to a date, with or without accents.
+
+    Returns:
+        The field (for example ``vessel_departure``), or None if no rule recognises it.
+    """
+    rule = _first_rule(strip_accents(label).lower())
+    return rule[0] if rule else None
 
 
 def _date_candidate(
