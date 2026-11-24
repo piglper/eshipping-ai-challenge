@@ -7,6 +7,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Ingesta (F3.2): lectura de carpetas de `.eml` y `.msg`, desempaquetado de correos incrustados, división de cada hilo en mensajes fechados por su propia cabecera, limpieza de firmas, avisos legales e imágenes, deduplicación de mensajes citados por hash, texto de los PDF (los escaneados se marcan sin OCR) y almacén de objetos local con claves por hash. El cuerpo de un correo contenedor no cuenta como mensaje.
+- Puertos `MailParser` y `ParsedMail`; `Repository` se divide en `InboxStore`, `ObservationStore`, `AliasStore`, `ErpStore` y `ProjectionStore`.
+- Dependencias `extract-msg` 0.58.3 y `pypdf` 7.1.1.
 - Modelo de dominio (`src/eshipping_ai/domain/`): vocabulario (clases de correo, eventos DCSA, clasificadores, roles y rangos de fuente, veredictos), identificadores con validación ISO 6346, entidades inmutables de las tres capas del modelo de datos con sus reglas de coherencia, y puertos de la arquitectura hexagonal.
 - Contrato de capas con `import-linter` en `make lint` y en el CI.
 - Dependencia de ejecución `pydantic` 2.14.4; de desarrollo, `import-linter` 2.17.
