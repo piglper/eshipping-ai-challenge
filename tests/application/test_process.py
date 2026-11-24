@@ -15,6 +15,7 @@ from eshipping_ai.adapters.mail_files import FolderMailSource, MailFileParser
 from eshipping_ai.adapters.object_store import LocalObjectStore
 from eshipping_ai.adapters.pdf_text import PdfTextParser
 from eshipping_ai.adapters.sql_repository import SqlRepository, create_schema
+from eshipping_ai.application.evaluate import evaluate_verdicts
 from eshipping_ai.application.ingest import IngestMail
 from eshipping_ai.application.process import ProcessMessages, ProcessReport
 from eshipping_ai.application.reconcile import ReconcileReport, ReconcileShipments
@@ -79,29 +80,16 @@ def pipeline(synthetic_dir: Path, tmp_path: Path) -> Iterator[Pipeline]:
     pipeline.engine.dispose()
 
 
-GOLD_TO_FIELDS = {
-    "booking": ["booking"],
-    "vessel": ["vessel"],
-    "vessel_departure": ["vessel_departure"],
-    "vessel_arrival_pod": ["vessel_arrival_pod"],
-    "stuffing": ["stuffing"],
-    "customs_release": ["customs_release"],
-    "cutoff": ["cutoff_document", "cutoff_vgm", "cutoff_full"],
-    "equipment": ["equipment_count"],
-}
-
-
 def test_the_rules_reproduce_the_verdicts_of_the_gold(
     pipeline: Pipeline, synthetic_dir: Path
 ) -> None:
     pipeline.process()
     pipeline.reconcile()
     gold = json.loads((synthetic_dir / "gold.json").read_text(encoding="utf-8"))["expedientes"]
-    for operation, fields in gold.items():
-        got = {v.field: v.code.value for v in pipeline.repo.verdicts_for(operation)}
-        for name, expected in fields.items():
-            codes = {got[f] for f in GOLD_TO_FIELDS[name] if f in got}
-            assert codes == {expected["verdict"]}, (operation, name, codes)
+    verdicts = {operation: pipeline.repo.verdicts_for(operation) for operation in gold}
+    evaluation = evaluate_verdicts(gold, verdicts)
+    assert evaluation.mismatches == []
+    assert evaluation.accuracy == 1.0
 
 
 def test_the_run_counts_what_it_found(pipeline: Pipeline) -> None:

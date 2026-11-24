@@ -452,6 +452,12 @@ class SqlRepository:
         with self._engine.connect() as connection:
             return [Verdict.model_validate(p) for p in connection.execute(query).scalars()]
 
+    def shipment_ids(self) -> Sequence[str]:
+        """Return the shipments that have a projection, in order."""
+        query = select(t.field_state.c.shipment_id).distinct().order_by(t.field_state.c.shipment_id)
+        with self._engine.connect() as connection:
+            return list(connection.execute(query).scalars())
+
 
 def create_schema(engine: Engine) -> None:
     """Create every table; for tests and throw-away databases (production uses Alembic).

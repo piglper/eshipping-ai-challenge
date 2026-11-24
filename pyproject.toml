@@ -20,6 +20,9 @@ dependencies = [
     "pyyaml==6.0.4",
 ]
 
+[project.scripts]
+eshipping = "eshipping_ai.entrypoints.cli:main"
+
 [dependency-groups]
 dev = [
     "import-linter==2.17",

@@ -3,7 +3,7 @@ PYTHON ?= python3.14
 VENV   := .venv
 BIN    := $(VENV)/bin
 
-.PHONY: help setup lint format typecheck test check sample migrate
+.PHONY: help setup lint format typecheck test check sample migrate demo
 
 help: ## Muestra esta ayuda
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -36,3 +36,13 @@ migrate: ## Crea o actualiza la base de datos (ESHIPPING_DATABASE_URL; por defec
 
 sample: ## Genera los datos sintéticos en data_sample/build/
 	$(BIN)/python -m eshipping_ai.synthetic
+
+DEMO_DIR := data_sample/build/demo
+DEMO_NOW := 2026-10-07T08:00:00+02:00
+ESHIPPING := $(BIN)/python -m eshipping_ai.entrypoints.cli --workdir $(DEMO_DIR) --now $(DEMO_NOW)
+
+demo: sample ## Demo de extremo a extremo sobre los datos sintéticos (sin LLM)
+	rm -rf $(DEMO_DIR)
+	$(ESHIPPING) run data_sample/build/mails --erp data_sample/build/erp.csv
+	$(ESHIPPING) report
+	$(ESHIPPING) evaluate --gold data_sample/build/gold.json
