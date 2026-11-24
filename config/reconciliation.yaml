@@ -1,0 +1,63 @@
+# Política de reconciliación (ADR-0009). Configuración versionada: cada veredicto guarda la
+# versión con la que se calculó. Los valores son configurables por operaciones.
+version: "2026.11.24-1"
+conflict_window_hours: 24      # fuentes de autoridad que discrepan casi a la vez -> conflicto
+erp_stale_after_hours: 24      # una lectura del ERP más antigua no permite ERP_ERROR ni ERP_MISSING
+urgent_horizon_hours: 72       # P1 si un campo crítico erróneo ocurre dentro de este plazo
+approx_days: 2                 # tolerancia de una fecha aproximada
+vessel_similarity: 0.92        # similitud mínima de dos nombres de buque
+
+fields:
+  booking:
+    kind: reference
+    authority: {A: [carrier], B: [internal]}
+    erp_key: booking
+  vessel:
+    kind: text
+    critical: true
+    authority: {A: [carrier_api, carrier], B: [internal]}
+    erp_key: vessel
+  vessel_departure:
+    kind: date
+    critical: true
+    authority: {A: [carrier_api, carrier], B: [internal]}
+    erp_key: vessel_departure
+    erp_actual_key: vessel_departure_actual
+  vessel_arrival_pod:
+    kind: date
+    critical: true
+    authority: {A: [carrier_api, carrier], B: [internal]}
+    erp_key: vessel_arrival_pod
+    erp_actual_key: vessel_arrival_actual
+  stuffing:
+    kind: date
+    critical: true
+    authority: {A: [haulier], B: [internal]}
+    erp_key: stuffing
+  customs_release:
+    kind: date
+    authority: {A: [customs_doc], B: [customs_agent, internal]}
+    erp_key: customs_release
+  equipment_count:
+    kind: count
+    authority: {A: [carrier], B: [internal, haulier]}
+    erp_key: equipment_count
+  # Campos que el ERP no tiene (se guardan en el expediente enriquecido, NOT_IN_ERP).
+  cutoff_document:
+    kind: date
+    critical: true
+    authority: {A: [carrier_api, carrier], B: [internal, haulier]}
+  cutoff_vgm:
+    kind: date
+    critical: true
+    authority: {A: [carrier_api, carrier], B: [internal, haulier]}
+  cutoff_full:
+    kind: date
+    critical: true
+    authority: {A: [carrier_api, carrier], B: [internal, haulier]}
+  containers:
+    kind: reference
+    authority: {A: [carrier, haulier, customs_doc], B: [internal]}
+  bill_of_lading:
+    kind: reference
+    authority: {A: [carrier], B: [internal]}
