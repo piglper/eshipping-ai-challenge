@@ -28,6 +28,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Dependencia de desarrollo `hypothesis` 6.170.17.
 
 ### Changed
+- El rol del remitente se resuelve en cascada (ADR-0013), sin dar de alta los dominios uno a uno:
+  - un directorio corto y curado: los dominios propios y un registro público de navieras;
+  - las partes del expediente en el ERP (`Línea Transporte`, `Agente Aduana`, `Transportistas`, `Cliente Op.`, `Shipper` y `Consignee`), con una coincidencia estricta del nombre con el dominio o con el nombre visible del remitente;
+  - y, por defecto, informativo.
+
+  `config/senders.yaml` gana la sección `erp_parties` y pierde los dominios de transportista y agente de aduanas, que ahora salen del ERP. El procesado cuenta los mensajes por rol y por la señal que lo decidió (`roles=`). El ERP sintético tiene las columnas `Transportistas` y `Agente Aduana`.
+- Un valor del LLM rellena un hueco, pero no desplaza a un valor fiable de las reglas (ADR-0014). Si discrepa, queda pendiente de confirmación.
 - El clasificador no cuenta la palabra que etiqueta un booking (`BKG 990000101`, `booking nº ...`). Un hilo la conserva en el asunto trate de lo que trate cada respuesta, y por eso las respuestas de transporte salían como reserva. «Booking confirmation» sí cuenta. En la muestra real, la clase principal pasa del 47 % al 63 %.
 - `make evaluate-real` usa una carpeta de trabajo por modelo, para comparar ejecuciones.
 - La cobertura mínima del 90 % se exige en `make test` y en el CI (`fail_under`). La página de Streamlit queda fuera de la medida, porque se prueba con `AppTest` en un proceso que coverage no ve.

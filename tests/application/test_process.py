@@ -63,6 +63,7 @@ class Pipeline:
         snapshot, records = self.erp.read()
         self.shipments = seed_aliases(records, self.repo, snapshot.read_at)
         self.senders = load_sender_directory(ROOT / "config" / "senders.yaml")
+        self.parties = self.senders.parties_of(records)
 
     def process(self, llm: LLMClient | None = None) -> ProcessReport:
         return ProcessMessages(
@@ -76,6 +77,7 @@ class Pipeline:
             self.senders,
             MADRID,
             llm,
+            self.parties,
         ).run()
 
     def reconcile(self) -> ReconcileReport:

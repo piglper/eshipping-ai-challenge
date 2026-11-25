@@ -1,10 +1,37 @@
-# Directorio de remitentes por dominio (RF-73). Sintético: el de producción lo mantiene
-# operaciones y no se versiona con datos reales. Un remitente desconocido es un cliente.
+# Rol de los remitentes (RF-73, ADR-0013). Se resuelve en cascada:
+#   1. domains: lista corta y curada de dominios seguros (los propios de EShipping y un
+#      registro público de navieras). No se dan de alta clientes ni proveedores uno a uno.
+#   2. erp_parties: columnas del ERP que nombran a la naviera, el agente de aduanas, el
+#      transportista y el cliente de cada expediente; un remitente cuyo dominio o nombre
+#      coincide con una de ellas toma ese rol.
+#   3. default: cualquier otro remitente es informativo (cliente).
 # month_first indica el orden de «09/10»: false = día/mes; sin valor, la fecha queda ambigua.
-version: "2026.11.24-1"
+version: "2026.11.25-1"
 default: {role: customer}
+
 domains:
-  naviera-ficticia.example: {role: carrier, month_first: false}
-  transportes-inventados.example: {role: haulier, month_first: false}
-  aduanas-ejemplo.example: {role: customs_agent, month_first: false}
+  # Dominios propios. El de producción lo fija el despliegue (en la PoC, sintético).
   eshipping-sintetico.example: {role: internal, month_first: false}
+  # Registro público de navieras (dominios corporativos conocidos). Se amplía con las que
+  # opere EShipping; no es confidencial.
+  naviera-ficticia.example: {role: carrier, month_first: false}  # la naviera sintética
+  maersk.com: {role: carrier}
+  msc.com: {role: carrier}
+  cma-cgm.com: {role: carrier}
+  hlag.com: {role: carrier}
+  hapag-lloyd.com: {role: carrier}
+  one-line.com: {role: carrier}
+  evergreen-line.com: {role: carrier}
+  coscon.com: {role: carrier}
+  oocl.com: {role: carrier}
+  zim.com: {role: carrier}
+  hmm21.com: {role: carrier}
+  yangming.com: {role: carrier}
+  pilship.com: {role: carrier}
+  wanhai.com: {role: carrier}
+
+erp_parties:
+  carrier: {columns: ["Línea Transporte"]}
+  customs_agent: {columns: ["Agente Aduana"], month_first: false}
+  haulier: {columns: ["Transportistas"], month_first: false}
+  customer: {columns: ["Cliente Op.", "Shipper", "Consignee"]}

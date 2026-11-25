@@ -22,7 +22,9 @@ Cada decisión relevante, técnica o de proyecto, se documenta como un *Architec
 | [0006](0006-modelo-de-eventos-basado-en-dcsa.md) | Modelo de eventos basado en el estándar DCSA | Aceptado | 2026-11-22 |
 | [0007](0007-monolito-modular-con-workers-por-etapa.md) | Monolito modular desplegado como workers por etapa detrás de colas | Aceptado | 2026-11-23 |
 | [0008](0008-estrategia-de-ia-cascada-por-etapa.md) | Estrategia de IA: cascada de técnicas por etapa, con el LLM acotado al texto libre | Aceptado | 2026-11-23 |
-| [0009](0009-politica-de-resolucion-de-discrepancias.md) | Política de resolución de discrepancias: autoridad por campo, estado del dato, frescura y escalado | Aceptado | 2026-11-23 |
+| [0009](0009-politica-de-resolucion-de-discrepancias.md) | Política de resolución de discrepancias: autoridad por campo, estado del dato, frescura y escalado | Aceptado; §1 sustituido por ADR-0013 en cómo se obtiene el rol; §3 ampliado por ADR-0014 | 2026-11-23 |
 | [0010](0010-proveedor-de-llm-de-produccion.md) | Proveedor de LLM de producción: lista corta con residencia en la UE y elección por evaluación | Aceptado | 2026-11-23 |
 | [0011](0011-almacenamiento-postgresql-y-almacen-de-objetos.md) | Almacenamiento de producción: PostgreSQL y almacén de objetos compatible con S3 | Aceptado | 2026-11-23 |
 | [0012](0012-despliegue-en-contenedores-portables.md) | Despliegue en contenedores portables sobre un servicio gestionado de la UE, sin Kubernetes | Aceptado | 2026-11-23 |
+| [0013](0013-rol-del-remitente-en-cascada.md) | El rol del remitente se resuelve en cascada, sin dar de alta los dominios uno a uno | Aceptado | 2026-11-25 |
+| [0014](0014-el-llm-rellena-huecos-no-sustituye.md) | Un valor del LLM rellena un hueco, pero no desplaza a un valor fiable de las reglas | Aceptado | 2026-11-25 |

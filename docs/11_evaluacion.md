@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.2.0 |
+| Versión | 0.3.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
@@ -17,6 +17,7 @@
 - La evaluación mide cuatro cosas: la **asociación** de cada correo a su expediente, su **clase**, el **valor de cada campo** y el **veredicto** frente al ERP. Cada proporción lleva su intervalo de confianza de Wilson al 95 %.
 - Es reproducible con un comando: `make evaluate` sobre los datos sintéticos y `make evaluate-real` sobre la muestra real, solo en local.
 - Sobre el conjunto sintético, la asociación, la extracción y los veredictos aciertan en todos los casos. La clase principal falla en 2 de 14 correos.
+- **Cómo leer las cifras reales.** La muestra son 38 correos que EShipping seleccionó para dar contexto sobre su sistema actual; no es una muestra aleatoria del flujo. Las cifras sirven para ver **cómo se comporta** el sistema y **qué tipos de error** tiene. Las proporciones (por ejemplo, cuántos correos son internos o de la naviera) son de la muestra y no se extrapolan a los 100.000 correos al mes.
 - Sobre la **muestra real**, solo con reglas y sin LLM:
   - **Asociación:** todo lo asociado de forma automática es correcto (35 de 35); 3 correos quedan sin asociar.
   - **Extracción:** precisión del 86 % y recall del 76 %. El booking y el levante aciertan siempre; el buque es el campo más débil (recall del 45 %).
@@ -26,9 +27,12 @@
   El detalle está en la [sección 4](#4-resultados-sobre-la-muestra-real).
 - **Análisis de errores** ([sección 5](#5-análisis-de-errores-f43)):
   - **Lo que más importa sale bien:** ninguna asociación automática es errónea.
-  - **El 90 % de lo que se acepta sin revisión es correcto.** Está lejos del 98 % de RNF-11, y casi todo el error viene de correos internos que mencionan buques o fechas que no son el dato vigente.
+  - **El 90 % de lo que se acepta sin revisión es correcto en esta muestra.** No basta para el 98 % de RNF-11. Los errores atribuibles ganan por la regla «el más reciente de los fiables».
   - **El fallo más frecuente no es de extracción:** en 8 casos el valor correcto se leyó, pero la proyección eligió otro.
-  - **El LLM local pequeño (`llama3.2:3b`) apenas suma.** Resuelve 2 valores, y sus fallos van a revisión.
+  - **El LLM local pequeño (`llama3.2:3b`) apenas suma.** Con la regla nueva del ADR-0014 ya no empeora lo que resuelven las reglas.
+- **Dos decisiones salen del análisis:**
+  - el rol del remitente se resuelve en cascada, sin dar de alta los dominios uno a uno ([ADR-0013](adr/0013-rol-del-remitente-en-cascada.md));
+  - un valor del LLM rellena un hueco, pero no desplaza a un valor fiable de las reglas ([ADR-0014](adr/0014-el-llm-rellena-huecos-no-sustituye.md)).
 
 ## 2. Cómo se mide
 
@@ -85,13 +89,18 @@ Los dos fallos de clase son avisos de buque (`VSL`) sin ninguna palabra del voca
 
 11 expedientes, 38 correos y 85 veredictos (`make evaluate-real`, 25/11/2026). Sin LLM: la cascada se detiene en las reglas.
 
-**Directorio de remitentes.** Lo exigen las reglas de autoridad del ADR-0009, y sin él ningún valor gana. La primera ejecución, con todos los remitentes desconocidos, dio 71 `MAIL_MISSING` y una extracción del 0 %. Para esta evaluación, el rol de cada uno de los 20 dominios se propuso en local y de forma automática:
-- `internal` si es el dominio de EShipping;
-- `carrier` si está en una lista pública de navieras;
-- `customs_agent` o `haulier` si la mitad o más de sus correos son de aduanas o de transporte;
-- `customer` en el resto.
+**Rol de los remitentes.** Lo exigen las reglas de autoridad del ADR-0009. La primera ejecución trató a todos los remitentes como desconocidos (informativos): ningún valor ganó y la reconciliación dio 71 `MAIL_MISSING`. Darlos de alta uno a uno no escala a 100.000 correos al mes, así que el rol se resuelve en cascada ([ADR-0013](adr/0013-rol-del-remitente-en-cascada.md)):
 
-Salieron 2 internos, 3 navieras, 2 agentes de aduanas y 13 clientes. Nadie lo ha revisado todavía, así que es una fuente de error más. En producción, el directorio lo mantiene operaciones, y el sistema puede proponerlo así para que una persona lo confirme.
+1. el directorio curado del repositorio: el dominio propio de EShipping y un registro público de navieras;
+2. las partes del expediente en el ERP;
+3. por defecto, informativo.
+
+La única configuración específica de la muestra es el dominio propio. Sale en local del remitente de los correos contenedores, que por construcción son de EShipping. De los 363 mensajes asociados, la cascada resuelve:
+- **por el directorio:** 195 (180 internos y 15 de navieras);
+- **por las partes del ERP:** 89 (11 agentes de aduanas y 78 clientes);
+- **por defecto:** 79.
+
+Ningún transportista coincide con el ERP. La coincidencia es estricta a propósito, y esos mensajes quedan como informativos: el error va hacia el lado seguro. Las métricas coinciden con las de un directorio provisional de los 20 dominios, preparado en una primera ejecución, sin escribir ninguno a mano.
 
 ### 4.1 Resumen
 
@@ -168,7 +177,7 @@ Por campo, el **buque** reparte sus 6 fallos entre las tres etapas (2 en cada un
 
 | Causa | Casos | Etapa responsable |
 |---|---|---|
-| El valor correcto solo lo dio una fuente informativa (un dominio que el directorio trata como cliente) y espera confirmación | 4 | Directorio de remitentes (propuesto automáticamente, §4) o una política demasiado estricta con el cliente |
+| El valor correcto solo lo dio una fuente informativa (un remitente que la cascada deja como cliente) y espera confirmación | 4 | Rol del remitente: un proveedor que no se reconoce (por ejemplo, un transportista que no coincide con el ERP), o un cliente que de verdad lo comunicó primero. Es el comportamiento previsto: lo informativo espera confirmación |
 | Un mensaje interno posterior menciona otro buque u otra fecha, y gana por ser el más reciente entre fuentes fiables | 3 | La regla «el más reciente de los fiables». Hipótesis: el correo interno cita una alternativa o un dato antiguo, y la extracción lo toma por vigente |
 | Un mensaje interno gana a una naviera más reciente en la carga en almacén | 1 | Autoridad por campo del ADR-0009 |
 
@@ -176,7 +185,9 @@ Por campo, el **buque** reparte sus 6 fallos entre las tres etapas (2 en cada un
 
 Son los más graves ([07 §2.2](07_fiabilidad.md#22-tipos-de-error-y-su-gravedad)): **6 de 60 valores automáticos son erróneos**, así que lo automático acierta un 90,0 % [79,9 % - 95,3 %]. En los 4 casos que se pueden atribuir, ganó la regla «el más reciente de los fiables». En 3 de ellos la fuente era un **correo interno** (buque, salida y carga) y en 1 una naviera (un cut-off).
 
-Hipótesis: los correos internos de EShipping reenvían, resumen y proponen alternativas a sus clientes; no son la fuente del dato, sino quien lo transmite. Si es así, darles la misma autoridad que a la naviera para el buque y sus fechas es la causa principal de que un error pase sin revisión.
+En esta muestra casi todo lo que se acepta sin revisión viene de correos internos, porque apenas tiene correos de navieras. En el flujo real no será así, y por eso **no se cambia la autoridad del correo interno con una regla fija**: con estos datos, la regla mandaría a revisión unos 29 valores correctos para atrapar 6 errores, pero esa proporción es de la muestra. La herramienta para decidirlo ya está diseñada: confianza calibrada por rol, campo y corroboración, con umbrales que se ajustan con la auditoría de producción ([07 §3 a §5](07_fiabilidad.md)).
+
+Hipótesis sobre la causa: los correos internos reenvían, resumen y proponen alternativas a los clientes, y la extracción toma por vigente un dato que en el texto es una alternativa o un dato antiguo (A-25, A-16). Esto apunta más a la extracción (cambio 4 del §5.7) que a la autoridad.
 
 ### 5.4 Veredictos
 
@@ -229,23 +240,24 @@ Cada uno de los 82 valores esperados, según quién da el valor vigente:
 
 ### 5.7 Qué cambiar, por orden de impacto
 
-| # | Cambio | Ataca | Esfuerzo |
+| # | Cambio | Ataca | Estado |
 |---|---|---|---|
-| 1 | El correo interno no es fuente de autoridad para el buque ni sus fechas: baja de rango, o exige confirmación de la naviera para entrar en zona automática | Errores aceptados sin revisión (§5.3) y «leídos, no elegidos» (§5.2) | Bajo: configuración de `reconciliation.yaml` y ADR que sustituya al ADR-0009 en ese punto |
-| 2 | Validar el directorio de remitentes con operaciones | 4 valores «leídos, no elegidos» | Bajo, pero necesita a EShipping |
-| 3 | Preguntar al LLM solo por los campos que le faltan al **expediente**, no al mensaje | Efecto lateral del LLM (§5.6) | Bajo |
-| 4 | Tratar las listas de buques alternativos y las menciones a datos antiguos (A-25) como contexto, no como valor | Buque extraído mal | Medio |
-| 5 | Escalón de ML para la clasificación con correos etiquetados | Clasificación (§5.5) | Medio; necesita datos |
-| 6 | Ampliar la regla B con el patrón de los errores del ERP que se vean en la auditoría | `ERP_ERROR` dado como `DISCREPANCY` | Bajo, cuando haya casos |
+| 1 | Calibrar la confianza por rol, campo y corroboración (¿lo confirma otra fuente?), y ajustar los umbrales con la auditoría de producción, en lugar de cambiar a mano la autoridad del correo interno | Errores aceptados sin revisión (§5.3) | Diseñado ([07 §3 a §5](07_fiabilidad.md)). No se ajusta con esta muestra: sus proporciones no son las del flujo |
+| 2 | Resolver el rol del remitente en cascada, sin dar de alta dominios ([ADR-0013](adr/0013-rol-del-remitente-en-cascada.md)) | Escalabilidad del rol; «leídos, no elegidos» por fuente informativa (§5.2) | **Aplicado** (señales 1, 2 y 4). El perfil aprendido (señal 3) queda diseñado |
+| 3 | Que un valor del LLM rellene huecos y no desplace a uno fiable de las reglas ([ADR-0014](adr/0014-el-llm-rellena-huecos-no-sustituye.md)) | Efecto lateral del LLM (§5.6) | **Aplicado** |
+| 4 | Tratar las listas de buques alternativos y las menciones a datos antiguos (A-25, A-16) como contexto, no como valor | Buque extraído mal y errores automáticos de correos internos (§5.3) | Propuesto. Esfuerzo medio |
+| 5 | Escalón de ML para la clasificación con correos etiquetados | Clasificación (§5.5) | Propuesto. Necesita datos etiquetados |
+| 6 | Ampliar la regla B con el patrón de los errores del ERP que se vean en la auditoría | `ERP_ERROR` dado como `DISCREPANCY` | Propuesto, cuando haya casos |
 
-Solo se ha aplicado la corrección del §5.5. El resto queda propuesto, porque con 11 expedientes cualquier ajuste más fino sería ajustar la política a la muestra.
+Se han aplicado la corrección del §5.5 y los cambios 2 y 3, que son de diseño y no dependen de la muestra. El resto queda propuesto: con 11 expedientes elegidos para dar contexto, cualquier ajuste más fino sería ajustar la política a la muestra.
 
 ## 6. Limitaciones
 
 - **Muestra pequeña.** 11 expedientes, 38 correos y 85 veredictos puntuables: los intervalos son anchos y ninguna cifra demuestra los objetivos de RNF-10 (99,5 %) ni de RNF-11 (98 %). Para eso hacen falta unos 765 y 190 casos sin errores ([07 §6.1](07_fiabilidad.md#61-qué-se-puede-demostrar-con-el-gold-standard)).
 - **Gold provisional.** Lo etiquetó Claude Code y está pendiente de revisión humana (`meta.review`), con un solo etiquetador.
 - **Un solo tipo de expediente** (exportación marítima FCL desde España).
-- **Directorio de remitentes propuesto automáticamente** y sin revisar (§4).
+- **Muestra elegida, no aleatoria.** EShipping la seleccionó para dar contexto. La mezcla de remitentes y de clases (por ejemplo, muchos correos internos y pocos de navieras) es de la muestra; por eso las cifras describen tipos de error y no se usan para calibrar umbrales ni para estimar la carga de revisión en producción.
+- **Roles de remitente sin validar.** La cascada del ADR-0013 no tiene, en la muestra, ningún caso en que la parte del ERP coincida con un transportista; el perfil aprendido (señal 3) no está implementado.
 - **El orden de los correos incrustados** es el del fichero. Si un mismo correo aparece en dos contenedores, se guarda una vez y cuenta en el primero; en el segundo queda sin emparejar y se cuenta como no encontrado.
 
 ## 7. Cómo reproducirlo
@@ -263,5 +275,6 @@ eshipping evaluate --gold <gold.json> --format json --verbose   # con los fallos
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.3.0 | 25/11/2026 | Las cifras reales describen comportamiento y tipos de error, no tasas de producción. Rol del remitente en cascada (ADR-0013), sin directorio manual; el LLM rellena huecos (ADR-0014). Cambios propuestos reordenados: la autoridad del correo interno pasa a calibración en producción |
 | 0.2.0 | 25/11/2026 | Análisis de errores (F4.3): etapa que pierde cada valor, causas, errores aceptados sin revisión, veredictos, clasificación con su corrección, porcentaje resuelto en cada escalón con y sin LLM, y cambios propuestos |
 | 0.1.0 | 25/11/2026 | Primera versión: metodología, métricas con intervalo de Wilson y resultados sobre el conjunto sintético y la muestra real, solo con reglas (F4.2) |

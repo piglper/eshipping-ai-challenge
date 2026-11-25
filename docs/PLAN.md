@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.22.0 |
+| Versión | 1.23.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
-| Última actualización | 23/11/2026 |
+| Última actualización | 25/11/2026 |
 | Documentos relacionados | [Índice de ADR](adr/README.md) · [CHANGELOG](../CHANGELOG.md) · [Índice de documentación](README.md) |
 
 > Documento vivo. Cada cambio se registra en el [historial de revisiones](#15-historial-de-revisiones) y cada decisión relevante en un [ADR](adr/README.md). No contiene datos reales.
@@ -454,6 +454,8 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | D5b | Proveedor de LLM de producción: lista corta de cuatro candidatos con residencia en la UE, elección por evaluación sobre el conjunto de referencia; escenario de referencia de costes con Claude Haiku 5.5 y escalado a Sonnet 5.5; autoalojado como contingencia | [ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md) |
 | D7 | Almacenamiento de producción: PostgreSQL (eventos como tabla de solo inserción, proyecciones, colas con `SKIP LOCKED`, particiones mensuales) y almacén de objetos compatible con S3 | [ADR-0011](adr/0011-almacenamiento-postgresql-y-almacen-de-objetos.md) |
 | D8 | Despliegue: imagen OCI única e infraestructura como código; referencia en un servicio gestionado de contenedores de la nube de EShipping en la UE, sin Kubernetes; alternativa con máquinas europeas y Docker Compose | [ADR-0012](adr/0012-despliegue-en-contenedores-portables.md) |
+| D10 | El rol del remitente se resuelve en cascada (directorio curado de dominios propios y navieras, partes del expediente en el ERP, perfil aprendido y, por defecto, informativo), sin dar de alta los dominios uno a uno | [ADR-0013](adr/0013-rol-del-remitente-en-cascada.md) |
+| D11 | Un valor del LLM rellena un hueco, pero no desplaza a un valor fiable de las reglas: si discrepa, queda pendiente de confirmación | [ADR-0014](adr/0014-el-llm-rellena-huecos-no-sustituye.md) |
 
 ### 14.2 Decisiones abiertas
 
@@ -492,3 +494,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.20.0 | 23/11/2026 | P. Iglesias Peral | F2.10: `docs/10_diseno_poc.md` (alcance por componente, estructura del código, CLI, LLM local, datos sintéticos generados desde YAML porque el hook bloquea `.eml` y `.csv`, pruebas y orden de implementación de F3 con línea de recorte). La CLI añade `reconcile` y `run`. La evaluación pasa a `docs/11_evaluacion.md` | #26 |
 | 1.21.0 | 23/11/2026 | P. Iglesias Peral | Revisión de fase de F2, cerrada con `v0.3.0` antes de lo previsto (el calendario reservaba hasta el martes 24/11 por la mañana). Criterios de salida: cada requisito de F1 tiene componente (arquitectura §10) y cada decisión de F2 tiene su ADR aceptado (ADR-0007 a ADR-0012); solo queda abierta D9, que se decide en F4. Trazabilidad con el enunciado (§13) actualizada. Pendientes que pasan a F3 y F4: validar en GitHub cómo se dibujan los diagramas Mermaid y revisar el gold standard (R10) | #70 |
 | 1.22.0 | 24/11/2026 | P. Iglesias Peral | Revisión de fase de F3, cerrada con `v0.4.0`. Criterio de salida cumplido: la canalización funciona de extremo a extremo (`make demo`: ingesta, reglas, asociación, reconciliación, informe y evaluación, con los siete veredictos y el 100 % frente al gold sintético; `make demo-llm` con el escalón del LLM en local; `make ui`). Desviaciones: el OCR se queda en marcar los PDF escaneados (alcance recortado, revisión 1.10.0); las plantillas de PDF y el banco de ejemplos del LLM no se implementan; `--no-llm` llegó con el LLM y no con la CLI; con Ollama 0.40 solo `llama3.2:3b` admite el esquema impuesto y los otros dos candidatos lo reciben en las instrucciones. Pendiente antes de F4: revisión humana del gold standard real (R10) | #74–#82 |
+| 1.23.0 | 25/11/2026 | P. Iglesias Peral | F4.1 a F4.3. La evaluación sobre la muestra real mostró que un directorio de remitentes manual no escala; nuevas decisiones D10 (rol del remitente en cascada, ADR-0013) y D11 (el LLM rellena huecos, ADR-0014). Las conclusiones de F4 describen el comportamiento y los tipos de error del sistema, no tasas de producción: la muestra la seleccionó EShipping para dar contexto y no es representativa del flujo | #39, #40, #41 |

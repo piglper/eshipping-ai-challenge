@@ -13,6 +13,7 @@ from pydantic import NonNegativeInt, PositiveInt
 from eshipping_ai.domain.model import Confidence, DomainModel, FieldState, Observation
 from eshipping_ai.domain.vocabulary import (
     EventClassifier,
+    ExtractionTier,
     ObservationStatus,
     SourceRank,
     SourceRole,
@@ -117,7 +118,10 @@ def project_field(
     Rules, in order: a human review wins (6); an actual value beats any estimate (2); among
     reliable sources the freshest wins (3); an informative source never replaces, it waits
     for confirmation (4); sources of authority that disagree within the conflict window, or
-    two different actual values, make a conflict (5, 2).
+    two different actual values, make a conflict (5, 2). A value read by the language model
+    fills a gap but never displaces a reliable value read by the rules: while there is one,
+    a different value of the model waits for confirmation like an informative one
+    (ADR-0014).
 
     Args:
         shipment_id: Shipment being projected.
@@ -140,6 +144,9 @@ def project_field(
     humans = [o for o in candidates if o.source_role is SourceRole.HUMAN_REVIEW]
     reliable = [o for o in candidates if o.source_rank in RELIABLE_RANKS and o not in humans]
     informative = [o for o in candidates if o.source_rank is SourceRank.C]
+    by_rules = [o for o in reliable if o.provenance.tier is not ExtractionTier.LLM]
+    held_back = [o for o in reliable if o not in by_rules] if by_rules else []
+    reliable = by_rules or reliable
 
     def build(
         winner: Observation | None,
@@ -184,6 +191,6 @@ def project_field(
         return build(None, "near_simultaneous", conflict=True, pending=[top, *clashing])
     newer_informative = [
         o for o in informative if o.value != top.value and o.known_at > top.known_at
-    ]
+    ] + [o for o in held_back if o.value != top.value]
     rule = "actual_over_estimate" if actual else "freshest_reliable"
     return build(top, rule, pending=newer_informative)
