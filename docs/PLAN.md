@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.25.0 |
+| Versión | 1.26.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
@@ -498,3 +498,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.23.0 | 25/11/2026 | P. Iglesias Peral | F4.1 a F4.3. La evaluación sobre la muestra real mostró que un directorio de remitentes manual no escala; nuevas decisiones D10 (rol del remitente en cascada, ADR-0013) y D11 (el LLM rellena huecos, ADR-0014). Las conclusiones de F4 describen el comportamiento y los tipos de error del sistema, no tasas de producción: la muestra la seleccionó EShipping para dar contexto y no es representativa del flujo | #39, #40, #41 |
 | 1.24.0 | 25/11/2026 | P. Iglesias Peral | F4.4: tokens, latencia, tiempos por etapa y memoria medidos en la PoC. Supuesto de tokens por llamada recalibrado (de 3.000 y 400 a 1.750 y 200, con margen sobre el p95); el LLM baja a 28 $ al mes en el escenario de referencia y el total técnico, a unos 330 €. La ingesta de `.msg` pasa a ser 13 veces más rápida | #42 |
 | 1.25.0 | 25/11/2026 | P. Iglesias Peral | F4.4b: benchmark de los tres modelos locales sobre la muestra real. D9 decidida: `qwen3.5:4b` por defecto (ADR-0015). Los tres empatan en resultado final; la elección se apoya en la proporción de propuestas válidas, las citas inventadas y la memoria. No quedan decisiones abiertas | #43 |
+| 1.26.0 | 25/11/2026 | P. Iglesias Peral | F4.5: prueba de volumen con 10.010 mensajes sintéticos (2.860 expedientes). Unos 9.100 mensajes por minuto en un solo proceso, coste lineal y calidad idéntica a la del conjunto base. Margen de unas 195 veces sobre el pico de 150.000 correos al mes, sin contar LLM ni OCR | #44 |
