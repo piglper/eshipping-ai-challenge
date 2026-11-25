@@ -18,7 +18,7 @@ from eshipping_ai.adapters.pdf_text import PdfTextParser
 from eshipping_ai.adapters.sql_repository import SqlRepository, create_schema
 from eshipping_ai.application.evaluate import evaluate_verdicts
 from eshipping_ai.application.ingest import IngestMail
-from eshipping_ai.application.process import ProcessMessages, ProcessReport
+from eshipping_ai.application.process import Distribution, ProcessMessages, ProcessReport
 from eshipping_ai.application.reconcile import ReconcileReport, ReconcileShipments
 from eshipping_ai.application.seed import seed_aliases
 from eshipping_ai.domain.ports import LLMClient, LLMRequest
@@ -189,6 +189,8 @@ def test_the_llm_is_asked_only_for_pending_fields_and_its_quote_is_kept(
     report = pipeline.process(fake)
     assert report.llm_calls == len(fake.requests) > 0
     assert report.tiers[ExtractionTier.LLM.value] == 1 and not report.llm_rejected
+    assert len(report.llm_input_per_call.values) == report.llm_calls
+    assert sum(report.llm_input_per_call.values) == report.llm_input_tokens
     assert all("vessel_departure" not in r.content or "ETD" not in r.content for r in fake.requests)
     (llm,) = [
         o
@@ -249,3 +251,12 @@ def test_a_failing_model_leaves_the_rules_result(pipeline: Pipeline, synthetic_d
     report = pipeline.process(FakeLLMClient(fail=True))
     assert report.llm_calls > 0 and report.llm_rejected["call_failed"] == report.llm_calls
     _gold_holds(pipeline, synthetic_dir)
+
+
+def test_a_distribution_gives_nearest_rank_percentiles() -> None:
+    measured = Distribution()
+    assert str(measured) == "-"
+    for value in range(1, 21):
+        measured.add(value)
+    assert (measured.percentile(0.5), measured.percentile(0.95)) == (10, 19)
+    assert str(measured) == "p50 10, p95 19, max 20"

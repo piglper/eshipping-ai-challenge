@@ -109,6 +109,17 @@ def test_parse_msg_with_embedded_message_files_and_images() -> None:
     assert parsed.embedded[0].html_body == "<p>Hola</p>"
 
 
+def test_parse_msg_decodes_the_html_only_without_a_plain_body() -> None:
+    class Untouchable(SimpleNamespace):
+        @property
+        def htmlBody(self) -> bytes:  # noqa: N802 - name defined by the library
+            raise AssertionError("the RTF body is slow to decode and is not needed")
+
+    message = Untouchable(**vars(msg_like()))
+    parsed = parse_msg(message)  # type: ignore[arg-type]
+    assert parsed.text_body == "ETD 08/10/2026" and parsed.html_body is None
+
+
 def test_parse_msg_without_date_or_sender() -> None:
     parsed = parse_msg(msg_like(date=None, sender=None, to=None, subject=None))  # type: ignore[arg-type]
     assert (parsed.sender, parsed.recipients, parsed.sent_at, parsed.subject) == ("", (), None, "")
