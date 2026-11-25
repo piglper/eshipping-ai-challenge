@@ -37,7 +37,7 @@ def test_a_seal_that_looks_like_a_container_is_skipped() -> None:
         ("BOOKING CONFIRMATION 990000101 - AURORA", ["990000101"]),
         ("Booking number: 990000101", ["990000101"]),
         ("BKG=ABCD1234567 VOY=041E", ["ABCD1234567"]),
-        ("Reserva nº 276844642", ["276844642"]),
+        ("Reserva nº 990000505", ["990000505"]),
         ("Pedido 990000101 de la fábrica", []),
         ("Llamar al 912345678", []),
         ("booking 123", []),

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.1 |
+| Versión | 0.2.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -187,7 +187,18 @@ Se mantiene la misma arquitectura con un modelo abierto servido en la propia inf
 | Sin servicios externos | LLM local con Ollama ([ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md)); OCR local |
 | Salidas | En `data/output/`, ignorado por git |
 | Logs | Sin contenido de los correos |
+| Auditoría | `make audit`, en local: lee los valores reales de `data/` (expedientes, bookings, B/L, contenedores, buques, clientes, proveedores, personas, direcciones y dominios) y los busca en los ficheros versionados, en todos los commits y en las issues y PR de GitHub. Solo informa de la categoría y del fichero, la línea o el commit, nunca del valor |
 | Al terminar | Se borran todas las copias de los datos reales, sus salidas derivadas y el entorno local |
+
+**Incidente (F5.4, 25/11/2026).** La auditoría encontró un número de booking real en un caso de test de la extracción de referencias, introducido el 24/11. Los controles no lo detectaron, porque un número de 9 cifras no se distingue de uno inventado sin conocer los datos. La causa fue tomar un ejemplo de formato de un correo real en lugar de inventarlo.
+
+Medidas tomadas:
+- se sustituyó por uno sintético;
+- se reescribió el historial del repositorio para eliminarlo de todos los commits y se forzó la subida de las ramas y las etiquetas;
+- se añadió `make audit` para repetir la comprobación;
+- el número no aparece en ninguna issue, PR ni comentario.
+
+GitHub conserva las referencias de solo lectura de los PR antiguos (`refs/pull/*`); borrarlas del todo requiere pedírselo a GitHub. El repositorio es privado y se borra al terminar el proceso de selección.
 
 ## 10. Preguntas para EShipping
 
@@ -210,5 +221,6 @@ Se mantiene la misma arquitectura con un modelo abierto servido en la propia inf
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.0 | 25/11/2026 | §9: auditoría de confidencialidad (`make audit`) e incidente de F5.4 |
 | 0.1.1 | 24/11/2026 | Remitente sin SPF, DKIM o DMARC: rol `customer`, como cualquier remitente desconocido en el ADR-0009 (antes decía `unknown`, un rol que no existe) |
 | 0.1.0 | 23/11/2026 | Primera versión: inventario de datos, RGPD (papeles, base legal, retención, derechos, transferencias), controles de seguridad, servicios externos con seudonimización, amenazas propias, continuidad, desarrollo seguro y medidas de la PoC |
