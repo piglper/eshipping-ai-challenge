@@ -3,117 +3,153 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EShipping · Correos y ERP</title>
-<meta name="description" content="Presentación para la entrevista de Ingeniero IA en EShipping: lectura de correos operativos, asociación a expediente, cruce con el ERP y discrepancias, contada para operativa, sistemas, arquitectura y RRHH. Sin datos reales.">
+<title>EShipping · Propuesta técnica</title>
+<meta name="description" content="Presentación de la propuesta técnica para el puesto de Ingeniero IA en EShipping: correos operativos, expedientes, cruce con el ERP, discrepancias y aprendizaje continuo. Sin datos reales.">
 <style>
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 300; src: url("fonts/ibm-plex-sans-300.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 400; src: url("fonts/ibm-plex-sans-400.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 500; src: url("fonts/ibm-plex-sans-500.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 600; src: url("fonts/ibm-plex-sans-600.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 700; src: url("fonts/ibm-plex-sans-700.woff2") format("woff2"); }
   :root {
-    --bg: #eef1f5;
-    --slide: #ffffff;
-    --ink: #17212b;
-    --muted: #5b6875;
-    --line: #d5dce4;
-    --accent: #0f6e78;
-    --accent-soft: #e3f2f3;
-    --warn: #a4501b;
-    --warn-soft: #fbeee4;
-    --ok: #2d7a3e;
-    --ok-soft: #e6f3e8;
-    --violet: #5b4fb0;
-    --violet-soft: #eeecfa;
-    --code: #f4f6f8;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0f1419; --slide: #171e26; --ink: #e6ebf0; --muted: #9aa7b4; --line: #2c3743;
-      --accent: #4fb8c2; --accent-soft: #15323a; --warn: #e59a68; --warn-soft: #3a2619;
-      --ok: #7cc78b; --ok-soft: #1c3322; --violet: #a99ff0; --violet-soft: #29254a; --code: #1f2830;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #0f1419; --slide: #171e26; --ink: #e6ebf0; --muted: #9aa7b4; --line: #2c3743;
-    --accent: #4fb8c2; --accent-soft: #15323a; --warn: #e59a68; --warn-soft: #3a2619;
-    --ok: #7cc78b; --ok-soft: #1c3322; --violet: #a99ff0; --violet-soft: #29254a; --code: #1f2830;
+    --green: #1c735d;
+    --green-dark: #155a49;
+    --mint: #34c79b;
+    --sage: #a9cfc3;
+    --tint: #e9f4f0;
+    --ink: #1b1f1d;
+    --muted: #6b7570;
+    --line: #d5dbd8;
+    --soft: #f4f6f5;
+    --amber: #a4501b;
+    --amber-soft: #fbeee4;
+    --blue: #2f5d8a;
+    --blue-soft: #e7eef6;
+    --surround: #e3e7e5;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
-    background: var(--bg); color: var(--ink);
-    font: 400 20px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--surround); color: var(--ink);
+    font: 400 19px/1.45 "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     overflow: hidden;
   }
   .deck { position: fixed; inset: 0; display: grid; place-items: center; }
   .slide {
-    position: absolute; width: 1280px; height: 720px; padding: 52px 72px 44px;
-    background: var(--slide); border-radius: 10px; box-shadow: 0 10px 40px rgb(0 0 0 / 0.12);
-    display: none; flex-direction: column; transform-origin: center center;
+    position: absolute; width: 1280px; height: 720px; background: #fff; overflow: hidden;
+    box-shadow: 0 10px 40px rgb(0 0 0 / 0.15); display: none; flex-direction: column; transform-origin: center center;
   }
   .slide.active { display: flex; }
-  .kicker { display: flex; align-items: center; gap: 12px; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 650; margin: 0 0 10px; }
-  .aud { letter-spacing: 0; text-transform: none; font-size: 13px; font-weight: 650; padding: 3px 10px; border-radius: 99px; }
-  .aud.ops { background: var(--ok-soft); color: var(--ok); }
-  .aud.sys { background: var(--warn-soft); color: var(--warn); }
-  .aud.arq { background: var(--accent-soft); color: var(--accent); }
-  .aud.all { background: var(--violet-soft); color: var(--violet); }
-  h1 { font-size: 54px; line-height: 1.1; margin: 0 0 18px; letter-spacing: -.01em; }
-  h2 { font-size: 34px; line-height: 1.15; margin: 0 0 24px; letter-spacing: -.01em; }
-  h3 { font-size: 21px; margin: 0 0 8px; }
-  p { margin: 0 0 14px; }
-  ul, ol { margin: 0; padding-left: 22px; }
-  li { margin: 0 0 9px; }
+
+  /* Cabecera, cuerpo y pie, como en los documentos de EShipping */
+  .band { height: 56px; flex: none; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 72px; }
+  .band .logo { height: 30px; display: block; }
+  .band-right { font-weight: 600; font-size: 15px; }
+  .wordmark { display: none; font-weight: 700; font-size: 22px; letter-spacing: -.01em; color: #fff; }
+  .nologo .logo { display: none !important; }
+  .nologo .wordmark { display: inline; }
+  .body { flex: 1; min-height: 0; padding: 24px 72px 0; display: flex; flex-direction: column; }
+  .pfoot { flex: none; height: 40px; margin: 0 72px; border-top: 1px solid var(--line); display: flex; align-items: center; font-size: 12.5px; color: var(--muted); gap: 24px; }
+  .pfoot .grow-x { flex: 1; }
+  .pfoot .conf { color: var(--green); font-weight: 600; }
+
+  .kicker { display: flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 0 0 6px; }
+  .aud { letter-spacing: 0; text-transform: none; font-size: 12.5px; font-weight: 600; padding: 2px 10px; border-radius: 99px; }
+  .aud.ops { background: var(--tint); color: var(--green); }
+  .aud.sys { background: var(--amber-soft); color: var(--amber); }
+  .aud.arq { background: var(--blue-soft); color: var(--blue); }
+  .aud.all { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  h1 { font-size: 52px; line-height: 1.1; margin: 0; font-weight: 600; }
+  h2 { font-size: 27px; line-height: 1.2; margin: 0 0 16px; font-weight: 600; padding-bottom: 8px; border-bottom: 2px solid var(--green); }
+  h2 .n { color: var(--green); margin-right: 12px; }
+  h3 { font-size: 17px; margin: 0 0 6px; font-weight: 600; color: var(--green); }
+  p { margin: 0 0 10px; }
+  ul, ol { margin: 0; padding-left: 20px; }
+  li { margin: 0 0 6px; }
+  ul li::marker { color: var(--mint); }
+  ol li::marker { color: var(--green); font-weight: 600; }
+  b, strong { font-weight: 600; }
   .muted { color: var(--muted); }
-  .small { font-size: 16px; }
-  .xs { font-size: 14px; }
+  .s16 { font-size: 16px; } .s15 { font-size: 15px; } .s14 { font-size: 14px; } .s13 { font-size: 13px; }
   .grow { flex: 1; min-height: 0; }
-  .cols { display: grid; gap: 28px; grid-template-columns: 1fr 1fr; align-items: start; }
-  .cols-wide { display: grid; gap: 28px; grid-template-columns: 1.35fr 1fr; align-items: start; }
-  .cols-3 { display: grid; gap: 22px; grid-template-columns: repeat(3, 1fr); align-items: start; }
-  .cols-4 { display: grid; gap: 18px; grid-template-columns: repeat(4, 1fr); align-items: stretch; }
-  .card { border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
-  .card.accent { background: var(--accent-soft); border-color: transparent; }
-  .card.warn { background: var(--warn-soft); border-color: transparent; }
-  .card.ok { background: var(--ok-soft); border-color: transparent; }
-  .card.violet { background: var(--violet-soft); border-color: transparent; }
-  .big { font-size: 44px; font-weight: 700; line-height: 1; color: var(--accent); margin: 2px 0 8px; font-variant-numeric: tabular-nums; }
-  .big.ok { color: var(--ok); } .big.warn { color: var(--warn); } .big.violet { color: var(--violet); }
-  table { border-collapse: collapse; width: 100%; font-size: 17px; font-variant-numeric: tabular-nums; }
-  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 15px; }
-  td.num, th.num { text-align: right; }
-  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; }
-  code { background: var(--code); padding: 1px 6px; border-radius: 5px; }
-  .tag { display: inline-block; font-size: 13px; font-weight: 650; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
-  .tag.warn { background: var(--warn-soft); color: var(--warn); }
-  .tag.ok { background: var(--ok-soft); color: var(--ok); }
-  .tag.muted { background: var(--code); color: var(--muted); }
-  .shot { width: 100%; border: 1px solid var(--line); border-radius: 8px; display: block; background: #fff; }
-  .caption { font-size: 13px; color: var(--muted); margin-top: 6px; }
-  .story { list-style: none; padding: 0; margin: 0; border-left: 2px solid var(--line); }
-  .story li { position: relative; padding: 0 0 12px 22px; margin: 0; font-size: 17px; }
-  .story li::before { content: ""; position: absolute; left: -7px; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--slide); border: 2px solid var(--muted); }
-  .story li.hot::before { border-color: var(--warn); background: var(--warn); }
-  .story .who { font-size: 13px; font-weight: 650; color: var(--muted); margin-right: 6px; }
-  .step { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
-  .foot { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-top: 16px; }
-  svg text { font-family: inherit; fill: var(--ink); }
-  svg .box { fill: var(--slide); stroke: var(--line); stroke-width: 1.5; }
-  svg .box.acc { fill: var(--accent-soft); stroke: var(--accent); }
-  svg .box.store { fill: var(--code); }
+  .cols { display: grid; gap: 26px; grid-template-columns: 1fr 1fr; align-items: start; }
+  .cols-wide { display: grid; gap: 26px; grid-template-columns: 1.35fr 1fr; align-items: start; }
+  .cols-narrow { display: grid; gap: 26px; grid-template-columns: 1fr 1.35fr; align-items: start; }
+  .cols-3 { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); align-items: start; }
+  .cols-4 { display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); align-items: start; }
+  .cols-5 { display: grid; gap: 14px; grid-template-columns: repeat(5, 1fr); align-items: start; }
+  .card { border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; background: #fff; }
+  .card.tint { background: var(--tint); border-color: transparent; }
+  .card.soft { background: var(--soft); border-color: transparent; }
+  .card.amber { background: var(--amber-soft); border-color: transparent; }
+  .card.top { border-top: 3px solid var(--green); }
+  .big { font-size: 38px; font-weight: 600; line-height: 1; color: var(--green); margin: 4px 0 6px; font-variant-numeric: tabular-nums; }
+
+  /* Recuadro con corchetes, como las notas del enunciado */
+  .ask { position: relative; background: var(--soft); padding: 9px 22px; margin: 0 0 16px; font-size: 15.5px; }
+  .ask::before, .ask::after { content: ""; position: absolute; top: 0; bottom: 0; width: 10px; border: 2px solid var(--mint); }
+  .ask::before { left: 0; border-right: none; }
+  .ask::after { right: 0; border-left: none; }
+  .ask .lbl { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--green); margin-right: 10px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 6px 10px; border-bottom: 2px solid var(--green); }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--soft); }
+  td.k { color: var(--green); font-weight: 600; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  table.compact td { padding: 4px 10px; }
+  tr.total td { font-weight: 600; border-top: 2px solid var(--green); }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .9em; }
+  code { background: var(--soft); padding: 1px 5px; border-radius: 3px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 99px; white-space: nowrap; }
+  .tag.ok { background: var(--tint); color: var(--green); }
+  .tag.plan { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  .shot { width: 100%; border: 1px solid var(--line); border-radius: 4px; display: block; }
+  .caption { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+  .story { list-style: none; padding: 0; margin: 0; border-left: 2px solid var(--sage); }
+  .story li { position: relative; padding: 0 0 11px 22px; margin: 0; font-size: 16.5px; }
+  .story li::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid var(--green); }
+  .story li.hot::before { border-color: var(--amber); background: var(--amber); }
+  .story .who { font-size: 12.5px; font-weight: 600; color: var(--green); margin-right: 6px; letter-spacing: .03em; }
+  .flow { display: flex; align-items: stretch; }
+  .flow .st { flex: 1; background: var(--tint); padding: 10px 12px; font-size: 14px; position: relative; margin-right: 14px; }
+  .flow .st:last-child { margin-right: 0; }
+  .flow .st::after { content: "›"; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--green); font-weight: 700; font-size: 22px; }
+  .flow .st:last-child::after { content: ""; }
+  .flow .st b { display: block; color: var(--green); font-size: 14.5px; margin-bottom: 2px; }
+  .step { font-size: 12.5px; font-weight: 600; color: var(--green); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+  svg text { font-family: "IBM Plex Sans", Arial, sans-serif; fill: var(--ink); }
+  svg .box { fill: #fff; stroke: var(--line); stroke-width: 1.5; }
+  svg .box.acc { fill: var(--tint); stroke: var(--green); }
+  svg .box.store { fill: var(--soft); }
   svg .arrow { stroke: var(--muted); stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
   svg .lbl { font-size: 13px; fill: var(--muted); }
-  svg .ttl { font-size: 16px; font-weight: 650; }
-  .nav { position: fixed; bottom: 14px; right: 18px; font-size: 13px; color: var(--muted); user-select: none; }
-  .nav button { font: inherit; color: inherit; background: var(--slide); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  svg .ttl { font-size: 16px; font-weight: 600; }
+
+  /* Portada y despedida */
+  .hero { background: var(--green); color: #fff; padding: 48px 72px 40px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .hero .logo { height: 56px; display: block; }
+  .hero .wordmark { font-size: 40px; }
+  .bracket { display: inline-flex; align-items: center; position: relative; padding: 6px 16px; font-size: 20px; font-weight: 500; margin-left: 22px; vertical-align: middle; }
+  .bracket::before, .bracket::after { content: ""; position: absolute; top: 0; bottom: 0; width: 8px; border: 2px solid var(--mint); }
+  .bracket::before { left: 0; border-right: none; }
+  .bracket::after { right: 0; border-left: none; }
+  .meta { display: grid; grid-template-columns: auto auto; gap: 8px 26px; font-size: 15px; margin-top: 8px; }
+  .meta .k { color: var(--sage); }
+  .meta .v { font-weight: 600; }
+  .farewell { background: var(--green); color: #fff; justify-content: center; align-items: flex-start; padding: 0 110px; }
+  .farewell .logo { height: 60px; display: block; margin-bottom: 40px; }
+  .farewell .wordmark { font-size: 42px; margin-bottom: 40px; }
+
+  .nav { position: fixed; bottom: 14px; right: 18px; font-size: 13px; color: var(--muted); user-select: none; font-family: -apple-system, Arial, sans-serif; }
+  .nav button { font: inherit; color: inherit; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; cursor: pointer; }
   @media print {
-    :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
-      --bg: #ffffff; --slide: #ffffff; --ink: #17212b; --muted: #5b6875; --line: #d5dce4;
-      --accent: #0f6e78; --accent-soft: #e3f2f3; --warn: #a4501b; --warn-soft: #fbeee4;
-      --ok: #2d7a3e; --ok-soft: #e6f3e8; --violet: #5b4fb0; --violet-soft: #eeecfa; --code: #f4f6f8;
-    }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     @page { size: 1280px 720px; margin: 0; }
-    html, body { overflow: visible; height: auto; background: var(--slide); }
+    html, body { overflow: visible; height: auto; background: #fff; }
     .deck { position: static; display: block; }
-    .slide { position: relative; display: flex !important; transform: none !important; box-shadow: none; border-radius: 0; page-break-after: always; break-after: page; }
+    .slide { position: relative; display: flex !important; transform: none !important; box-shadow: none; page-break-after: always; break-after: page; }
     .nav { display: none; }
   }
 </style>
@@ -122,379 +158,642 @@
 <div class="deck" id="deck">
 
 <!-- 1 · Portada -->
-<section class="slide">
-  <div class="grow" style="display:flex;flex-direction:column;justify-content:center">
-    <p class="kicker">Candidatura · Ingeniero IA · EShipping</p>
-    <h1>De los correos operativos<br>a un expediente fiable</h1>
-    <p style="font-size:24px;max-width:940px" class="muted">Un sistema que lee los correos, sabe a qué expediente pertenecen, decide qué dato está vigente y avisa de lo que no cuadra con el ERP. Lo valida siempre una persona del equipo.</p>
-  </div>
-  <div class="foot"><span>Pablo Iglesias Peral · Prueba técnica, noviembre de 2026</span><span>Sin datos reales: todos los ejemplos y capturas son sintéticos</span></div>
-</section>
-
-<!-- 2 · Agenda por público -->
-<section class="slide">
-  <p class="kicker">En 15 minutos</p>
-  <h2>Cada uno de vosotros mira esto desde un sitio distinto</h2>
-  <div class="cols-4" style="align-items:start">
-    <div class="card ok"><span class="aud ops">Operativa</span><h3 style="margin-top:12px">Qué cambia en vuestro día</h3><p class="small">Qué veríais en pantalla, cómo decide qué dato vale y quién tiene la última palabra.</p><p class="xs muted">Diapositivas 4 a 6</p></div>
-    <div class="card accent"><span class="aud arq">Arquitectura</span><h3 style="margin-top:12px">Qué decidí y por qué</h3><p class="small">La arquitectura, el papel de la IA y las alternativas que descarté, cada una con su registro de decisión.</p><p class="xs muted">Diapositivas 7 a 9</p></div>
-    <div class="card warn"><span class="aud sys">Sistemas</span><h3 style="margin-top:12px">Qué habría que operar</h3><p class="small">Máquinas, integraciones, seguridad, copias, coste y cuánto aguanta.</p><p class="xs muted">Diapositivas 10 a 12</p></div>
-    <div class="card violet"><span class="aud all">Todos · RRHH</span><h3 style="margin-top:12px">Cómo he trabajado</h3><p class="small">Cómo abordé la prueba, cómo trato los errores y cómo lo pondría en marcha con vosotros.</p><p class="xs muted">Diapositivas 3 y 13 a 16</p></div>
-  </div>
-  <div class="card" style="margin-top:28px;font-size:24px;line-height:1.35"><b>La idea en una frase:</b> el sistema lee, propone y explica; operativa decide; y nadie toca el ERP sin una persona.</div>
-</section>
-
-<!-- 3 · Cómo he trabajado -->
-<section class="slide">
-  <p class="kicker">Cómo he abordado la prueba <span class="aud all">Todos · RRHH</span></p>
-  <h2>Entender antes de construir, y medir en vez de suponer</h2>
-  <div class="cols-wide grow">
+<section class="slide cover">
+  <div class="hero">
     <div>
-      <ol class="small">
-        <li><b>Entender el problema.</b> Analicé los correos y el ERP de la muestra y escribí las preguntas que os haría antes de diseñar: 13, desde el volumen real hasta qué significa un campo del ERP.</li>
-        <li><b>Decidir por escrito.</b> Cada decisión relevante tiene su registro, con las alternativas y por qué se descartaron: 15 en total.</li>
-        <li><b>Construir lo justo.</b> Una prueba de concepto sencilla, pero de extremo a extremo y con calidad de producción.</li>
-        <li><b>Medir.</b> Recalculé el coste con lo medido, comparé tres modelos de IA y probé el volumen.</li>
-        <li><b>Ser honesto con los límites.</b> Digo qué no está hecho, qué no se puede concluir con la muestra y qué salió mal.</li>
-      </ol>
-      <p class="xs muted" style="margin-top:8px">Usé un asistente de IA para programar (Claude Code) con el mismo proceso: cada cambio pasa por una petición de cambio con integración continua. Las decisiones y la revisión son mías.</p>
+      <img class="logo" src="../../data/output/presentacion/logo.png" alt="EShipping"><span class="wordmark">EShipping</span>
+      <div style="margin-top:46px"><h1 style="display:inline">Propuesta técnica</h1><span class="bracket">Ingeniero IA</span></div>
     </div>
-    <div class="cols" style="gap:16px">
-      <div class="card"><div class="big violet">15</div><p class="xs muted">registros de decisión (ADR)</p></div>
-      <div class="card"><div class="big violet">12</div><p class="xs muted">documentos de análisis, diseño y evaluación</p></div>
-      <div class="card"><div class="big violet">44</div><p class="xs muted">peticiones de cambio, cada una con su revisión automática</p></div>
-      <div class="card"><div class="big violet">379</div><p class="xs muted">pruebas automáticas, cobertura del 97 %</p></div>
+    <div class="meta">
+      <span class="k">Fecha</span><span class="v">Noviembre de 2026</span>
+      <span class="k">Candidato</span><span class="v">Pablo Iglesias Peral</span>
+      <span class="k">Puesto</span><span class="v">Desarrollador / Ingeniero IA</span>
     </div>
   </div>
+  <div class="body" style="padding-top:44px">
+    <h2 style="font-size:34px;border:none;padding:0;margin-bottom:14px">De los correos operativos a un expediente fiable</h2>
+    <p style="font-size:21px;max-width:980px" class="muted">Un sistema que lee los correos, sabe a qué expediente pertenecen, decide qué dato está vigente, avisa de lo que no cuadra con DEIWORLD y aprende de cada corrección del equipo. La decisión final la toma siempre una persona.</p>
+  </div>
+  <div class="pfoot"><span class="grow-x">Sin datos reales: todos los ejemplos y capturas son sintéticos</span><span class="conf">Confidencial</span></div>
 </section>
 
-<!-- 4 · El problema visto desde operativa -->
+<!-- 2 · Agenda -->
 <section class="slide">
-  <p class="kicker">El problema <span class="aud ops">Operativa</span></p>
-  <h2>Un expediente, cinco correos y un ERP que se queda atrás</h2>
-  <div class="cols grow">
-    <div>
-      <ul class="story">
-        <li><span class="who">NAVIERA · 15/09</span>Confirma la reserva: buque BOREAL FICTICIA, salida el 01/10, llegada el 15/10.</li>
-        <li><span class="who">CLIENTE · 18/09</span>Pregunta si puede adelantar la carga.</li>
-        <li class="hot"><span class="who">NAVIERA · 24/09</span>Cambio de buque: ahora CELESTE FICTICIA, salida el 06/10, llegada el 22/10.</li>
-        <li><span class="who">EQUIPO INTERNO · 25/09</span>Reenvía el primer aviso, con las fechas antiguas, para otra consulta.</li>
-        <li><span class="who">AGENTE DE ADUANAS · 03/10</span>Comunica el levante.</li>
-      </ul>
-      <p class="small" style="margin-top:6px"><b>Y el ERP sigue con BOREAL FICTICIA y la salida el 01/10.</b></p>
+  <div class="body">
+    <p class="kicker">Recorrido</p>
+    <h2>Una propuesta, cuatro miradas</h2>
+    <div class="cols-5">
+      <div class="card top"><span class="aud ops">Operativa</span><h3 style="margin-top:10px">Qué cambia en el día a día</h3><p class="s14">El problema, la pantalla de trabajo y cómo se decide qué dato vale.</p><p class="s13 muted">Diapositivas 4 a 6</p></div>
+      <div class="card top"><span class="aud arq">Arquitectura</span><h3 style="margin-top:10px">Diseño y modelo de IA</h3><p class="s14">Arquitectura, decisiones con sus alternativas, modelo de IA y datos.</p><p class="s13 muted">Diapositivas 7 a 10</p></div>
+      <div class="card top"><span class="aud all">Todos</span><h3 style="margin-top:10px">Fiabilidad y entrenamiento</h3><p class="s14">Cuánto acierta, cómo aprende de cada corrección y cómo evita aprender errores.</p><p class="s13 muted">Diapositivas 11 a 14</p></div>
+      <div class="card top"><span class="aud sys">Sistemas</span><h3 style="margin-top:10px">Operación y coste</h3><p class="s14">Qué hay que operar, coste, escalabilidad y confidencialidad.</p><p class="s13 muted">Diapositivas 15 a 18</p></div>
+      <div class="card top"><span class="aud all">RRHH · Todos</span><h3 style="margin-top:10px">Forma de trabajar</h3><p class="s14">Cómo se abordó la prueba, la puesta en marcha y la prueba de concepto.</p><p class="s13 muted">Diapositivas 3, 19 y 20</p></div>
     </div>
-    <div>
-      <div class="card warn" style="margin-bottom:16px">
-        <h3>Hoy</h3>
-        <p class="small" style="margin:0">Alguien tiene que leerlo todo, saber que el correo de la naviera manda sobre el reenvío, darse cuenta de que el ERP está desfasado y corregirlo a tiempo. Con unos 100.000 correos al mes.</p>
+    <div class="ask" style="margin-top:26px;font-size:21px;padding:16px 28px"><span class="lbl">La idea en una frase</span>El sistema lee, propone y explica; operativa decide; y DEIWORLD no se toca sin una persona.</div>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 3 · Cómo se abordó la prueba -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Forma de trabajar <span class="aud all">RRHH · Todos</span></p>
+    <h2>Entender antes de construir, y medir en vez de suponer</h2>
+    <div class="cols-wide">
+      <div>
+        <ol class="s16">
+          <li><b>Entender el problema.</b> Primero se analizaron los correos y el ERP de la muestra, y se recogieron 13 preguntas para EShipping antes de diseñar: volumen real, significado de algunos campos del ERP, proveedor de IA autorizado…</li>
+          <li><b>Decidir por escrito.</b> Cada decisión relevante tiene su registro (ADR), con las alternativas y el motivo del descarte.</li>
+          <li><b>Construir lo justo.</b> Una prueba de concepto sencilla, de extremo a extremo y con calidad de producción.</li>
+          <li><b>Medir.</b> Coste recalculado con lo medido, tres modelos de IA comparados y una prueba de volumen.</li>
+          <li><b>Ser claro con los límites.</b> Qué está hecho, qué está diseñado y qué no se puede concluir con una muestra pequeña.</li>
+        </ol>
+        <p class="s13 muted" style="margin-top:8px">El desarrollo se apoyó en un asistente de IA para programar (Claude Code), con el mismo proceso de revisión: cada cambio pasa por una petición de cambio con integración continua. Las decisiones y la revisión son del autor.</p>
       </div>
-      <div class="card ok">
-        <h3>Con el sistema</h3>
-        <p class="small" style="margin:0">Lee los cinco correos y entiende que la naviera manda en el buque y que el reenvío es antiguo. Os pone arriba de la lista: <b>«Cambio de buque sin reflejar en el ERP, urgente»</b>, con la frase exacta del correo.</p>
+      <div class="cols" style="gap:14px">
+        <div class="card"><div class="big">15</div><p class="s13 muted">registros de decisión (ADR)</p></div>
+        <div class="card"><div class="big">12</div><p class="s13 muted">documentos de análisis, diseño y evaluación</p></div>
+        <div class="card"><div class="big">44</div><p class="s13 muted">peticiones de cambio revisadas por integración continua</p></div>
+        <div class="card"><div class="big">379</div><p class="s13 muted">pruebas automáticas, cobertura del 97 %</p></div>
       </div>
     </div>
   </div>
-  <p class="xs muted">Ejemplo sintético, construido con los patrones reales de la muestra: cambios de buque, reenvíos de avisos antiguos, errores de tecleo en el ERP.</p>
+  <div class="pfoot"></div>
 </section>
 
-<!-- 5 · Qué veríais en pantalla -->
+<!-- 4 · El problema -->
 <section class="slide">
-  <p class="kicker">Qué cambia en vuestro día <span class="aud ops">Operativa</span></p>
-  <h2>Una lista de lo que no cuadra, por urgencia, y vosotros decidís</h2>
-  <div class="cols-wide grow">
-    <div>
-      <img class="shot" src="img/discrepancias.jpg" alt="Captura de la vista para operativos: lista de discrepancias abiertas ordenadas por prioridad, con el valor de los correos, el del ERP y la evidencia">
-      <p class="caption">La prueba de concepto, con datos sintéticos.</p>
+  <div class="body">
+    <p class="kicker">El problema <span class="aud ops">Operativa</span></p>
+    <h2>Un expediente, cinco correos y un ERP que se queda atrás</h2>
+    <div class="cols">
+      <div>
+        <ul class="story">
+          <li><span class="who">NAVIERA · 15/09</span>Confirma la reserva: buque BOREAL FICTICIA, salida el 01/10, llegada el 15/10.</li>
+          <li><span class="who">CLIENTE · 18/09</span>Pregunta si puede adelantar la carga.</li>
+          <li class="hot"><span class="who">NAVIERA · 24/09</span>Cambio de buque: ahora CELESTE FICTICIA, salida el 06/10, llegada el 22/10.</li>
+          <li><span class="who">EQUIPO INTERNO · 25/09</span>Reenvía el primer aviso, con las fechas antiguas, para otra consulta.</li>
+          <li><span class="who">AGENTE DE ADUANAS · 03/10</span>Comunica el levante.</li>
+        </ul>
+        <p class="s16" style="margin-top:6px"><b>Y DEIWORLD sigue con BOREAL FICTICIA y la salida el 01/10.</b></p>
+      </div>
+      <div>
+        <div class="card amber" style="margin-bottom:14px">
+          <h3 style="color:var(--amber)">Hoy</h3>
+          <p class="s15" style="margin:0">Una persona tiene que leerlo todo, saber que el correo de la naviera manda sobre el reenvío, darse cuenta de que el ERP está desfasado y corregirlo a tiempo. Con unos 100.000 correos al mes, algo se escapa, y el problema aparece cuando ya cuesta dinero.</p>
+        </div>
+        <div class="card tint">
+          <h3>Con el sistema</h3>
+          <p class="s15" style="margin:0">Lee los cinco correos, entiende que la naviera manda en el buque y que el reenvío es antiguo, y pone el caso en lo alto de la lista: <b>«Cambio de buque sin reflejar en el ERP, urgente»</b>, con la frase exacta del correo como prueba.</p>
+        </div>
+      </div>
     </div>
-    <div>
-      <ul class="small">
-        <li><b>P1 arriba:</b> un cambio de buque o de salida se avisa al momento. Lo que solo falta por rellenar, al final.</li>
-        <li><b>Cada propuesta trae su prueba:</b> la frase literal del correo y quién la dijo. No hay que buscar en el buzón.</li>
-        <li><b>Detecta errores del ERP</b>, como el día y el mes cruzados: el 04/10 grabado como 10/04.</li>
-        <li><b>Vosotros tenéis la última palabra:</b> aceptar, corregir o rechazar. <b>El sistema nunca escribe en el ERP.</b></li>
-        <li><b>Cada corrección le enseña:</b> la próxima vez ese caso llega resuelto o mejor priorizado.</li>
-      </ul>
-    </div>
+    <p class="s13 muted" style="margin-top:auto;padding-bottom:10px">Ejemplo sintético, construido con patrones reales de la muestra: cambios de buque, reenvíos de avisos antiguos y errores de tecleo en el ERP.</p>
   </div>
+  <div class="pfoot"></div>
 </section>
 
-<!-- 6 · Cómo decide -->
+<!-- 5 · Pantalla de trabajo -->
 <section class="slide">
-  <p class="kicker">Cuál es el dato bueno <span class="aud ops">Operativa</span> <span class="aud arq">Arquitectura</span></p>
-  <h2>Decide con las mismas reglas que aplicaríais vosotros</h2>
-  <div class="cols grow">
-    <div>
-      <ol class="small">
-        <li><b>Cada uno manda en lo suyo:</b> la naviera en el buque y sus fechas, el agente en el levante y el transportista en la carga.</li>
-        <li><b>Lo que ya pasó manda sobre lo previsto</b>, aunque llegue antes.</li>
-        <li><b>Entre fuentes fiables, gana la más reciente.</b> Lo anterior queda en el historial.</li>
-        <li><b>Un reenvío o una pregunta no cambian nada:</b> como mucho, quedan pendientes de confirmar.</li>
-        <li><b>Si dos fuentes fiables se contradicen</b>, no elige: os lo pregunta.</li>
-        <li><b>Vuestra corrección prevalece</b>, y avisa si después la naviera dice otra cosa.</li>
-      </ol>
-      <p class="xs muted" style="margin-top:6px">Son reglas escritas y configurables, no una caja negra. La pregunta P-11 es para vosotros: ¿qué jerarquía aplicáis hoy?</p>
-    </div>
-    <div>
-      <img class="shot" src="img/expediente.jpg" alt="Captura de la vista de un expediente: cada campo con su valor en los correos, en el ERP, el veredicto y la fuente; debajo, la línea temporal">
-      <p class="caption">Vista del expediente: el valor de los correos frente al del ERP, quién lo dijo y, debajo, toda la historia.</p>
+  <div class="body">
+    <p class="kicker">Qué cambia en el día a día <span class="aud ops">Operativa</span></p>
+    <h2>Una lista de lo que no cuadra, por urgencia; la decisión es de operativa</h2>
+    <div class="cols-wide">
+      <div>
+        <img class="shot" src="img/discrepancias.jpg" alt="Vista para operativos: discrepancias abiertas por prioridad, con el valor de los correos, el del ERP y la evidencia">
+        <p class="caption">Vista de la prueba de concepto, con datos sintéticos.</p>
+      </div>
+      <div>
+        <ul class="s16">
+          <li><b>Lo urgente, arriba (P1):</b> un cambio de buque o de salida se avisa al momento. Lo que solo falta por rellenar va al final (P3).</li>
+          <li><b>Cada propuesta trae su prueba:</b> la frase literal del correo y quién la dijo. No hace falta buscar en el buzón.</li>
+          <li><b>Detecta errores del ERP</b>, como el día y el mes cruzados: el 04/10 grabado como 10/04.</li>
+          <li><b>La última palabra es del operativo:</b> aceptar, corregir o rechazar. <b>El sistema nunca escribe en DEIWORLD.</b></li>
+          <li><b>Cada corrección enseña al sistema:</b> la próxima vez ese caso llega resuelto o mejor priorizado (diapositivas 12 a 14).</li>
+        </ul>
+      </div>
     </div>
   </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 6 · Ambigüedad -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Ambigüedad entre fuentes <span class="aud ops">Operativa</span> <span class="aud arq">Arquitectura</span></p>
+    <h2>Decide con reglas explícitas, las mismas que aplicaría una persona</h2>
+    <div class="ask"><span class="lbl">Enunciado</span>La misma información puede significar cosas distintas según la fuente: la ETD de la API de una naviera no siempre es la ETD de un correo.</div>
+    <div class="cols">
+      <div>
+        <ol class="s15">
+          <li><b>Cada fuente manda en lo suyo:</b> la naviera en el buque y sus fechas, el agente en el levante y el transportista en la carga.</li>
+          <li><b>Lo real manda sobre lo previsto</b>, aunque llegue antes.</li>
+          <li><b>Entre fuentes fiables, gana la más reciente.</b> Lo anterior queda en el historial.</li>
+          <li><b>Un reenvío o una pregunta no cambian nada:</b> quedan pendientes de confirmar.</li>
+          <li><b>Si dos fuentes fiables se contradicen</b>, no elige: lo envía a revisión.</li>
+          <li><b>La corrección humana prevalece</b>, y avisa si después la naviera dice otra cosa.</li>
+        </ol>
+        <p class="s14 muted" style="margin-top:4px">Cada dato guarda su <b>estado</b> (planificado, estimado o real), su <b>fuente</b> y su <b>rol</b>: una ETD estimada de un correo y una salida real de la naviera nunca se mezclan. Las reglas están escritas y son configurables (ADR-0009).</p>
+      </div>
+      <div>
+        <img class="shot" src="img/expediente.jpg" alt="Vista del expediente: cada campo con su valor en los correos, en el ERP, el veredicto y la fuente; debajo, la línea temporal">
+        <p class="caption">Vista del expediente: el valor de los correos frente al del ERP, quién lo dijo y, debajo, toda la historia.</p>
+      </div>
+    </div>
+  </div>
+  <div class="pfoot"></div>
 </section>
 
 <!-- 7 · Arquitectura -->
 <section class="slide">
-  <p class="kicker">Arquitectura <span class="aud arq">Arquitectura</span> <span class="aud sys">Sistemas</span></p>
-  <h2>Monolito modular hexagonal, desplegado como workers por etapa</h2>
-  <svg class="grow" viewBox="0 0 1136 430" role="img" aria-label="Canalización: buzón, ingesta, parseo, documentos, extracción en cascada, asociación y reconciliación, revisión; con PostgreSQL, almacén de objetos, ERP y pasarela de LLM">
-    <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--muted)"/></marker></defs>
-    <rect class="box" x="0" y="40" width="130" height="70" rx="8"/><text class="ttl" x="65" y="72" text-anchor="middle">Buzón</text><text class="lbl" x="65" y="93" text-anchor="middle">solo lectura</text>
-    <rect class="box acc" x="170" y="40" width="130" height="70" rx="8"/><text class="ttl" x="235" y="72" text-anchor="middle">ingest</text><text class="lbl" x="235" y="93" text-anchor="middle">idempotente</text>
-    <rect class="box acc" x="340" y="40" width="130" height="70" rx="8"/><text class="ttl" x="405" y="72" text-anchor="middle">parse</text><text class="lbl" x="405" y="93" text-anchor="middle">hilo y citas</text>
-    <rect class="box acc" x="510" y="40" width="130" height="70" rx="8"/><text class="ttl" x="575" y="72" text-anchor="middle">document</text><text class="lbl" x="575" y="93" text-anchor="middle">PDF y OCR</text>
-    <rect class="box acc" x="680" y="40" width="150" height="70" rx="8"/><text class="ttl" x="755" y="72" text-anchor="middle">extract</text><text class="lbl" x="755" y="93" text-anchor="middle">cascada</text>
-    <rect class="box acc" x="870" y="40" width="130" height="70" rx="8"/><text class="ttl" x="935" y="66" text-anchor="middle">reconcile</text><text class="lbl" x="935" y="86" text-anchor="middle">asociación</text><text class="lbl" x="935" y="102" text-anchor="middle">y veredicto</text>
-    <rect class="box" x="1020" y="150" width="116" height="70" rx="8"/><text class="ttl" x="1078" y="182" text-anchor="middle">Revisión</text><text class="lbl" x="1078" y="203" text-anchor="middle">operativa</text>
-    <path class="arrow" d="M130 75 H166"/><path class="arrow" d="M300 75 H336"/><path class="arrow" d="M470 75 H506"/><path class="arrow" d="M640 75 H676"/><path class="arrow" d="M830 75 H866"/><path class="arrow" d="M1000 75 C1060 75 1078 100 1078 146"/>
-    <text class="lbl" x="583" y="25" text-anchor="middle">colas entre etapas (PostgreSQL, SKIP LOCKED): cada etapa escala con réplicas por separado</text>
-    <rect class="box store" x="170" y="280" width="300" height="70" rx="8"/><text class="ttl" x="320" y="310" text-anchor="middle">PostgreSQL</text><text class="lbl" x="320" y="331" text-anchor="middle">eventos de solo inserción · proyecciones · colas</text>
-    <rect class="box store" x="510" y="280" width="200" height="70" rx="8"/><text class="ttl" x="610" y="310" text-anchor="middle">Almacén de objetos</text><text class="lbl" x="610" y="331" text-anchor="middle">originales cifrados</text>
-    <rect class="box" x="870" y="280" width="130" height="70" rx="8"/><text class="ttl" x="935" y="310" text-anchor="middle">ERP</text><text class="lbl" x="935" y="331" text-anchor="middle">solo lectura</text>
-    <rect class="box" x="680" y="170" width="150" height="62" rx="8"/><text class="ttl" x="755" y="197" text-anchor="middle">Pasarela LLM</text><text class="lbl" x="755" y="216" text-anchor="middle">UE · seudonimizado</text>
-    <path class="arrow" d="M755 110 V166"/><path class="arrow" d="M935 276 V114"/>
-    <path class="arrow" d="M405 110 V276" style="stroke-dasharray:4 4"/><path class="arrow" d="M610 110 V276" style="stroke-dasharray:4 4"/>
-    <text class="lbl" x="0" y="400">Un solo código y un solo modelo de dominio. Cada correo se convierte en eventos con su evidencia (modelo DCSA); el valor vigente se proyecta a partir de ellos.</text>
-  </svg>
+  <div class="body">
+    <p class="kicker">Arquitectura <span class="aud arq">Arquitectura</span> <span class="aud sys">Sistemas</span></p>
+    <h2>Monolito modular hexagonal, desplegado como workers por etapa</h2>
+    <svg class="grow" viewBox="0 0 1136 420" role="img" aria-label="Canalización: buzón, ingesta, parseo, documentos, extracción en cascada, asociación y reconciliación, revisión; con PostgreSQL, almacén de objetos, ERP y pasarela de LLM">
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7570"/></marker></defs>
+      <rect class="box" x="0" y="40" width="130" height="70" rx="4"/><text class="ttl" x="65" y="72" text-anchor="middle">Buzón</text><text class="lbl" x="65" y="93" text-anchor="middle">solo lectura</text>
+      <rect class="box acc" x="170" y="40" width="130" height="70" rx="4"/><text class="ttl" x="235" y="72" text-anchor="middle">ingest</text><text class="lbl" x="235" y="93" text-anchor="middle">idempotente</text>
+      <rect class="box acc" x="340" y="40" width="130" height="70" rx="4"/><text class="ttl" x="405" y="72" text-anchor="middle">parse</text><text class="lbl" x="405" y="93" text-anchor="middle">hilo y citas</text>
+      <rect class="box acc" x="510" y="40" width="130" height="70" rx="4"/><text class="ttl" x="575" y="72" text-anchor="middle">document</text><text class="lbl" x="575" y="93" text-anchor="middle">PDF y OCR</text>
+      <rect class="box acc" x="680" y="40" width="150" height="70" rx="4"/><text class="ttl" x="755" y="72" text-anchor="middle">extract</text><text class="lbl" x="755" y="93" text-anchor="middle">cascada</text>
+      <rect class="box acc" x="870" y="40" width="130" height="70" rx="4"/><text class="ttl" x="935" y="66" text-anchor="middle">reconcile</text><text class="lbl" x="935" y="86" text-anchor="middle">asociación</text><text class="lbl" x="935" y="102" text-anchor="middle">y veredicto</text>
+      <rect class="box" x="1020" y="150" width="116" height="70" rx="4"/><text class="ttl" x="1078" y="182" text-anchor="middle">Revisión</text><text class="lbl" x="1078" y="203" text-anchor="middle">operativa</text>
+      <path class="arrow" d="M130 75 H166"/><path class="arrow" d="M300 75 H336"/><path class="arrow" d="M470 75 H506"/><path class="arrow" d="M640 75 H676"/><path class="arrow" d="M830 75 H866"/><path class="arrow" d="M1000 75 C1060 75 1078 100 1078 146"/>
+      <text class="lbl" x="583" y="25" text-anchor="middle">colas entre etapas (PostgreSQL, SKIP LOCKED): cada etapa escala con réplicas por separado</text>
+      <rect class="box store" x="170" y="280" width="300" height="70" rx="4"/><text class="ttl" x="320" y="310" text-anchor="middle">PostgreSQL</text><text class="lbl" x="320" y="331" text-anchor="middle">eventos de solo inserción · proyecciones · colas</text>
+      <rect class="box store" x="510" y="280" width="200" height="70" rx="4"/><text class="ttl" x="610" y="310" text-anchor="middle">Almacén de objetos</text><text class="lbl" x="610" y="331" text-anchor="middle">originales cifrados</text>
+      <rect class="box" x="870" y="280" width="130" height="70" rx="4"/><text class="ttl" x="935" y="310" text-anchor="middle">DEIWORLD</text><text class="lbl" x="935" y="331" text-anchor="middle">solo lectura</text>
+      <rect class="box" x="680" y="170" width="150" height="62" rx="4"/><text class="ttl" x="755" y="197" text-anchor="middle">Pasarela LLM</text><text class="lbl" x="755" y="216" text-anchor="middle">UE · seudonimizado</text>
+      <path class="arrow" d="M755 110 V166"/><path class="arrow" d="M935 276 V114"/>
+      <path class="arrow" d="M405 110 V276" style="stroke-dasharray:4 4"/><path class="arrow" d="M610 110 V276" style="stroke-dasharray:4 4"/>
+      <text class="lbl" x="0" y="395">Un solo código y un solo modelo de dominio. Cada correo se convierte en eventos con su evidencia (modelo DCSA, el estándar del sector marítimo);</text>
+      <text class="lbl" x="0" y="414">el valor vigente de cada campo se calcula a partir de esos eventos. Cambiar de buzón, de LLM o de base de datos es cambiar un adaptador.</text>
+    </svg>
+  </div>
+  <div class="pfoot"></div>
 </section>
 
 <!-- 8 · Decisiones -->
 <section class="slide">
-  <p class="kicker">Decisiones y alternativas <span class="aud arq">Arquitectura</span></p>
-  <h2>Lo que elegí, lo que descarté y por qué</h2>
-  <table class="small">
-    <thead><tr><th>Decisión</th><th>Descartado</th><th>Por qué</th><th>ADR</th></tr></thead>
-    <tbody>
-      <tr><td><b>Monolito modular</b> con workers por etapa</td><td>Microservicios</td><td>Un equipo pequeño y un solo modelo de dominio. El escalado por etapa se consigue igual, sin operar N servicios.</td><td class="mono">0007</td></tr>
-      <tr><td><b>Eventos inmutables</b> con su cita y fuente</td><td>Actualizar campos</td><td>Para decidir hace falta la historia (lo real frente a lo estimado, el más reciente) y para explicar y auditar cada veredicto.</td><td class="mono">0006</td></tr>
-      <tr><td><b>Reglas deterministas</b> para el veredicto</td><td>Que decida un LLM</td><td>Explicables, reproducibles y configurables por negocio. El LLM solo extrae.</td><td class="mono">0009</td></tr>
-      <tr><td><b>Cascada</b>: reglas → plantillas → ML → LLM</td><td>Todo al LLM</td><td>Unas 90 veces más caro, más lento y no determinista. Las reglas resuelven la mayor parte.</td><td class="mono">0008</td></tr>
-      <tr><td><b>PostgreSQL</b> como base y como cola</td><td>Kafka o RabbitMQ</td><td>Unas decenas de tareas por minuto: una pieza menos que operar. Cambiar es un adaptador.</td><td class="mono">0011</td></tr>
-      <tr><td><b>Contenedores portables</b>, sin Kubernetes</td><td>Kubernetes</td><td>Unos 13 procesos: el clúster cuesta más de lo que aporta, salvo que ya lo operéis.</td><td class="mono">0012</td></tr>
-      <tr><td><b>Rol del remitente en cascada</b>, a partir del ERP</td><td>Dar de alta cada dominio</td><td>Escriben miles de dominios. Un directorio manual no escala y falla sin avisar.</td><td class="mono">0013</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<!-- 9 · IA -->
-<section class="slide">
-  <p class="kicker">El papel de la IA <span class="aud arq">Arquitectura</span></p>
-  <h2>La IA no es un requisito: se usa donde las reglas no llegan</h2>
-  <div class="cols grow">
-    <table>
-      <thead><tr><th>Escalón</th><th>Para qué</th><th>En la prueba</th></tr></thead>
+  <div class="body">
+    <p class="kicker">Justificación técnica <span class="aud arq">Arquitectura</span></p>
+    <h2>Lo que se eligió, lo que se descartó y por qué</h2>
+    <table class="s15">
+      <thead><tr><th>Decisión</th><th>Descartado</th><th>Por qué</th><th>ADR</th></tr></thead>
       <tbody>
-        <tr><td><b>Reglas</b></td><td>Identificadores con dígito de control, fechas, buques, plazos, puertos</td><td><span class="tag ok">hecho</span></td></tr>
-        <tr><td><b>Plantillas</b></td><td>Avisos repetitivos de cada naviera</td><td><span class="tag muted">diseñado</span></td></tr>
-        <tr><td><b>ML clásico</b></td><td>Clasificar, cuando haya correos etiquetados</td><td><span class="tag muted">diseñado</span></td></tr>
-        <tr><td><b>LLM</b></td><td>Texto libre que lo anterior no lee</td><td><span class="tag ok">local</span></td></tr>
-        <tr><td><b>Persona</b></td><td>Lo dudoso, con su evidencia y por prioridad</td><td><span class="tag ok">hecho</span></td></tr>
+        <tr><td class="k">Monolito modular con workers por etapa</td><td>Microservicios</td><td>Un equipo pequeño y un solo modelo de dominio. El escalado por etapa se consigue igual, sin operar N servicios.</td><td class="mono">0007</td></tr>
+        <tr><td class="k">Eventos inmutables con cita y fuente</td><td>Sobrescribir campos</td><td>Para decidir hace falta la historia (real frente a estimado, el más reciente), y para explicar y auditar cada veredicto.</td><td class="mono">0006</td></tr>
+        <tr><td class="k">Reglas deterministas para el veredicto</td><td>Que decida un LLM</td><td>Explicables, reproducibles y configurables por negocio. El LLM solo extrae.</td><td class="mono">0009</td></tr>
+        <tr><td class="k">IA híbrida en cascada</td><td>Todo al LLM</td><td>Unas 90 veces más caro, más lento y no determinista. Las reglas resuelven la mayor parte.</td><td class="mono">0008</td></tr>
+        <tr><td class="k">PostgreSQL como base y como cola</td><td>Kafka o RabbitMQ</td><td>Unas decenas de tareas por minuto: una pieza menos que operar. Cambiar es un adaptador.</td><td class="mono">0011</td></tr>
+        <tr><td class="k">Contenedores portables, sin Kubernetes</td><td>Kubernetes</td><td>Unos 13 procesos: el clúster cuesta más de lo que aporta, salvo que ya se opere uno.</td><td class="mono">0012</td></tr>
+        <tr><td class="k">Rol del remitente en cascada, a partir del ERP</td><td>Dar de alta cada dominio</td><td>Escriben miles de dominios. Un directorio manual no escala y falla sin avisar.</td><td class="mono">0013</td></tr>
+        <tr><td class="k">LLM de producción en la UE, sin retención</td><td>API sin garantías de región</td><td>Datos de clientes: residencia en la UE, sin entrenamiento y con contrato de encargado.</td><td class="mono">0010</td></tr>
       </tbody>
     </table>
-    <div>
-      <div class="card accent" style="margin-bottom:16px">
-        <h3>El LLM, con correa corta</h3>
-        <ul class="small">
-          <li>Devuelve JSON con esquema y <b>una cita literal que se comprueba</b> en el correo: si no existe, se descarta.</li>
-          <li>No decide la asociación ni el veredicto, así que un correo malicioso no puede mover nada.</li>
-          <li>Rellena huecos, pero nunca sustituye un valor leído por las reglas (ADR-0014).</li>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 9 · Modelo de IA -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Modelo de IA <span class="aud arq">Arquitectura</span> <span class="aud all">Todos</span></p>
+    <h2><span class="n">1</span>Híbrido en cascada: cada técnica donde rinde más</h2>
+    <div class="ask"><span class="lbl">Enunciado</span>Modelo de IA elegido (reglas, NLP clásico, LLM, híbrido…) y por qué ese y no otro.</div>
+    <table class="s14">
+      <thead><tr><th>Opción</th><th>A favor</th><th>En contra</th><th>Papel en la propuesta</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Solo reglas</td><td>Precisas, gratis, explicables. Validan con dígito de control (contenedores ISO 6346).</td><td>No entienden el texto libre; cada formato nuevo es trabajo manual.</td><td>Primer escalón: identificadores, fechas, buques, plazos, puertos</td></tr>
+        <tr><td class="k">NLP clásico</td><td>Barato y rápido; se reentrena con las correcciones.</td><td>Necesita correos etiquetados; no sirve para extraer valores del texto libre.</td><td>Clasificar correos (TF-IDF + regresión logística) cuando haya etiquetas</td></tr>
+        <tr><td class="k">Solo LLM</td><td>Entiende cualquier redacción, sin entrenar.</td><td>Unas 90 veces más caro, no determinista, puede inventar, depende de un tercero.</td><td>Solo el texto libre que no resuelven los escalones anteriores</td></tr>
+        <tr><td class="k">Híbrido en cascada ✓</td><td>Lo mejor de cada uno; el coste baja con el tiempo.</td><td>Más piezas que mantener.</td><td><b>Elegido</b> (ADR-0008): reglas, plantillas, ML, LLM y, al final, una persona</td></tr>
+      </tbody>
+    </table>
+    <div class="cols" style="margin-top:14px">
+      <div class="card tint s14">
+        <h3>El LLM, acotado</h3>
+        Devuelve JSON con esquema y una <b>cita literal que se comprueba</b> en el correo; si la cita no existe, se descarta. No decide la asociación ni el veredicto, así que un correo malicioso no mueve nada. Rellena huecos, pero nunca sustituye un valor leído por las reglas (ADR-0014).
+      </div>
+      <div class="card s14">
+        <h3>Elegido con datos</h3>
+        Se compararon tres modelos locales sobre la muestra. Empatan en resultado final, y <code>qwen3.5:4b</code> propone con más precisión que <code>llama3.2:3b</code> y con la mitad de memoria que <code>gemma4:e4b</code> (ADR-0015). En producción, una API en la UE elegida con el mismo procedimiento.
+      </div>
+    </div>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 10 · Datos -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Datos <span class="aud arq">Arquitectura</span> <span class="aud ops">Operativa</span></p>
+    <h2><span class="n">2</span>Qué datos obtiene y cómo se estructuran</h2>
+    <div class="ask"><span class="lbl">Enunciado</span>Datos que obtiene el sistema y cómo se estructuran.</div>
+    <div class="cols-narrow">
+      <table class="s14">
+        <thead><tr><th>Grupo</th><th>Campos</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Identificadores</td><td>Expediente, booking, B/L y contenedor (con dígito de control, separado de precintos y teléfonos)</td></tr>
+          <tr><td class="k">Transporte</td><td>Naviera, buque y viaje, puertos de origen y destino (UN/LOCODE), ETD y ETA</td></tr>
+          <tr><td class="k">Plazos</td><td>Cut-off documental, de VGM y de entrega del contenedor</td></tr>
+          <tr><td class="k">Mercancía y aduana</td><td>Carga en almacén, número de contenedores, levante</td></tr>
+          <tr><td class="k">Tipo de evento</td><td>Confirmación, retraso, cambio de buque, roleo, transbordo</td></tr>
+        </tbody>
+      </table>
+      <div>
+        <div class="flow" style="margin-bottom:12px">
+          <div class="st"><b>1 · Lo recibido</b>Correos, adjuntos y lecturas del ERP, tal cual y cifrados</div>
+          <div class="st"><b>2 · Observaciones</b>Cada afirmación de una fuente, con su cita. Nunca se borran</div>
+          <div class="st"><b>3 · Proyección</b>El valor vigente y el veredicto frente al ERP. Se recalcula</div>
+        </div>
+        <p class="s14" style="margin-bottom:8px">Cada observación lleva: <b>valor</b>, <b>estado</b> (planificado, estimado o real), <b>cita literal</b>, <b>remitente y rol</b>, <b>escalón</b> que la extrajo y <b>confianza</b>. Es <b>bitemporal</b>: cuándo ocurre el hecho, cuándo lo dijo la fuente y cuándo lo registró el sistema. Así se responde «qué se sabía del expediente el día X».</p>
+        <div class="card soft s14"><b>Datos útiles para el negocio:</b> qué naviera y ruta acierta más en sus ETA, qué proveedores cambian más a última hora, discrepancias abiertas por equipo y tiempo hasta detectarlas.</div>
+      </div>
+    </div>
+    <p class="s13 muted" style="margin-top:8px">En la prueba de concepto, el transbordo, la omisión de escala y el DUA quedan diseñados, pero no implementados.</p>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 11 · Fiabilidad -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Fiabilidad <span class="aud all">Todos</span></p>
+    <h2><span class="n">3</span>Cuando decide solo, tiene que acertar; si duda, pregunta</h2>
+    <div class="ask"><span class="lbl">Enunciado</span>Qué porcentaje de acierto se espera, cómo se mide y qué se hace con los casos de baja confianza.</div>
+    <div class="cols-3">
+      <div class="card top s14">
+        <h3>Qué se espera</h3>
+        <p><b>La precisión de lo automático se impone:</b> 98 % en los campos críticos y 99,5 % en la asociación. El umbral de cada campo se fija para que el <b>límite inferior</b> del intervalo cumpla el objetivo.</p>
+        <p style="margin:0"><b>Lo que se mide es la cobertura:</b> cuánto resuelve solo. Objetivo: menos del 15 % de los correos a revisión.</p>
+      </div>
+      <div class="card top s14">
+        <h3>Cómo se mide</h3>
+        <p><b>Confianza calibrada:</b> la probabilidad real de acierto, aprendida por campo (no la que declara el modelo).</p>
+        <p style="margin:0"><b>Auditoría por muestreo</b> de lo aceptado solo, unas 400 muestras al mes por campo crítico. Si la precisión cae, el umbral se endurece automáticamente; relajarlo exige a una persona.</p>
+      </div>
+      <div class="card top s14">
+        <h3>Baja confianza</h3>
+        <table class="s13">
+          <tr><td class="k">Alta</td><td>Se acepta y entra en la auditoría</td></tr>
+          <tr><td class="k">Media</td><td>A revisión, con su evidencia y prioridad P1–P3</td></tr>
+          <tr><td class="k">Baja</td><td>No se propone; si falta un dato crítico, el expediente queda marcado</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="cols" style="margin-top:14px">
+      <table class="s14">
+        <thead><tr><th>Medido en la muestra real (solo reglas)</th><th class="num">Resultado</th></tr></thead>
+        <tbody>
+          <tr><td>Correos asociados solos a su expediente, y bien</td><td class="num"><b>35 de 35</b></td></tr>
+          <tr><td>Datos aceptados sin revisión que son correctos</td><td class="num"><b>90 %</b> (54 de 60)</td></tr>
+          <tr><td>Precisión de la extracción</td><td class="num">86 %</td></tr>
+          <tr><td>Veredicto exacto frente al ERP</td><td class="num">74 % (63 de 85)</td></tr>
+        </tbody>
+      </table>
+      <div class="card amber s14">
+        <b>Cómo leer estas cifras.</b> La muestra son 38 correos y 11 expedientes elegidos por EShipping para dar contexto, no una muestra aleatoria. Sirve para ver cómo se comporta y qué falla; las tasas de producción salen de un piloto (unos 190 casos por campo para demostrar un 98 %). Con los umbrales de producción, ese 90 % sube a costa de enviar más a revisión.
+      </div>
+    </div>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 12 · Entrenamiento -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Aprendizaje continuo · entrenamiento <span class="aud all">Todos</span></p>
+    <h2><span class="n">4</span>Cada corrección se convierte en una mejora medible</h2>
+    <div class="ask"><span class="lbl">Enunciado</span>Cómo aprende el modelo de los operativos y de la relación con clientes y proveedores, y cómo se evita que aprenda de errores.</div>
+    <div class="flow" style="margin-bottom:10px">
+      <div class="st"><b>1 · Señal</b>Corrección, validación, rechazo o muestra de auditoría</div>
+      <div class="st"><b>2 · Etiqueta</b>Control de calidad y cuarentena de 7 días</div>
+      <div class="st"><b>3 · Entrenamiento</b>Modelos pequeños, cada semana o al momento</div>
+      <div class="st"><b>4 · Evaluación</b>Contra un conjunto protegido: no puede empeorar</div>
+      <div class="st"><b>5 · Modo sombra</b>La versión nueva corre en paralelo, sin efecto</div>
+      <div class="st"><b>6 · Activación</b>Gradual, con más auditoría la primera semana</div>
+    </div>
+    <table class="s14 compact">
+      <thead><tr><th>Qué se entrena</th><th>Cómo</th><th>Con qué</th><th>Ritmo</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Calibración de la confianza</td><td>Regresión logística por campo</td><td>Revisiones y auditoría (desde 200 etiquetas)</td><td>Semanal</td></tr>
+        <tr><td class="k">Clasificador de correos</td><td>TF-IDF + regresión logística</td><td>Correcciones de clase</td><td>Semanal</td></tr>
+        <tr><td class="k">Ejemplos para el LLM</td><td>Hasta tres ejemplos validados del mismo remitente (few-shot)</td><td>Correcciones con doble revisión o auditoría</td><td>Continuo</td></tr>
+        <tr><td class="k">Plantillas por proveedor</td><td>Inducidas de los formatos repetidos que resuelve el LLM</td><td>Salidas del LLM validadas</td><td>Al aparecer</td></tr>
+        <tr><td class="k">Perfiles y alias</td><td>Formato de fechas, rol del remitente, bookings tras un roleo</td><td>Correcciones y asociaciones validadas</td><td>Continuo</td></tr>
+        <tr><td class="k">Modelo propio, más adelante</td><td>Ajuste fino de un modelo pequeño</td><td>Miles de ejemplos validados por campo</td><td>Con volumen</td></tr>
+      </tbody>
+    </table>
+    <p class="s14" style="margin-top:8px;margin-bottom:0"><b>La clave:</b> no se reentrena un LLM gigante; se entrenan modelos pequeños y explicables, y el LLM aprende con ejemplos. <b>El trabajo baja por la cascada:</b> lo que hoy resuelve el LLM, mañana lo resuelve una plantilla.</p>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 13 · De quién aprende -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Aprendizaje continuo · fuentes <span class="aud all">Todos</span> <span class="aud ops">Operativa</span></p>
+    <h2><span class="n">4</span>Aprende de los operativos y de la relación con clientes y proveedores</h2>
+    <div class="cols">
+      <div>
+        <h3>De los operativos que usan la aplicación</h3>
+        <table class="s14">
+          <thead><tr><th>Señal</th><th>Qué enseña</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Corrección</td><td>El valor correcto de un campo, la clase o el expediente</td></tr>
+            <tr><td class="k">Validación</td><td>Que la propuesta era correcta, si no fue apresurada</td></tr>
+            <tr><td class="k">Rechazo con motivo</td><td>Que la propuesta era errónea, y por qué</td></tr>
+            <tr><td class="k">Muestra de auditoría</td><td>Si lo aceptado solo era correcto, sin sesgo de selección</td></tr>
+          </tbody>
+        </table>
+        <p class="s14 muted" style="margin-top:8px">Corregir no edita lo que dijo la fuente: añade una observación humana con autor y fecha, y el expediente se vuelve a calcular.</p>
+      </div>
+      <div>
+        <h3>De la relación con clientes y proveedores</h3>
+        <ul class="s14">
+          <li><b>Perfil de cada remitente:</b> formato de fechas, zona horaria, idioma, qué datos suele enviar y qué hay que pedirle.</li>
+          <li><b>Rol aprendido por dominio:</b> qué tipo de correos manda y en qué expedientes aparece, <b>sin dar de alta dominios uno a uno</b>.</li>
+          <li><b>Confirmaciones posteriores:</b> una salida estimada que acaba siendo la real refuerza a esa fuente.</li>
+          <li><b>Fiabilidad por naviera y ruta:</b> la diferencia entre la ETA estimada y la real. Una naviera que suele acertar pesa más, y operaciones planifica mejor.</li>
+          <li><b>Proveedores problemáticos:</b> cambios de última hora, roleos y discrepancias.</li>
+        </ul>
+        <p class="s14 muted" style="margin-top:6px">Estas señales implícitas refuerzan o debilitan, pero nunca sustituyen una etiqueta humana en los campos críticos.</p>
+      </div>
+    </div>
+    <div class="cols-4" style="margin-top:10px">
+      <div class="card soft s13"><b>El LLM resuelve menos</b> cada mes, por proveedor</div>
+      <div class="card soft s13"><b>La revisión baja</b> del 30 % del arranque hacia el 15 %</div>
+      <div class="card soft s13"><b>La precisión auditada</b> se mantiene mientras sube la cobertura</div>
+      <div class="card soft s13"><b>Un remitente nuevo</b> necesita menos correcciones con las semanas</div>
+    </div>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 14 · Sin aprender errores -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Aprendizaje continuo · control de calidad <span class="aud all">Todos</span> <span class="aud arq">Arquitectura</span></p>
+    <h2><span class="n">4</span>Cómo se evita que aprenda de errores</h2>
+    <div class="cols-wide">
+      <table class="s14">
+        <thead><tr><th>Riesgo</th><th>Control</th></tr></thead>
+        <tbody>
+          <tr><td class="k">El operativo se equivoca</td><td>La corrección pasa las mismas validaciones que un dato extraído (fecha plausible, puerto existente, contenedor válido) y lleva cita o motivo</td></tr>
+          <tr><td class="k">Validar sin leer</td><td>Se detectan validaciones demasiado rápidas o un 100 % de aceptación; se intercalan casos de control ya conocidos</td></tr>
+          <tr><td class="k">Dos operativos discrepan</td><td>Doble revisión del 10 %, con el acuerdo medido (kappa de Cohen); el desacuerdo va a una tercera persona</td></tr>
+          <tr><td class="k">El ERP estaba mal</td><td>Un valor del ERP nunca es una etiqueta si una persona no lo confirma</td></tr>
+          <tr><td class="k">Aprender de sí mismo</td><td>Nada aceptado automáticamente se usa para entrenar sin confirmación de la auditoría: se corta el bucle</td></tr>
+          <tr><td class="k">Etiqueta precipitada</td><td>Cuarentena de 7 días: si algo la contradice (una salida real distinta), se revisa</td></tr>
+          <tr><td class="k">Sesgo de selección</td><td>La zona de aceptación se calibra con auditoría aleatoria, no solo con lo revisado</td></tr>
+        </tbody>
+      </table>
+      <div>
+        <div class="card top s14" style="margin-bottom:12px">
+          <h3>Todo es reversible</h3>
+          Cada artefacto aprendido guarda su versión y las etiquetas que lo generaron. Si una etiqueta resulta errónea, se sabe qué la usó, se regenera sin ella y se reprocesan los datos afectados.
+        </div>
+        <div class="card top s14" style="margin-bottom:12px">
+          <h3>Quién aprueba qué</h3>
+          Calibración, clasificador y ejemplos: automático, si pasa la evaluación. Plantillas nuevas: el equipo técnico. Qué fuente manda o bajar un umbral: operaciones.
+        </div>
+        <div class="card tint s14">
+          <h3>En la prueba de concepto</h3>
+          La corrección como observación humana que recalcula el expediente, los alias aprendidos solos (4 en la demo) y el formato de fechas por remitente. La llamada al LLM ya admite ejemplos validados. El resto está diseñado en detalle.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 15 · Qué hay que operar -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Operación <span class="aud sys">Sistemas</span></p>
+    <h2>Poca infraestructura, integraciones de solo lectura y nada exótico</h2>
+    <div class="cols-3">
+      <div class="card top">
+        <h3>Infraestructura</h3>
+        <ul class="s15">
+          <li>Una imagen de contenedor, con un rol por etapa.</li>
+          <li>2 servidores de aplicación (4 vCPU, 16 GB).</li>
+          <li>PostgreSQL con primario y réplica (2 vCPU, 8 GB), con particiones mensuales.</li>
+          <li>Almacén de objetos compatible con S3 y monitorización con OpenTelemetry.</li>
+          <li>En la nube de EShipping, en la UE, o en máquinas virtuales con Docker Compose.</li>
         </ul>
       </div>
-      <div class="card">
-        <h3>Elegido con datos</h3>
-        <p class="small" style="margin:0">Comparé tres modelos locales sobre la muestra. Empatan en resultado, y <code>qwen3.5:4b</code> es el que propone con más precisión. En producción, una API en la UE elegida con el mismo procedimiento.</p>
+      <div class="card top">
+        <h3>Integraciones y acceso</h3>
+        <ul class="s15">
+          <li><b>Buzón:</b> Microsoft Graph con permiso de solo lectura, restringido a los buzones operativos.</li>
+          <li><b>DEIWORLD:</b> solo lectura, por exportación o API. <b>Nadie escribe en él.</b></li>
+          <li>Inicio de sesión con el directorio corporativo (Entra ID) y doble factor; roles por equipo.</li>
+          <li>El equipo técnico no ve el contenido de los correos por defecto.</li>
+        </ul>
+      </div>
+      <div class="card top">
+        <h3>Seguridad y continuidad</h3>
+        <ul class="s15">
+          <li>Red privada; solo se expone la aplicación de revisión. Salida a Internet por lista blanca.</li>
+          <li>Secretos en un gestor, con rotación. TLS en todo y cifrado en reposo.</li>
+          <li>Copias diarias con recuperación a un momento dado: <b>RPO de 15 min y RTO de 4 h</b>.</li>
+          <li>Si algo se pierde, se vuelve a leer del buzón sin duplicados.</li>
+          <li>Despliegue gradual, con modo sombra y vuelta atrás.</li>
+        </ul>
       </div>
     </div>
   </div>
+  <div class="pfoot"></div>
 </section>
 
-<!-- 10 · Qué hay que operar -->
+<!-- 16 · Coste -->
 <section class="slide">
-  <p class="kicker">Qué habría que operar <span class="aud sys">Sistemas</span></p>
-  <h2>Poca infraestructura, integraciones de solo lectura y nada exótico</h2>
-  <div class="cols-3 grow">
-    <div class="card">
-      <h3>Infraestructura</h3>
-      <ul class="small">
-        <li>Una imagen de contenedor, con un rol por etapa.</li>
-        <li>2 servidores de aplicación (4 vCPU, 16 GB).</li>
-        <li>PostgreSQL con primario y réplica (2 vCPU, 8 GB), con particiones mensuales.</li>
-        <li>Almacén de objetos compatible con S3 y monitorización con OpenTelemetry.</li>
-        <li>En vuestra nube, en la UE, o en máquinas virtuales con Docker Compose.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h3>Integraciones y acceso</h3>
-      <ul class="small">
-        <li><b>Buzón:</b> Microsoft Graph con permiso de solo lectura, restringido a los buzones operativos.</li>
-        <li><b>ERP:</b> solo lectura, por exportación o API (P-09). <b>Nadie escribe en él.</b></li>
-        <li>Inicio de sesión con el directorio corporativo (Entra ID) y doble factor; roles por equipo.</li>
-        <li>Sistemas, sin acceso al contenido de los correos por defecto.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h3>Seguridad y continuidad</h3>
-      <ul class="small">
-        <li>Red privada; solo se expone la aplicación de revisión. Salida a Internet por lista blanca.</li>
-        <li>Secretos en un gestor, con rotación. TLS en todo y cifrado en reposo.</li>
-        <li>Copias diarias con recuperación a un momento dado: <b>RPO de 15 min y RTO de 4 h</b>.</li>
-        <li>Si algo se pierde, se reingiere del buzón sin duplicados.</li>
-        <li>Despliegue gradual, con modo sombra y vuelta atrás.</li>
-      </ul>
+  <div class="body">
+    <p class="kicker">Coste <span class="aud sys">Sistemas</span> <span class="aud all">Dirección</span></p>
+    <h2><span class="n">5</span>Unos 330 € al mes con 100.000 correos, medido y no supuesto</h2>
+    <div class="ask"><span class="lbl">Enunciado</span>Coste de la solución, tanto computacional como económico, para el volumen indicado.</div>
+    <div class="cols">
+      <div>
+        <h3>Computacional (medido en la prueba de concepto)</h3>
+        <table class="s14">
+          <tbody>
+            <tr><td>Ingesta: parseo, división del hilo y deduplicación</td><td class="num">2,4 ms por mensaje</td></tr>
+            <tr><td>Clasificación, rol, asociación y extracción</td><td class="num">3,3 ms por mensaje</td></tr>
+            <tr><td>Reconciliación con el ERP</td><td class="num">3,1 ms por expediente</td></tr>
+            <tr><td>Todo un mes de 100.000 correos, sin LLM ni OCR</td><td class="num">≈ 15 min de CPU</td></tr>
+            <tr><td>Llamadas al LLM al mes</td><td class="num">≈ 37.500</td></tr>
+            <tr><td>Tokens por llamada (medidos)</td><td class="num">≈ 360 de entrada, 100 de salida</td></tr>
+            <tr><td>Peticiones simultáneas al LLM en el pico</td><td class="num">≈ 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Económico (al mes, sin IVA)</h3>
+        <table class="s14">
+          <thead><tr><th>Partida</th><th class="num">100.000</th><th class="num">150.000</th></tr></thead>
+          <tbody>
+            <tr><td>2 servidores de aplicación</td><td class="num">173 €</td><td class="num">173 €</td></tr>
+            <tr><td>2 servidores de base de datos</td><td class="num">87 €</td><td class="num">87 €</td></tr>
+            <tr><td>Monitorización y almacén de objetos</td><td class="num">42 €</td><td class="num">42 €</td></tr>
+            <tr><td>LLM (proveedor en la UE)</td><td class="num">25 €</td><td class="num">37 €</td></tr>
+            <tr class="total"><td>Total técnico</td><td class="num">≈ 330 €</td><td class="num">≈ 340 €</td></tr>
+            <tr><td class="muted">Por correo</td><td class="num muted">0,33 cént.</td><td class="num muted">0,23 cént.</td></tr>
+          </tbody>
+        </table>
+        <p class="s13 muted" style="margin-top:8px">Las máquinas son el 90 %. Peor caso de la sensibilidad del LLM: unos 257 $, aún menos que las máquinas. Sin cascada, unas 90 veces más. Precios oficiales del 23/11/2026. El tiempo de revisión del equipo se mide en horas, no en euros.</p>
+      </div>
     </div>
   </div>
+  <div class="pfoot"></div>
 </section>
 
-<!-- 11 · Coste -->
+<!-- 17 · Escalabilidad -->
 <section class="slide">
-  <p class="kicker">Coste <span class="aud sys">Sistemas</span> <span class="aud all">Dirección</span></p>
-  <h2>Unos 330 € al mes con 100.000 correos, medido y no supuesto</h2>
-  <div class="cols grow">
-    <table>
-      <thead><tr><th>Partida</th><th class="num">100.000/mes</th><th class="num">150.000/mes</th></tr></thead>
-      <tbody>
-        <tr><td>2 servidores de aplicación</td><td class="num">173 €</td><td class="num">173 €</td></tr>
-        <tr><td>2 servidores de base de datos</td><td class="num">87 €</td><td class="num">87 €</td></tr>
-        <tr><td>Monitorización y almacén de objetos</td><td class="num">42 €</td><td class="num">42 €</td></tr>
-        <tr><td>LLM (proveedor en la UE)</td><td class="num">25 €</td><td class="num">37 €</td></tr>
-        <tr><td><b>Total técnico</b></td><td class="num"><b>≈ 330 €</b></td><td class="num"><b>≈ 340 €</b></td></tr>
-        <tr><td class="muted">Por correo</td><td class="num muted">0,33 cént.</td><td class="num muted">0,23 cént.</td></tr>
-      </tbody>
-    </table>
-    <div>
-      <ul class="small">
-        <li><b>La infraestructura es casi fija:</b> pasar de 100.000 a 150.000 correos no cambia ninguna máquina. Con 300.000, un servidor más: unos 470 €.</li>
-        <li><b>Medido en la prueba:</b> cada llamada al LLM usa muchos menos tokens de los supuestos al principio, porque solo le llega el mensaje nuevo y limpio.</li>
-        <li><b>Peor caso de la sensibilidad:</b> el LLM costaría unos 257 $, todavía menos que las máquinas.</li>
-        <li><b>Sin cascada</b> (todo el correo a un modelo grande), unas 90 veces más.</li>
-      </ul>
-      <p class="xs muted">Precios oficiales del 23/11/2026 y máquinas de referencia europeas, sin IVA. El tiempo de revisión del equipo no se valora en euros.</p>
+  <div class="body">
+    <p class="kicker">Escalabilidad <span class="aud sys">Sistemas</span> <span class="aud arq">Arquitectura</span></p>
+    <h2><span class="n">6</span>De 100.000 a 150.000 correos: configuración, no rediseño</h2>
+    <div class="ask"><span class="lbl">Enunciado</span>Cómo se comportaría el diseño si se pasara de 100.000 a 150.000 correos.</div>
+    <div class="cols-wide">
+      <table class="s14">
+        <thead><tr><th></th><th class="num">100.000/mes</th><th class="num">150.000/mes</th><th>¿Qué hay que tocar?</th></tr></thead>
+        <tbody>
+          <tr><td>Correos en el minuto pico</td><td class="num">23</td><td class="num">34</td><td>Nada</td></tr>
+          <tr><td>Margen de un solo proceso sobre el pico</td><td class="num">≈ 290×</td><td class="num">≈ 195×</td><td>Nada</td></tr>
+          <tr><td>Servidores</td><td class="num">2 + 2 + 1</td><td class="num">2 + 2 + 1</td><td>Nada: las réplicas las fija la disponibilidad</td></tr>
+          <tr><td>Llamadas al LLM al mes</td><td class="num">37.500</td><td class="num">56.250</td><td>Revisar el nivel de uso del proveedor y el presupuesto</td></tr>
+          <tr><td>Base de datos al año</td><td class="num">≈ 16 GB</td><td class="num">≈ 23 GB</td><td>Nada: particiones mensuales</td></tr>
+          <tr><td>Horas de revisión al mes (15 % a revisión)</td><td class="num">≈ 281 h</td><td class="num">≈ 422 h</td><td>Es el recurso que de verdad crece</td></tr>
+        </tbody>
+      </table>
+      <div>
+        <div class="card top s14" style="margin-bottom:12px">
+          <h3>Prueba de volumen</h3>
+          10.010 mensajes y 2.860 expedientes sintéticos en <b>66 s</b>, en un solo proceso. Con cuatro veces más mensajes, cuatro veces más tiempo: crece de forma <b>lineal</b> y con la misma calidad.
+        </div>
+        <div class="card tint s14">
+          <h3>El límite real no son las máquinas</h3>
+          Son las horas de revisión, el LLM, el OCR y lo al día que esté el ERP. Por eso la revisión se trata como una pieza de primer nivel, y el aprendizaje continuo la reduce. Con 300.000 correos basta un servidor más.
+        </div>
+      </div>
     </div>
   </div>
+  <div class="pfoot"></div>
 </section>
 
-<!-- 12 · Escala -->
+<!-- 18 · Confidencialidad -->
 <section class="slide">
-  <p class="kicker">Cuánto aguanta <span class="aud sys">Sistemas</span> <span class="aud arq">Arquitectura</span></p>
-  <h2>Crecer de 100.000 a 150.000 correos es configuración, no rediseño</h2>
-  <div class="cols-3">
-    <div class="card"><p class="xs muted">Prueba de volumen sintética</p><div class="big">10.010</div><p class="xs muted">mensajes y 2.860 expedientes en 66 s, en un solo proceso</p></div>
-    <div class="card"><p class="xs muted">Crecimiento</p><div class="big ok">lineal</div><p class="xs muted">con cuatro veces más mensajes, cuatro veces más tiempo, y la misma calidad</p></div>
-    <div class="card"><p class="xs muted">Margen sobre el pico a 150.000/mes</p><div class="big">≈ 195×</div><p class="xs muted">sin contar el LLM ni el OCR</p></div>
-  </div>
-  <div class="cols grow" style="margin-top:22px">
-    <ul class="small">
-      <li>Cada etapa es un worker sin estado detrás de una cola: <b>se escala solo la que lo necesita</b>.</li>
-      <li>La base de datos crece unos 23 GB al año con 150.000 correos.</li>
-      <li>Medir sirve: descodificar el formato de Outlook se llevaba el 97 % de la ingesta. Tras corregirlo, la ingesta es 13 veces más rápida.</li>
-    </ul>
-    <div class="card accent small">
-      <b>El límite real no son las máquinas</b>, sino las horas de revisión del equipo, el LLM, el OCR y lo al día que esté el ERP. Por eso la revisión se trata como una pieza de primer nivel.
+  <div class="body">
+    <p class="kicker">Confidencialidad <span class="aud all">Todos</span> <span class="aud sys">Sistemas</span></p>
+    <h2>Los datos de EShipping no han salido del equipo</h2>
+    <div class="ask"><span class="lbl">Enunciado</span>Si la solución envía datos a servicios externos, indicarlo y explicar cómo se protegen.</div>
+    <div class="cols">
+      <div class="card top">
+        <h3>En la prueba técnica</h3>
+        <ul class="s15">
+          <li>Todo se ha procesado en local: los datos reales viven en una carpeta excluida del repositorio y el modelo de IA corre en el propio equipo (Ollama).</li>
+          <li><b>Ningún dato se ha enviado a servicios externos.</b></li>
+          <li>Bloqueos automáticos al guardar cambios y en la integración continua, y una auditoría que comprueba que ningún valor real aparece en el repositorio ni en su historial.</li>
+          <li>Ejemplos, pruebas y capturas, con datos sintéticos.</li>
+          <li>Al terminar el proceso de selección se borran todas las copias.</li>
+        </ul>
+      </div>
+      <div class="card tint">
+        <h3>En producción</h3>
+        <ul class="s15">
+          <li>El único servicio externo es el LLM: <b>en la UE, sin retención y sin uso para entrenar</b>, con contrato de encargado del tratamiento.</li>
+          <li>Recibe solo el mensaje nuevo, limpio y <b>seudonimizado</b>; nunca el hilo ni los adjuntos.</li>
+          <li>Si EShipping no autoriza un proveedor externo, un modelo propio alojado en la UE.</li>
+          <li>Logs sin datos personales y registro de auditoría de cada acceso y cada decisión.</li>
+        </ul>
+      </div>
     </div>
   </div>
+  <div class="pfoot"></div>
 </section>
 
-<!-- 13 · Fiabilidad -->
+<!-- 19 · Puesta en marcha -->
 <section class="slide">
-  <p class="kicker">Fiabilidad <span class="aud all">Todos</span></p>
-  <h2>Cuando decide solo, tiene que acertar; si duda, os pregunta</h2>
-  <div class="cols-3">
-    <div class="card"><p class="xs muted">Correos asociados solos a su expediente, y bien</p><div class="big ok">35 / 35</div><p class="xs muted">muestra real, solo con reglas</p></div>
-    <div class="card"><p class="xs muted">Datos aceptados sin revisión que son correctos</p><div class="big">90 %</div><p class="xs muted">54 de 60</p></div>
-    <div class="card"><p class="xs muted">Veredicto exacto frente al ERP</p><div class="big">74 %</div><p class="xs muted">63 de 85</p></div>
-  </div>
-  <div class="cols grow" style="margin-top:22px">
-    <ul class="small">
-      <li><b>El objetivo se impone, no se espera:</b> el 98 % en los campos críticos y el 99,5 % en la asociación. Si un tipo de dato no llega, va a revisión.</li>
-      <li><b>Se vigila siempre:</b> una auditoría por muestreo de lo automático endurece los umbrales sola, y solo una persona los relaja.</li>
-      <li><b>Lo que se mide es cuánto se automatiza.</b> Objetivo: menos del 15 % a revisión.</li>
-    </ul>
-    <div class="card warn small">
-      <b>Lectura honesta.</b> La muestra son 38 correos y 11 expedientes, elegidos por vosotros para dar contexto. Sirve para ver qué falla, no para prometer tasas. El fallo más frecuente no es leer mal, sino elegir otro valor del hilo. Las cifras de producción salen de un piloto.
+  <div class="body">
+    <p class="kicker">Puesta en marcha <span class="aud all">Todos</span></p>
+    <h2>Por fases, sin cambiar el día a día de operativa hasta que esté probado</h2>
+    <div class="cols-4">
+      <div class="card top"><div class="step">1 · Preparar</div><p class="s15">Cerrar con EShipping las preguntas del análisis de requisitos (volumen real, significado de algunos campos de DEIWORLD, proveedor de IA autorizado y jerarquía de fuentes), obtener el acceso de solo lectura al buzón y al ERP y etiquetar con operativa unos cientos de casos reales.</p></div>
+      <div class="card top"><div class="step">2 · Modo sombra</div><p class="s15">El sistema lee los correos reales <b>sin ningún efecto</b>: operativa trabaja como siempre y se compara lo que propone con lo que hace el equipo. Así se fijan los umbrales con datos.</p></div>
+      <div class="card top"><div class="step">3 · Piloto</div><p class="s15">Un equipo usa la lista de discrepancias con umbrales prudentes: al principio va mucho a revisión. Sus correcciones entrenan el sistema.</p></div>
+      <div class="card top"><div class="step">4 · Ampliar</div><p class="s15">Por naviera y por tipo de correo. La revisión baja con el aprendizaje: del 30 % del arranque hacia el 15 %, y menos en régimen maduro.</p></div>
     </div>
+    <div class="ask" style="margin-top:22px"><span class="lbl">Objetivo</span>Hoy una persona lee todos los correos. El objetivo es que el volumen crezca más deprisa que las horas de revisión.</div>
   </div>
+  <div class="pfoot"></div>
 </section>
 
-<!-- 14 · Confidencialidad -->
+<!-- 20 · Resumen de la PoC -->
 <section class="slide">
-  <p class="kicker">Confidencialidad <span class="aud all">Todos</span> <span class="aud sys">Sistemas</span></p>
-  <h2>Vuestros datos no han salido de mi equipo; el único fallo lo detecté y lo corregí</h2>
-  <div class="cols grow">
-    <div>
-      <h3>En la prueba</h3>
-      <ul class="small">
-        <li>Todo es local: los datos reales solo viven en una carpeta excluida del repositorio, y el modelo de IA corre en mi máquina. <b>No he enviado datos a ningún servicio externo.</b></li>
-        <li>Hay bloqueos automáticos al guardar cambios y en la integración continua.</li>
-        <li><b>Un incidente, y cómo lo resolví:</b> escribí una auditoría que busca vuestros valores reales en todo el repositorio, su historial y GitHub. Encontró un número de reserva real en una prueba. Lo sustituí, reescribí el historial y verifiqué cero coincidencias.</li>
-        <li>Al terminar el proceso, borro todas las copias.</li>
-      </ul>
-    </div>
-    <div class="card accent">
-      <h3>En producción</h3>
-      <ul class="small">
-        <li>El único servicio externo es el LLM: <b>en la UE, sin retención y sin uso para entrenar</b>, con contrato de encargado del tratamiento.</li>
-        <li>Recibe solo el mensaje nuevo, limpio y <b>seudonimizado</b>; nunca el hilo ni los adjuntos.</li>
-        <li>Si no autorizáis un proveedor externo, un modelo propio en la UE.</li>
-        <li>Logs sin datos personales y registro de auditoría de cada acceso y cada decisión.</li>
-      </ul>
+  <div class="body">
+    <p class="kicker">Prueba de concepto <span class="aud all">Todos</span></p>
+    <h2>La prueba de concepto, en resumen</h2>
+    <div class="cols-wide">
+      <table class="s15">
+        <thead><tr><th>Lo que pide el enunciado</th><th>Cómo lo hace</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="k">Admite correos nuevos</td><td>Ingiere cualquier <code>.eml</code> o <code>.msg</code>, sin duplicados</td><td><span class="tag ok">hecho</span></td></tr>
+          <tr><td class="k">Clasificación</td><td>Tipo de correo: reserva, buque, transporte, aduana, ruido…</td><td><span class="tag ok">hecho</span></td></tr>
+          <tr><td class="k">Extracción</td><td>Reglas y LLM local, con cita literal de cada dato</td><td><span class="tag ok">hecho</span></td></tr>
+          <tr><td class="k">Organización por expediente</td><td>Asociación por identificadores y alias aprendidos</td><td><span class="tag ok">hecho</span></td></tr>
+          <tr><td class="k">Cruce con el ERP</td><td>Valor vigente frente al CSV de DEIWORLD, campo a campo</td><td><span class="tag ok">hecho</span></td></tr>
+          <tr><td class="k">Discrepancias</td><td>Priorizadas P1–P3, con su evidencia y aviso de las urgentes</td><td><span class="tag ok">hecho</span></td></tr>
+          <tr><td class="k">Datos resultantes</td><td>Base consultable, informe por expediente y vista para operativos</td><td><span class="tag ok">hecho</span></td></tr>
+          <tr><td class="k">Aprendizaje</td><td>Correcciones, alias y perfil de fechas; el resto, diseñado</td><td><span class="tag plan">parcial</span></td></tr>
+        </tbody>
+      </table>
+      <div>
+        <div class="card top s15" style="margin-bottom:12px">
+          <h3>Cómo se prueba</h3>
+          <code>make demo</code>: todo el proceso sobre correos sintéticos.<br>
+          <code>make ui</code>: la vista para operativos.<br>
+          <code>make volume</code>: la prueba de volumen.
+        </div>
+        <div class="cols" style="gap:12px">
+          <div class="card"><div class="big">35/35</div><p class="s13 muted">asociaciones automáticas correctas en la muestra real</p></div>
+          <div class="card"><div class="big">66 s</div><p class="s13 muted">para 10.010 mensajes sintéticos</p></div>
+        </div>
+        <p class="s13 muted" style="margin-top:10px">379 pruebas automáticas, cobertura del 97 %, tipado estricto e integración continua. Diseñado, pero fuera de la prueba: plantillas, ML clásico, transbordo, DUA y OCR.</p>
+      </div>
     </div>
   </div>
+  <div class="pfoot"></div>
 </section>
 
-<!-- 15 · Puesta en marcha -->
-<section class="slide">
-  <p class="kicker">Cómo lo pondría en marcha <span class="aud all">Todos</span></p>
-  <h2>Por fases, sin cambiar nada de vuestro día hasta que esté probado</h2>
-  <div class="cols-4" style="align-items:start">
-    <div class="card"><div class="step">1 · Preparar</div><p class="small">Responder las preguntas abiertas, conseguir el acceso de solo lectura al buzón y al ERP y etiquetar con operativa unos cientos de casos reales.</p></div>
-    <div class="card"><div class="step">2 · Modo sombra</div><p class="small">El sistema lee los correos reales <b>sin efecto</b>: operativa trabaja como siempre y comparamos lo que propone con lo que hacéis.</p></div>
-    <div class="card"><div class="step">3 · Piloto</div><p class="small">Un equipo usa la lista de discrepancias, con umbrales prudentes: al principio va mucho a revisión. Sus correcciones entrenan el sistema.</p></div>
-    <div class="card"><div class="step">4 · Ampliar</div><p class="small">Por naviera y por tipo de correo. La revisión baja con el aprendizaje: del 30 % del arranque hacia el 15 %, y menos en régimen maduro.</p></div>
+<!-- 21 · Despedida -->
+<section class="slide farewell">
+  <div style="margin-top:auto"><img class="logo" src="../../data/output/presentacion/logo.png" alt="EShipping"><span class="wordmark">EShipping</span></div>
+  <h1 style="font-size:84px">Gracias</h1>
+  <p style="font-size:26px;margin-top:14px;color:var(--sage)">Turno de preguntas</p>
+  <div style="margin-top:auto;margin-bottom:56px;display:flex;align-items:center;gap:20px;font-size:17px">
+    <span class="bracket" style="margin:0">Pablo Iglesias Peral</span><span style="color:var(--sage)">Propuesta técnica · Ingeniero IA · Noviembre de 2026</span>
   </div>
-  <div class="cols" style="margin-top:20px">
-    <p class="small"><b>Aprende sin aprender errores:</b> las etiquetas se revisan antes de usarse, nunca se entrena con sus propias salidas sin revisar y todo lo aprendido es reversible.</p>
-    <p class="small muted">Las horas de revisión son el recurso que hay que cuidar. Hoy una persona lee todos los correos; el objetivo es que el volumen crezca más deprisa que las horas de revisión.</p>
-  </div>
-</section>
-
-<!-- 16 · Cierre -->
-<section class="slide">
-  <p class="kicker">Para terminar <span class="aud all">Todos</span></p>
-  <h2>Lo que me gustaría que os llevarais, y lo que me gustaría saber</h2>
-  <div class="cols grow">
-    <div>
-      <ul>
-        <li><b>Operativa</b> gana una lista de lo que no cuadra, por urgencia y con su prueba, y sigue teniendo la última palabra.</li>
-        <li><b>Sistemas</b> opera poco y conocido, con integraciones de solo lectura y unos 330 € al mes.</li>
-        <li><b>Arquitectura</b> tiene cada decisión escrita y reversible, y la IA solo donde aporta.</li>
-        <li><b>Y de mí:</b> entiendo antes de construir, mido antes de afirmar y digo lo que no sé y lo que sale mal.</li>
-      </ul>
-    </div>
-    <div class="card violet">
-      <h3>Preguntas para vosotros</h3>
-      <ul class="small">
-        <li>¿Se puede usar un proveedor de IA en la nube en la UE, o hace falta un modelo propio? (P-10)</li>
-        <li>¿Se puede saber cuándo se actualizó cada campo del ERP? ¿Tiene API? (P-07, P-09)</li>
-        <li>¿Cuánta revisión es asumible, y qué cuesta un dato erróneo frente a uno que falta? (P-06)</li>
-        <li>¿Qué jerarquía de fuentes aplica hoy operativa cuando la naviera y el cliente no coinciden? (P-11)</li>
-      </ul>
-    </div>
-  </div>
-  <div class="foot"><span>Repositorio con código, decisiones y documentación · Resumen ejecutivo de una página</span><span>Gracias</span></div>
 </section>
 
 </div>
 <div class="nav"><button id="prev" aria-label="Anterior">←</button> <span id="count"></span> <button id="next" aria-label="Siguiente">→</button></div>
 <script>
+  // ?sinlogo: versión sin el logo (el logo no se versiona; vive en data/output/presentacion/).
+  const noLogo = () => document.documentElement.classList.add('nologo');
+  try { if (new URLSearchParams(location.search).has('sinlogo')) noLogo(); } catch (e) {}
   const slides = [...document.querySelectorAll('.slide')];
+  const band = '<header class="band"><span><img class="logo" src="../../data/output/presentacion/logo.png" alt="EShipping"><span class="wordmark">EShipping</span></span><span class="band-right">Propuesta técnica · Ingeniero IA</span></header>';
+  slides.forEach((s, n) => {
+    if (s.classList.contains('cover') || s.classList.contains('farewell')) return;
+    s.insertAdjacentHTML('afterbegin', band);
+    const foot = s.querySelector('.pfoot');
+    if (foot && !foot.children.length) foot.innerHTML = `<span class="grow-x">EShipping · Propuesta técnica · Ingeniero IA · Pablo Iglesias Peral</span><span class="conf">Confidencial</span><span>${n + 1}</span>`;
+  });
+  document.querySelectorAll('img.logo').forEach(img => {
+    img.addEventListener('error', noLogo);
+    if (img.complete && img.naturalWidth === 0) noLogo();
+  });
   let current = 0;
   try { current = Math.min(slides.length - 1, Math.max(0, parseInt(location.hash.slice(1), 10) - 1 || 0)); } catch (e) {}
   function fit() {
@@ -505,7 +804,7 @@
     current = Math.min(slides.length - 1, Math.max(0, i));
     slides.forEach((s, n) => s.classList.toggle('active', n === current));
     document.getElementById('count').textContent = `${current + 1} / ${slides.length}`;
-    history.replaceState(null, '', `#${current + 1}`);
+    history.replaceState(null, '', `${location.search}#${current + 1}`);
   }
   document.addEventListener('keydown', e => {
     if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(current + 1); }

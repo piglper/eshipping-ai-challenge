@@ -9,7 +9,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [1.0.1] - 2026-11-26
 
 ### Changed
-- La presentación se reorganiza para la entrevista, con un tribunal de RRHH, sistemas, arquitectura y operativa (#96). Cada bloque se dirige a su público: qué cambia en el día de operativa, con capturas de la PoC sobre datos sintéticos; decisiones y alternativas para arquitectura; qué habría que operar para sistemas; y cómo se ha trabajado y cómo se pondría en marcha, para todos.
+- La presentación se rehace para la entrevista, con un tribunal de RRHH, sistemas, arquitectura y operativa (#96):
+  - 21 diapositivas en el estilo corporativo de EShipping (IBM Plex Sans y su verde), en tercera persona y organizadas por público;
+  - una diapositiva o más por cada pregunta del enunciado (§7), con la pregunta a la vista;
+  - tres diapositivas sobre el entrenamiento y el aprendizaje continuo: qué se entrena y cómo, de quién aprende y cómo evita aprender de errores;
+  - capturas de la PoC sobre datos sintéticos, resumen de la PoC y despedida.
+  - El logo no se versiona: se carga desde `data/output/` y el PDF versionado se exporta sin él.
 
 ## [1.0.0] - 2026-11-25
 
