@@ -57,4 +57,4 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
 
 ## Estado
 
-Fase F3 (PoC) cerrada con `v0.4.0`: canalización de extremo a extremo con CLI, escalón del LLM local y vista para operativos. Siguiente: F4 (evaluación). Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).
+Fase F4 (evaluación) cerrada con `v0.5.0`: métricas frente al gold, análisis de errores, costes recalibrados, benchmark de modelos locales y prueba de volumen. Siguiente: F5 (entrega). Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).

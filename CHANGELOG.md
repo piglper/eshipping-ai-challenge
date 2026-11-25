@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-25
+
+Cierre de la fase F4 (evaluación): métricas frente al gold con intervalos, análisis de errores, rol del remitente en cascada, costes recalibrados con lo medido, benchmark de modelos locales y prueba de volumen.
+
 ### Added
 - Prueba de volumen (F4.5): `make volume` replica los expedientes sintéticos con identificadores renumerados (`python -m eshipping_ai.synthetic --copies N`) y procesa unos 10.000 mensajes sin LLM. Resultado: unos 9.100 mensajes por minuto en un solo proceso, crecimiento lineal y la misma calidad que el conjunto base (arquitectura §9.10).
 - Medición de costes y rendimiento (F4.4). El informe de procesado da la distribución por llamada al LLM de los tokens de entrada y salida y de la latencia (p50, p95 y máximo). Cada etapa de la CLI informa de sus segundos. `docs/06_costes.md` y la arquitectura §9 se recalibran con lo medido: el coste del LLM baja a menos de la mitad.
@@ -138,7 +142,8 @@ Cierre de la fase F0 (entorno y proceso).
 - `.gitignore` que excluye datos reales (`data/`, `*.csv`, `*.eml`, `*.msg`), entornos virtuales y secretos.
 - Hook de pre-commit (`.githooks/pre-commit`) que bloquea commits con ficheros confidenciales.
 
-[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.1.0...v0.2.0
