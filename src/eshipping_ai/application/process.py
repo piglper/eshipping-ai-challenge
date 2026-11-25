@@ -13,6 +13,7 @@ The evidence of an observation points into the text the rules read: ``Asunto: <s
 a line break and the clean body for a message, or the text of the attachment for a document.
 """
 
+import math
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -73,6 +74,27 @@ _SUBJECT_PREFIX = "Asunto: "
 
 
 @dataclass(slots=True)
+class Distribution:
+    """Values measured once per call, shown as percentiles (nearest rank)."""
+
+    values: list[int] = field(default_factory=list)
+
+    def add(self, value: int) -> None:
+        """Record one measurement."""
+        self.values.append(value)
+
+    def percentile(self, share: float) -> int:
+        """The smallest value that at least ``share`` of the measurements do not exceed."""
+        ordered = sorted(self.values)
+        return ordered[max(0, math.ceil(share * len(ordered)) - 1)]
+
+    def __str__(self) -> str:
+        if not self.values:
+            return "-"
+        return f"p50 {self.percentile(0.5)}, p95 {self.percentile(0.95)}, max {max(self.values)}"
+
+
+@dataclass(slots=True)
 class ProcessReport:
     """What a processing run did; counts only, never content."""
 
@@ -90,6 +112,9 @@ class ProcessReport:
     llm_input_tokens: int = 0
     llm_output_tokens: int = 0
     llm_rejected: Counter[str] = field(default_factory=Counter)
+    llm_input_per_call: Distribution = field(default_factory=Distribution)
+    llm_output_per_call: Distribution = field(default_factory=Distribution)
+    llm_latency_ms: Distribution = field(default_factory=Distribution)
     roles: Counter[str] = field(default_factory=Counter)
 
 
@@ -327,6 +352,9 @@ class ProcessMessages:
             return []
         report.llm_input_tokens += response.input_tokens
         report.llm_output_tokens += response.output_tokens
+        report.llm_input_per_call.add(response.input_tokens)
+        report.llm_output_per_call.add(response.output_tokens)
+        report.llm_latency_ms.add(response.latency_ms)
         outcome = parse_response(response, text, fields, sent_on, self._tz)
         report.llm_rejected.update(outcome.rejected)
         version = f"{PROMPT_VERSION}:{response.model}"

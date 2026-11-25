@@ -7,6 +7,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Medición de costes y rendimiento (F4.4). El informe de procesado da la distribución por llamada al LLM de los tokens de entrada y salida y de la latencia (p50, p95 y máximo). Cada etapa de la CLI informa de sus segundos. `docs/06_costes.md` y la arquitectura §9 se recalibran con lo medido: el coste del LLM baja a menos de la mitad.
 - Diagnóstico de errores en `eshipping evaluate` (F4.3):
   - la etapa que pierde cada valor esperado (no extraído, extraído mal, leído y no elegido, o de más);
   - el escalón y la zona que resuelven cada valor, con la precisión de lo aceptado sin revisión;
@@ -28,6 +29,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Dependencia de desarrollo `hypothesis` 6.170.17.
 
 ### Changed
+- La ingesta de `.msg` solo descodifica el cuerpo HTML (RTF comprimido de Outlook) cuando no hay texto plano. Era el 97 % del tiempo de ingesta: la muestra pasa de 36,5 s a 2,8 s, con el mismo resultado.
 - El rol del remitente se resuelve en cascada (ADR-0013), sin dar de alta los dominios uno a uno:
   - un directorio corto y curado: los dominios propios y un registro público de navieras;
   - las partes del expediente en el ERP (`Línea Transporte`, `Agente Aduana`, `Transportistas`, `Cliente Op.`, `Shipper` y `Consignee`), con una coincidencia estricta del nombre con el dominio o con el nombre visible del remitente;

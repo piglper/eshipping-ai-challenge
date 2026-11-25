@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.23.0 |
+| Versión | 1.24.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
@@ -495,3 +495,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.21.0 | 23/11/2026 | P. Iglesias Peral | Revisión de fase de F2, cerrada con `v0.3.0` antes de lo previsto (el calendario reservaba hasta el martes 24/11 por la mañana). Criterios de salida: cada requisito de F1 tiene componente (arquitectura §10) y cada decisión de F2 tiene su ADR aceptado (ADR-0007 a ADR-0012); solo queda abierta D9, que se decide en F4. Trazabilidad con el enunciado (§13) actualizada. Pendientes que pasan a F3 y F4: validar en GitHub cómo se dibujan los diagramas Mermaid y revisar el gold standard (R10) | #70 |
 | 1.22.0 | 24/11/2026 | P. Iglesias Peral | Revisión de fase de F3, cerrada con `v0.4.0`. Criterio de salida cumplido: la canalización funciona de extremo a extremo (`make demo`: ingesta, reglas, asociación, reconciliación, informe y evaluación, con los siete veredictos y el 100 % frente al gold sintético; `make demo-llm` con el escalón del LLM en local; `make ui`). Desviaciones: el OCR se queda en marcar los PDF escaneados (alcance recortado, revisión 1.10.0); las plantillas de PDF y el banco de ejemplos del LLM no se implementan; `--no-llm` llegó con el LLM y no con la CLI; con Ollama 0.40 solo `llama3.2:3b` admite el esquema impuesto y los otros dos candidatos lo reciben en las instrucciones. Pendiente antes de F4: revisión humana del gold standard real (R10) | #74–#82 |
 | 1.23.0 | 25/11/2026 | P. Iglesias Peral | F4.1 a F4.3. La evaluación sobre la muestra real mostró que un directorio de remitentes manual no escala; nuevas decisiones D10 (rol del remitente en cascada, ADR-0013) y D11 (el LLM rellena huecos, ADR-0014). Las conclusiones de F4 describen el comportamiento y los tipos de error del sistema, no tasas de producción: la muestra la seleccionó EShipping para dar contexto y no es representativa del flujo | #39, #40, #41 |
+| 1.24.0 | 25/11/2026 | P. Iglesias Peral | F4.4: tokens, latencia, tiempos por etapa y memoria medidos en la PoC. Supuesto de tokens por llamada recalibrado (de 3.000 y 400 a 1.750 y 200, con margen sobre el p95); el LLM baja a 28 $ al mes en el escenario de referencia y el total técnico, a unos 330 €. La ingesta de `.msg` pasa a ser 13 veces más rápida | #42 |
