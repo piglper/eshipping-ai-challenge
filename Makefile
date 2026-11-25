@@ -3,7 +3,7 @@ PYTHON ?= python3.14
 VENV   := .venv
 BIN    := $(VENV)/bin
 
-.PHONY: help setup lint format typecheck test test-unit test-integration check sample migrate demo demo-llm evaluate evaluate-real volume ui
+.PHONY: help setup lint format typecheck test test-unit test-integration check sample migrate demo demo-llm evaluate evaluate-real volume audit ui
 
 help: ## Muestra esta ayuda
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-17s %s\n", $$1, $$2}'
@@ -61,6 +61,9 @@ demo-llm: sample ## La demo con el escalón del LLM (Ollama en local; MODEL=<mod
 
 evaluate: demo ## Informe de evaluación sobre los datos sintéticos (data_sample/build/evaluacion.md)
 	$(ESHIPPING) evaluate --gold data_sample/build/gold.json --out data_sample/build/evaluacion.md
+
+audit: ## Auditoría de confidencialidad, solo en local: busca valores de data/ en el repositorio, su historial y GitHub (sin mostrarlos)
+	$(BIN)/python -m eshipping_ai.entrypoints.audit --github
 
 COPIES ?= 715
 VOLUME_DIR := data_sample/build/volume

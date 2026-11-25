@@ -6,6 +6,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+- Auditoría de confidencialidad (F5.4): `make audit` (`python -m eshipping_ai.entrypoints.audit`) busca los valores reales de `data/` en los ficheros versionados, en todos los commits y en las issues y PR de GitHub. Informa de la categoría y el lugar de cada coincidencia, nunca del valor.
+
+### Security
+- Un caso de test de la extracción de referencias usaba un número de booking real. Se sustituye por uno sintético y se reescribe el historial para eliminarlo (`docs/09_seguridad.md` §9).
+
 ## [0.5.0] - 2026-11-25
 
 Cierre de la fase F4 (evaluación): métricas frente al gold con intervalos, análisis de errores, rol del remitente en cascada, costes recalibrados con lo medido, benchmark de modelos locales y prueba de volumen.
