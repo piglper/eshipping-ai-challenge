@@ -8,6 +8,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ### Added
 - Resumen ejecutivo de una página (F5.1, `docs/00_resumen_ejecutivo.md`).
+- Presentación final en HTML autocontenido y PDF (F5.3, `docs/presentacion/`).
 - Auditoría de confidencialidad (F5.4): `make audit` (`python -m eshipping_ai.entrypoints.audit`) busca los valores reales de `data/` en los ficheros versionados, en todos los commits y en las issues y PR de GitHub. Informa de la categoría y el lugar de cada coincidencia, nunca del valor.
 
 ### Security

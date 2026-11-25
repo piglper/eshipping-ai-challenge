@@ -19,6 +19,8 @@ repos:
     hooks:
       - id: check-added-large-files
         args: [--maxkb=500]
+        # The exported deck is a deliberate deliverable; its embedded fonts weigh ~700 KB.
+        exclude: ^docs/presentacion/presentacion\.pdf$
       - id: check-merge-conflict
       - id: check-toml
       - id: check-yaml
