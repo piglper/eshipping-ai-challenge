@@ -1,6 +1,7 @@
 import io
 import json
 import logging
+import shutil
 from pathlib import Path
 
 import pytest
@@ -101,3 +102,18 @@ def test_without_ollama_the_run_stops_and_says_how_to_go_on(
     args = ["--workdir", str(tmp_path), "process", "--erp", str(synthetic_dir / "erp.csv")]
     assert main([*args, "--ollama-url", "http://127.0.0.1:9"], io.StringIO()) == 2
     assert "--no-llm" in capsys.readouterr().err
+
+
+def test_broken_files_in_the_folder_do_not_change_the_result(
+    synthetic_dir: Path, tmp_path: Path
+) -> None:
+    mails = tmp_path / "mails"
+    shutil.copytree(synthetic_dir / "mails", mails)
+    (mails / "zz_broken.msg").write_bytes(b"not a mail at all \x00\xff")
+    (mails / "zz_empty.eml").write_bytes(b"")
+    (mails / "zz_binary.eml").write_bytes(b"\xff\xfe\x00garbage")
+    workdir = tmp_path / "work"
+    output = cli(workdir, "run", str(mails), "--erp", str(synthetic_dir / "erp.csv"), "--no-llm")
+    assert "failures=1" in output
+    scored = cli(workdir, "evaluate", "--gold", str(synthetic_dir / "gold.json"))
+    assert "acierto del veredicto: 100.0%" in scored

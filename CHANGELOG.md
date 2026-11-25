@@ -6,6 +6,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+- Tests de propiedades con Hypothesis (F4.1): con cualquier texto los extractores no fallan y cada mención apunta a los caracteres exactos que cita. El dígito de control ISO 6346 detecta cualquier error de un dígito, una fecha completa se lee tal como está escrita y una fecha sin año cae junto al mensaje. El perfil `HYPOTHESIS_PROFILE=thorough` lanza 5.000 ejemplos por propiedad.
+- Marcador `integration`, que lleva solo todo test que usa el conjunto sintético generado, y los objetivos `make test-unit` y `make test-integration`.
+- Test de integración con ficheros rotos, vacíos y binarios en la carpeta de correos: cuentan como fallo de ingesta o no dan mensajes, y los veredictos no cambian.
+- Casos límite de fechas: fechas imposibles, el 29 de febrero sin año, rangos invertidos y rangos que cruzan el fin de año.
+- Guía «Cómo probarlo» en el README.
+- Dependencia de desarrollo `hypothesis` 6.170.17.
+
+### Changed
+- La cobertura mínima del 90 % se exige en `make test` y en el CI (`fail_under`). La página de Streamlit queda fuera de la medida, porque se prueba con `AppTest` en un proceso que coverage no ve.
+
+### Fixed
+- `make help` muestra los objetivos con guion (`demo-llm`, `test-unit`, `test-integration`).
+
 ## [0.4.0] - 2026-11-24
 
 Cierre de la fase F3 (PoC): canalización de extremo a extremo con CLI, escalón del LLM local y vista para operativos.

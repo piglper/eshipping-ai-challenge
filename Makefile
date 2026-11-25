@@ -3,10 +3,10 @@ PYTHON ?= python3.14
 VENV   := .venv
 BIN    := $(VENV)/bin
 
-.PHONY: help setup lint format typecheck test check sample migrate demo demo-llm ui
+.PHONY: help setup lint format typecheck test test-unit test-integration check sample migrate demo demo-llm ui
 
 help: ## Muestra esta ayuda
-	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
+	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-17s %s\n", $$1, $$2}'
 
 setup: ## Crea el entorno, instala dependencias y activa los hooks
 	test -d $(VENV) || $(PYTHON) -m venv $(VENV)
@@ -26,8 +26,14 @@ format: ## Aplica el formato y las correcciones automáticas
 typecheck: ## Comprobación de tipos (mypy estricto)
 	$(BIN)/mypy
 
-test: ## Tests con cobertura
+test: ## Tests con cobertura (mínimo del 90 %)
 	$(BIN)/pytest --cov --cov-report=term-missing
+
+test-unit: ## Solo los tests unitarios (rápidos)
+	$(BIN)/pytest -m "not integration"
+
+test-integration: ## Solo los de integración: de extremo a extremo sobre los datos sintéticos
+	$(BIN)/pytest -m integration
 
 check: lint typecheck test ## Todo lo que comprueba el CI
 

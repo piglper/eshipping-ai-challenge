@@ -201,13 +201,14 @@ Una decisión nunca edita lo que dijo una fuente: aceptar o corregir añade una 
 |---|---|---|
 | Unitarias | Dominio (identificadores, política, comparación, veredictos), extractores, limpieza y división de hilos | Casos sintéticos en el código del test |
 | Contrato | Cada adaptador cumple su puerto | El mismo conjunto de tests para `FakeLLMClient` y `OllamaClient` (este último, solo si Ollama está disponible) |
-| Integración | `run` de extremo a extremo sobre los datos sintéticos, con `FakeLLMClient` | Comparación con el gold sintético |
+| Propiedades | Con cualquier texto los extractores no fallan, toda mención apunta a los caracteres exactos que cita, el dígito de control ISO 6346 detecta cualquier error de un dígito y una fecha completa se lee tal como está escrita | Hypothesis (`HYPOTHESIS_PROFILE=thorough` para 5.000 ejemplos por propiedad) |
+| Integración | `run` de extremo a extremo sobre los datos sintéticos, con `FakeLLMClient`, SQLite real y la vista de Streamlit (`AppTest`); ficheros rotos en la carpeta no cambian el resultado | Comparación con el gold sintético. Marcador `integration`: lo lleva solo todo test que usa el conjunto sintético generado (`make test-integration`; `make test-unit` para el resto) |
 | Regresión | Casos límite: fechas ambiguas, roleo, `ERP_NEWER`, inyección de instrucciones | Datos sintéticos |
 | Arquitectura | Regla de dependencias | `import-linter` en la CI |
 
-- **Cobertura mínima:** 90 % en `domain` y `extraction`; la CI falla por debajo.
+- **Cobertura mínima:** 90 % en todo el paquete (`fail_under`); la CI falla por debajo. En el cierre de F4.1, `domain` está al 100 % y `extraction` por encima del 95 %. La página de Streamlit queda fuera de la medida porque Streamlit la ejecuta por su cuenta; se prueba con `AppTest`.
 - **CI:** ruff, mypy estricto, pytest e `import-linter`; sin Ollama en la CI (se usa `FakeLLMClient`).
-- **Dependencias** de ejecución fijadas con su versión al añadirse: `pydantic`, `sqlalchemy`, `extract-msg`, `pdfplumber`, `pyyaml`, `typer`, `httpx` y `streamlit` (grupo opcional `ui`).
+- **Dependencias** de ejecución fijadas con su versión al añadirse: `pydantic`, `sqlalchemy`, `alembic`, `extract-msg`, `pypdf`, `pyyaml` y `streamlit` (grupo opcional `ui`). La CLI usa `argparse` y el cliente de Ollama, `urllib`, ambos de la biblioteca estándar. De desarrollo, además de las herramientas de calidad, `hypothesis` para los tests de propiedades.
 
 ## 9. Orden de implementación (martes 24/11)
 

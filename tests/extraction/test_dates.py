@@ -103,3 +103,46 @@ def test_several_dates_in_order_without_overlaps() -> None:
     found = find_dates("ETD 29/09/2026, ETA 05/11/2026 y levante el 06/10/2026 10:00", ANCHOR)
     assert [m.start for m in found] == [date(2026, 9, 29), date(2026, 11, 5), date(2026, 10, 6)]
     assert found[2].at == time(10, 0)
+
+
+@pytest.mark.parametrize(
+    "text", ["ETA 31/02/2026", "31 de febrero de 2026", "ETA 29/02", "29 de febrero"]
+)
+def test_impossible_dates_are_not_invented(text: str) -> None:
+    assert find_dates(text, ANCHOR) == []
+
+
+def test_the_29th_of_february_without_year_goes_to_the_nearest_leap_year() -> None:
+    (mention,) = find_dates("ETA 29/02", date(2027, 9, 1))
+    assert (mention.start, mention.year_inferred, mention.ambiguous) == (
+        date(2028, 2, 29),
+        True,
+        True,
+    )
+
+
+def test_a_range_with_an_impossible_end_keeps_only_the_valid_date() -> None:
+    assert [m.raw for m in find_dates("ETD 31/02 - 05/03/2026", ANCHOR)] == ["05/03/2026"]
+
+
+@pytest.mark.parametrize("text", ["del 12/10 al 08/10", "12/10/2026 - 08/10/2026"])
+def test_a_backwards_range_is_read_as_two_dates(text: str) -> None:
+    found = find_dates(text, ANCHOR)
+    assert [(m.start, m.end) for m in found] == [
+        (date(2026, 10, 12), None),
+        (date(2026, 10, 8), None),
+    ]
+
+
+def test_a_range_end_without_year_moves_to_the_next_year_of_the_start() -> None:
+    mention = one("28/12/2026 - 03/01")
+    assert (mention.start, mention.end) == (date(2026, 12, 28), date(2027, 1, 3))
+
+
+def test_a_range_with_month_names_crosses_the_year_end() -> None:
+    mention = one("28 dic - 3 ene")
+    assert (mention.start, mention.end, mention.ambiguous) == (
+        date(2026, 12, 28),
+        date(2027, 1, 3),
+        False,
+    )
