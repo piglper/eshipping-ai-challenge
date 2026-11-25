@@ -31,13 +31,14 @@ from eshipping_ai.adapters.ollama_client import DEFAULT_URL as OLLAMA_URL
 from eshipping_ai.adapters.ollama_client import OllamaClient
 from eshipping_ai.adapters.pdf_text import PdfTextParser
 from eshipping_ai.adapters.sql_repository import SqlRepository, create_schema
-from eshipping_ai.application.evaluate import evaluate_verdicts
+from eshipping_ai.application.evaluate import EvaluateRun
 from eshipping_ai.application.ingest import IngestMail
 from eshipping_ai.application.process import ProcessMessages
 from eshipping_ai.application.reconcile import ReconcileShipments
 from eshipping_ai.application.report import ShipmentReport, shipment_report
 from eshipping_ai.application.seed import seed_aliases
 from eshipping_ai.domain.ports import Clock, LLMClient
+from eshipping_ai.entrypoints.evaluation_report import render_markdown, report_to_json
 
 DEFAULT_WORKDIR = Path("data/output")
 DEFAULT_CONFIG = Path("config")
@@ -188,16 +189,18 @@ def _report(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
 
 
 def _evaluate(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
-    gold = json.loads(args.gold.read_text(encoding="utf-8"))["expedientes"]
-    verdicts = {shipment_id: ctx.repo.verdicts_for(shipment_id) for shipment_id in gold}
-    evaluation = evaluate_verdicts(gold, verdicts)
-    for name in evaluation.total:
-        print(f"{name}: {evaluation.right[name]}/{evaluation.total[name]}", file=out)
-    print(f"acierto del veredicto: {evaluation.accuracy:.1%}", file=out)
-    if args.verbose:
-        for miss in evaluation.mismatches:
-            got = ", ".join(miss.got)
-            print(f"  {miss.shipment_id} {miss.field}: esperado {miss.expected}, {got}", file=out)
+    gold = json.loads(args.gold.read_text(encoding="utf-8"))
+    report = EvaluateRun(ctx.repo, ctx.repo, ctx.repo).run(gold)
+    if args.format == "json":
+        text = json.dumps(report_to_json(report, verbose=args.verbose), indent=2) + "\n"
+    else:
+        text = render_markdown(report, verbose=args.verbose)
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(text, encoding="utf-8")
+        print(f"evaluación escrita en {args.out}", file=out)
+    else:
+        out.write(text)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -254,9 +257,13 @@ def _parser() -> argparse.ArgumentParser:
     report.add_argument("--shipment", help="solo este expediente")
     report.add_argument("--format", choices=("md", "json"), default="md")
     report.set_defaults(handler=_report)
-    evaluate = commands.add_parser("evaluate", help="veredictos frente a un gold standard")
+    evaluate = commands.add_parser("evaluate", help="métricas frente a un gold standard")
     evaluate.add_argument("--gold", type=Path, required=True, help="gold standard (JSON)")
-    evaluate.add_argument("--verbose", action="store_true", help="lista los fallos")
+    evaluate.add_argument("--format", choices=("md", "json"), default="md")
+    evaluate.add_argument("--out", type=Path, help="fichero donde escribir el informe")
+    evaluate.add_argument(
+        "--verbose", action="store_true", help="añade los fallos, que nombran expedientes"
+    )
     evaluate.set_defaults(handler=_evaluate)
     return parser
 

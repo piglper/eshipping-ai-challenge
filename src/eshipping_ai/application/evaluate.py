@@ -1,16 +1,40 @@
-"""Use case: compare the verdicts with a gold standard (RNF-01; F4 widens it).
+"""Use case: score the system against a gold standard (F4.2, docs/07_fiabilidad.md §2).
 
-The gold gives the expected verdict of each field of each shipment. One gold field may
-cover several fields of the system: ``cutoff`` covers the three cut-offs and ``equipment``
-the number of containers. A gold field is right when every system field it covers has the
-expected verdict; fields the gold leaves out of that list are not scored.
+Four units are scored, each against its own part of the gold:
+
+- **Fields**: the current value of each field according to the mails, against the value
+  the gold says the mails give. A right value is a true positive; a wrong one is both a
+  false positive and a false negative; a value the gold does not expect is a false
+  positive. The classifier (planned, estimated, actual) is scored on the right values.
+- **Verdicts**: the verdict of each field against the ERP. Besides the exact verdict, the
+  verdicts that ask for an action (ADR-0009 §6) are scored as a detection problem.
+- **Classes**: the classes of each mail, primary and secondary.
+- **Association**: the shipment of each mail, telling apart the automatic ones, the ones
+  left for review and the noise.
+
+The gold may cover several system fields with one name: ``cutoff`` covers the three
+cut-offs and ``equipment`` the number of containers. Fields the gold leaves out of a
+shipment are not scored. Every proportion carries its 95 % Wilson interval, because the
+gold is small (docs/07_fiabilidad.md §6). The report holds counts only; the list of
+mismatches, which names shipments, is kept apart for local use.
 """
 
-from collections import Counter
+import math
+import re
+from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import date
 
-from eshipping_ai.domain.model import Verdict
+from eshipping_ai.domain.identifiers import normalize_reference
+from eshipping_ai.domain.model import FieldState, Observation, Verdict
+from eshipping_ai.domain.ports import (
+    MailOutcome,
+    ObservationStore,
+    ProcessingStore,
+    ProjectionStore,
+)
+from eshipping_ai.domain.vocabulary import AssociationStatus, VerdictCode
 
 GOLD_TO_FIELDS: dict[str, tuple[str, ...]] = {
     "booking": ("booking",),
@@ -22,38 +46,297 @@ GOLD_TO_FIELDS: dict[str, tuple[str, ...]] = {
     "cutoff": ("cutoff_document", "cutoff_vgm", "cutoff_full"),
     "equipment": ("equipment_count",),
 }
+CUTOFF_KEYS = {"DCO": "cutoff_document", "VCO": "cutoff_vgm", "FCO": "cutoff_full"}
+DATE_FIELDS = frozenset(
+    {"vessel_departure", "vessel_arrival_pod", "stuffing", "customs_release", "cutoff"}
+)
+# Verdicts that ask an operator to act (ADR-0009 §6): complete or correct the ERP, or check.
+ACTIONABLE = frozenset(
+    code.value for code in (VerdictCode.ERP_ERROR, VerdictCode.DISCREPANCY, VerdictCode.ERP_MISSING)
+)
 NO_VERDICT = "NONE"
+NOISE_KEY = "_noise"
+_Z_95 = 1.96
+_VESSEL_PREFIX_RE = re.compile(r"^(?:M/V|M\.V\.|MV|M/S|MS|M/T|MT)\s+", re.IGNORECASE)
+
+# --- measures ---------------------------------------------------------------------------
+
+
+def wilson_interval(successes: int, total: int) -> tuple[float, float]:
+    """Return the 95 % Wilson score interval of a proportion; (0, 1) if nothing was counted."""
+    if total == 0:
+        return 0.0, 1.0
+    rate = successes / total
+    spread = _Z_95**2 / total
+    centre = (rate + spread / 2) / (1 + spread)
+    half = _Z_95 * math.sqrt(rate * (1 - rate) / total + spread / (4 * total)) / (1 + spread)
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
+@dataclass(slots=True)
+class Proportion:
+    """Right out of total, with its interval."""
+
+    right: int = 0
+    total: int = 0
+
+    def add(self, *, ok: bool) -> None:
+        """Count one case."""
+        self.total += 1
+        self.right += ok
+
+    @property
+    def rate(self) -> float:
+        """Share of right cases; 0 if nothing was counted."""
+        return self.right / self.total if self.total else 0.0
+
+    @property
+    def interval(self) -> tuple[float, float]:
+        """95 % Wilson interval of the rate."""
+        return wilson_interval(self.right, self.total)
+
+
+@dataclass(slots=True)
+class Score:
+    """True positives, false positives and false negatives of a detection or extraction."""
+
+    tp: int = 0
+    fp: int = 0
+    fn: int = 0
+
+    @property
+    def precision(self) -> float:
+        """Share of what the system gave that is right; 0 if it gave nothing."""
+        return self.tp / (self.tp + self.fp) if self.tp + self.fp else 0.0
+
+    @property
+    def recall(self) -> float:
+        """Share of what the gold expects that the system gave; 0 if it expects nothing."""
+        return self.tp / (self.tp + self.fn) if self.tp + self.fn else 0.0
+
+    @property
+    def f1(self) -> float:
+        """Harmonic mean of precision and recall."""
+        both = self.precision + self.recall
+        return 2 * self.precision * self.recall / both if both else 0.0
+
+    @property
+    def precision_interval(self) -> tuple[float, float]:
+        """95 % Wilson interval of the precision."""
+        return wilson_interval(self.tp, self.tp + self.fp)
+
+    @property
+    def recall_interval(self) -> tuple[float, float]:
+        """95 % Wilson interval of the recall."""
+        return wilson_interval(self.tp, self.tp + self.fn)
+
+    def count(self, *, expected: bool, given: bool, right: bool) -> None:
+        """Count one comparison.
+
+        Args:
+            expected: The gold expects a value.
+            given: The system gave one.
+            right: Both agree.
+        """
+        if expected and given and right:
+            self.tp += 1
+            return
+        self.fp += given
+        self.fn += expected
+
+
+def total_score(scores: Mapping[str, Score]) -> Score:
+    """Add up several scores (micro average)."""
+    return Score(
+        tp=sum(s.tp for s in scores.values()),
+        fp=sum(s.fp for s in scores.values()),
+        fn=sum(s.fn for s in scores.values()),
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class Mismatch:
-    """A gold field whose verdict the system did not reproduce."""
+    """A gold item the system did not reproduce; it names the shipment, so it stays local."""
 
+    unit: str
     shipment_id: str
     field: str
     expected: str
-    got: tuple[str, ...]
+    got: str
+
+
+# --- fields -----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class Extracted:
+    """The current value of a system field and the classifier of the observation behind it."""
+
+    value: str | None
+    classifier: str | None
 
 
 @dataclass(slots=True)
-class Evaluation:
-    """Agreement with the gold, by field."""
+class FieldEvaluation:
+    """Extraction scores and classifier agreement, by gold field."""
 
-    right: Counter[str] = field(default_factory=Counter)
-    total: Counter[str] = field(default_factory=Counter)
+    scores: dict[str, Score] = field(default_factory=lambda: defaultdict(Score))
+    classifier: dict[str, Proportion] = field(default_factory=lambda: defaultdict(Proportion))
+    mismatches: list[Mismatch] = field(default_factory=list)
+
+
+def _dates(value: str) -> tuple[date, ...] | None:
+    """Read a date, a date and time, or a range ``start/end``; None if it is none of them."""
+    try:
+        return tuple(date.fromisoformat(part.strip()[:10]) for part in value.split("/"))
+    except ValueError:
+        return None
+
+
+def _vessel(name: str) -> str:
+    return " ".join(_VESSEL_PREFIX_RE.sub("", name.strip()).upper().split())
+
+
+def values_agree(gold_field: str, expected: str, got: str, tolerance_days: int = 0) -> bool:
+    """Tell whether a system value is the one the gold expects.
+
+    Bookings are compared without separators, vessels without their prefix and case, dates
+    to the day (or within the tolerance of the gold) and ranges end by end.
+    """
+    if gold_field == "booking":
+        return normalize_reference(expected) == normalize_reference(got)
+    if gold_field == "vessel":
+        return _vessel(expected) == _vessel(got)
+    if gold_field in DATE_FIELDS:
+        want, have = _dates(expected), _dates(got)
+        if want is None or have is None or len(want) != len(have):
+            return False
+        return all(abs((a - b).days) <= tolerance_days for a, b in zip(want, have, strict=True))
+    return expected.strip() == got.strip()
+
+
+def _expected_values(name: str, value: object) -> list[tuple[tuple[str, ...], str | None]]:
+    """Turn a gold value into (system fields that may hold it, expected value) pairs.
+
+    A cut-off whose kind the labeller was not sure of (``FCO?``) may be held by any of the
+    three cut-off fields.
+    """
+    if name == "cutoff":
+        if not isinstance(value, Mapping):
+            return []
+        pairs: list[tuple[tuple[str, ...], str | None]] = []
+        for key, when in value.items():
+            kind = str(key).rstrip("?")
+            sure = not str(key).endswith("?") and kind in CUTOFF_KEYS
+            fields = (CUTOFF_KEYS[kind],) if sure else GOLD_TO_FIELDS["cutoff"]
+            pairs.append((fields, None if when is None else str(when)))
+        return pairs
+    if value is None:
+        return [(GOLD_TO_FIELDS[name], None)]
+    if name == "stuffing" and isinstance(value, Mapping):
+        when = value.get("date")
+        return [(GOLD_TO_FIELDS[name], None if when is None else str(when))]
+    if name == "equipment" and isinstance(value, Mapping):
+        count = value.get("count")
+        return [(GOLD_TO_FIELDS[name], None if count is None else str(count))]
+    return [(GOLD_TO_FIELDS[name], str(value))]
+
+
+def evaluate_fields(
+    gold: Mapping[str, Mapping[str, Mapping[str, object]]],
+    extracted: Mapping[str, Mapping[str, Extracted]],
+    tolerance_days: Mapping[str, int] | None = None,
+) -> FieldEvaluation:
+    """Score the current values of the system against the values of the gold.
+
+    Args:
+        gold: Shipment to gold field to its expectation, with ``value`` and, for events,
+            ``classifier``.
+        extracted: Shipment to system field to its current value.
+        tolerance_days: Allowed difference in days by gold field; 0 if missing.
+
+    Returns:
+        Scores and classifier agreement by gold field, and the mismatches. A system
+        cut-off that no cut-off of the gold accounts for is a false positive.
+    """
+    tolerance = tolerance_days or {}
+    evaluation = FieldEvaluation()
+    for shipment_id, fields in gold.items():
+        given = {f: e for f, e in extracted.get(shipment_id, {}).items() if e.value is not None}
+        for name, expectation in fields.items():
+            if name not in GOLD_TO_FIELDS or "value" not in expectation:
+                continue
+            score = evaluation.scores[name]
+            used: set[str] = set()
+            for candidates, want in _expected_values(name, expectation["value"]):
+                free = [f for f in candidates if f in given and f not in used]
+                match = next(
+                    (
+                        f
+                        for f in free
+                        if want is not None
+                        and values_agree(name, want, given[f].value or "", tolerance.get(name, 0))
+                    ),
+                    None,
+                )
+                chosen = match or (free[0] if free else None)
+                if chosen:
+                    used.add(chosen)
+                score.count(expected=want is not None, given=chosen is not None, right=bool(match))
+                if match and "classifier" in expectation:
+                    evaluation.classifier[name].add(
+                        ok=given[match].classifier == expectation["classifier"]
+                    )
+                elif not match and (want is not None or chosen is not None):
+                    got = given[chosen].value if chosen else None
+                    evaluation.mismatches.append(
+                        Mismatch("field", shipment_id, name, str(want), str(got))
+                    )
+            if name == "cutoff":
+                for extra in (f for f in GOLD_TO_FIELDS[name] if f in given and f not in used):
+                    score.count(expected=False, given=True, right=False)
+                    evaluation.mismatches.append(
+                        Mismatch("field", shipment_id, extra, "None", str(given[extra].value))
+                    )
+    return evaluation
+
+
+# --- verdicts ---------------------------------------------------------------------------
+
+
+@dataclass(slots=True)
+class VerdictEvaluation:
+    """Agreement with the verdicts of the gold, by field and by verdict."""
+
+    by_field: dict[str, Proportion] = field(default_factory=lambda: defaultdict(Proportion))
+    confusion: Counter[tuple[str, str]] = field(default_factory=Counter)
+    actionable: Score = field(default_factory=Score)
     mismatches: list[Mismatch] = field(default_factory=list)
 
     @property
-    def accuracy(self) -> float:
-        """Share of gold fields with the expected verdict; 0 if nothing was scored."""
-        scored = sum(self.total.values())
-        return sum(self.right.values()) / scored if scored else 0.0
+    def overall(self) -> Proportion:
+        """Exact verdict over every scored field."""
+        return Proportion(
+            right=sum(p.right for p in self.by_field.values()),
+            total=sum(p.total for p in self.by_field.values()),
+        )
+
+    def by_verdict(self) -> dict[str, Score]:
+        """Precision and recall of each verdict, from the confusion counts."""
+        scores: dict[str, Score] = defaultdict(Score)
+        for (expected, got), n in self.confusion.items():
+            if expected == got:
+                scores[expected].tp += n
+            else:
+                scores[expected].fn += n
+                scores[got].fp += n
+        return dict(sorted(scores.items()))
 
 
 def evaluate_verdicts(
     gold: Mapping[str, Mapping[str, Mapping[str, object]]],
     verdicts: Mapping[str, Sequence[Verdict]],
-) -> Evaluation:
+) -> VerdictEvaluation:
     """Score the verdicts of the system against the gold.
 
     Args:
@@ -61,23 +344,241 @@ def evaluate_verdicts(
         verdicts: Shipment to its current verdicts.
 
     Returns:
-        Right and total by gold field, and the mismatches. A gold field covering several
-        fields counts the verdict of the fields that have one: the gold of a cut-off lists
-        only the cut-offs the mails give, so the others have no verdict to match.
+        Exact agreement by field, the confusion counts and the detection of the verdicts
+        that ask for an action. A gold field covering several fields counts the verdict of
+        the fields that have one: the gold of a cut-off lists only the cut-offs the mails
+        give, so the others have no verdict to match; differing verdicts are joined by ``+``.
     """
-    evaluation = Evaluation()
+    evaluation = VerdictEvaluation()
     for shipment_id, fields in gold.items():
-        got = {v.field: v.code.value for v in verdicts.get(shipment_id, ())}
-        for name, expected in fields.items():
+        got_by_field = {v.field: v.code.value for v in verdicts.get(shipment_id, ())}
+        for name, expectation in fields.items():
             covered = GOLD_TO_FIELDS.get(name)
-            if covered is None or "verdict" not in expected:
+            if covered is None or "verdict" not in expectation:
                 continue
-            codes = tuple(sorted({got[f] for f in covered if f in got})) or (NO_VERDICT,)
-            evaluation.total[name] += 1
-            if codes == (str(expected["verdict"]),):
-                evaluation.right[name] += 1
-            else:
-                evaluation.mismatches.append(
-                    Mismatch(shipment_id, name, str(expected["verdict"]), codes)
-                )
+            expected = str(expectation["verdict"])
+            codes = sorted({got_by_field[f] for f in covered if f in got_by_field})
+            got = "+".join(codes) or NO_VERDICT
+            evaluation.by_field[name].add(ok=got == expected)
+            evaluation.confusion[expected, got] += 1
+            evaluation.actionable.count(
+                expected=expected in ACTIONABLE,
+                given=any(code in ACTIONABLE for code in codes),
+                right=expected in ACTIONABLE and got == expected,
+            )
+            if got != expected:
+                evaluation.mismatches.append(Mismatch("verdict", shipment_id, name, expected, got))
     return evaluation
+
+
+# --- mails: classes and association -----------------------------------------------------
+
+
+@dataclass(slots=True)
+class MailEvaluation:
+    """Classes and association of the mails of the gold."""
+
+    primary: Proportion = field(default_factory=Proportion)
+    by_class: dict[str, Score] = field(default_factory=lambda: defaultdict(Score))
+    association: Counter[str] = field(default_factory=Counter)
+    unpaired: int = 0
+    mismatches: list[Mismatch] = field(default_factory=list)
+
+    @property
+    def automatic_precision(self) -> Proportion:
+        """Right shipment among the mails the system associated on its own (RNF-10)."""
+        right = self.association["auto_right"]
+        return Proportion(right=right, total=right + self.association["auto_wrong"])
+
+    @property
+    def automatic_coverage(self) -> Proportion:
+        """Mails associated right on their own (or left as noise right), out of all."""
+        return Proportion(
+            right=self.association["auto_right"] + self.association["noise_right"],
+            total=sum(self.association.values()),
+        )
+
+
+def _association_outcome(expected: str | None, outcome: MailOutcome | None) -> str:
+    shipments = outcome.shipments if outcome else ()
+    auto = {s for s, status in shipments if status is AssociationStatus.AUTO}
+    review = {s for s, status in shipments if status is not AssociationStatus.AUTO}
+    if expected is None:
+        return "noise_right" if not shipments else "noise_wrong"
+    if auto:
+        return "auto_right" if auto == {expected} else "auto_wrong"
+    if expected in review:
+        return "review"
+    return "missing"
+
+
+def pair_mails(
+    gold_mails: Mapping[str, Sequence[Sequence[str]]], outcomes: Sequence[MailOutcome]
+) -> list[tuple[str, int, Sequence[str], MailOutcome | None]]:
+    """Pair each mail of the gold with what the system made of it.
+
+    The gold lists, for each shipment, the classes of the mails embedded in the file named
+    after that shipment, in the order they are embedded (``M1``, ``M2``...). Mails of files
+    named after no shipment are paired, in file order, with the noise of the gold.
+
+    Returns:
+        (shipment or noise key, position, gold classes, system outcome or None) tuples.
+    """
+    shipments = [key for key in gold_mails if key != NOISE_KEY]
+    by_file: dict[str, dict[int, MailOutcome]] = defaultdict(dict)
+    for outcome in outcomes:
+        by_file[outcome.source_ref or ""][outcome.position or 0] = outcome
+    pairs: list[tuple[str, int, Sequence[str], MailOutcome | None]] = []
+    owners: dict[str, str] = {}
+    for source in by_file:
+        owner = next((key for key in shipments if key in source), None)
+        if owner is not None:
+            owners[owner] = source
+    for key in shipments:
+        found = by_file.get(owners.get(key, "\0"), {})
+        pairs.extend(
+            (key, position, classes, found.get(position))
+            for position, classes in enumerate(gold_mails[key])
+        )
+    noise = [
+        outcome
+        for source in sorted(by_file)
+        if source not in owners.values()
+        for _, outcome in sorted(by_file[source].items())
+    ]
+    for position, classes in enumerate(gold_mails.get(NOISE_KEY, ())):
+        pairs.append(
+            (NOISE_KEY, position, classes, noise[position] if position < len(noise) else None)
+        )
+    return pairs
+
+
+def evaluate_mails(
+    gold_mails: Mapping[str, Sequence[Sequence[str]]], outcomes: Sequence[MailOutcome]
+) -> MailEvaluation:
+    """Score the classes and the association of the mails against the gold.
+
+    Args:
+        gold_mails: Shipment (or the noise key) to the classes of each of its mails,
+            primary first.
+        outcomes: What the processing made of each mail.
+
+    Returns:
+        Primary class accuracy, scores by class (every class of a mail counts) and the
+        association outcomes: ``auto_right``, ``auto_wrong``, ``review``, ``missing``,
+        ``noise_right`` and ``noise_wrong``.
+    """
+    evaluation = MailEvaluation()
+    for key, position, classes, outcome in pair_mails(gold_mails, outcomes):
+        label = f"M{position + 1}"
+        if outcome is None:
+            evaluation.unpaired += 1
+        got = [c.value for c in outcome.classes] if outcome else []
+        primary_ok = bool(got) and bool(classes) and got[0] == classes[0]
+        evaluation.primary.add(ok=primary_ok)
+        if not primary_ok:
+            want, have = (classes[0] if classes else "-"), (got[0] if got else "-")
+            evaluation.mismatches.append(Mismatch("class", key, label, want, have))
+        for name in set(classes) | set(got):
+            evaluation.by_class[name].count(
+                expected=name in classes, given=name in got, right=name in classes and name in got
+            )
+        expected = None if key == NOISE_KEY else key
+        outcome_name = _association_outcome(expected, outcome)
+        evaluation.association[outcome_name] += 1
+        if outcome_name not in {"auto_right", "noise_right"}:
+            shipments = ",".join(s for s, _ in outcome.shipments) if outcome else "-"
+            evaluation.mismatches.append(
+                Mismatch("association", key, label, str(expected), shipments or "-")
+            )
+    evaluation.by_class = dict(sorted(evaluation.by_class.items()))
+    return evaluation
+
+
+# --- the whole evaluation ---------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class EvaluationReport:
+    """Every score of one run against one gold standard."""
+
+    gold_version: str
+    gold_review: str
+    shipments: int
+    fields: FieldEvaluation
+    verdicts: VerdictEvaluation
+    mails: MailEvaluation
+
+    @property
+    def mismatches(self) -> list[Mismatch]:
+        """Every mismatch; they name shipments, so they are for local use only."""
+        return [*self.mails.mismatches, *self.fields.mismatches, *self.verdicts.mismatches]
+
+
+def _extracted(
+    states: Sequence[FieldState], observations: Sequence[Observation]
+) -> dict[str, Extracted]:
+    by_id = {o.observation_id: o for o in observations}
+    result = {}
+    for state in states:
+        winner = by_id.get(state.winning_observation_id or "")
+        result[state.field] = Extracted(state.value, winner.classifier.value if winner else None)
+    return result
+
+
+class EvaluateRun:
+    """Score what is stored for a run against a gold standard."""
+
+    def __init__(
+        self,
+        projections: ProjectionStore,
+        observations: ObservationStore,
+        processing: ProcessingStore,
+    ) -> None:
+        """Wire the stores the evaluation reads."""
+        self._projections = projections
+        self._observations = observations
+        self._processing = processing
+
+    def run(self, gold: Mapping[str, object]) -> EvaluationReport:
+        """Score the stored run against a gold standard in the format of docs/01 §6.
+
+        Args:
+            gold: The gold standard, with ``meta``, ``mails`` and ``expedientes``.
+
+        Returns:
+            The report with every score.
+        """
+        meta = _mapping(gold.get("meta"))
+        shipments = {str(k): _mapping(v) for k, v in _mapping(gold.get("expedientes")).items()}
+        expectations = {
+            s: {str(name): _mapping(e) for name, e in fields.items()}
+            for s, fields in shipments.items()
+        }
+        extracted = {
+            s: _extracted(
+                self._projections.field_states_for(s), self._observations.observations_for(s)
+            )
+            for s in expectations
+        }
+        verdicts = {s: self._projections.verdicts_for(s) for s in expectations}
+        tolerance = {
+            str(k): int(str(v)) for k, v in _mapping(meta.get("date_tolerance_days")).items()
+        }
+        gold_mails = {
+            str(k): [[str(c) for c in classes] for classes in v]
+            for k, v in _mapping(gold.get("mails")).items()
+            if isinstance(v, list)
+        }
+        return EvaluationReport(
+            gold_version=str(meta.get("version", "")),
+            gold_review=str(meta.get("review", "")),
+            shipments=len(expectations),
+            fields=evaluate_fields(expectations, extracted, tolerance),
+            verdicts=evaluate_verdicts(expectations, verdicts),
+            mails=evaluate_mails(gold_mails, self._processing.mail_outcomes()),
+        )
+
+
+def _mapping(value: object) -> Mapping[str, object]:
+    return value if isinstance(value, Mapping) else {}

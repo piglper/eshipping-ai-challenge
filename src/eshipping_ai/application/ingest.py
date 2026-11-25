@@ -94,24 +94,31 @@ class IngestMail:
             except ValueError:
                 report.failures += 1
                 continue
-            self._ingest(parsed, raw, parent_id=None, report=report)
+            self._ingest(parsed, raw, parent_id=None, position=None, report=report)
         return report
 
     def _ingest(
-        self, parsed: ParsedMail, raw: RawMail, parent_id: str | None, report: IngestReport
+        self,
+        parsed: ParsedMail,
+        raw: RawMail,
+        parent_id: str | None,
+        position: int | None,
+        report: IngestReport,
     ) -> None:
-        mail = self._mail_entity(parsed, raw, parent_id)
+        mail = self._mail_entity(parsed, raw, parent_id, position)
         if not self._store.add_mail(mail):
             report.mails_known += 1
             return
         report.mails_new += 1
         if self._container_body_is_message or not parsed.embedded:
-            for position, segment in enumerate(split_thread(parsed.text_body, self._tz)):
-                self._ingest_segment(segment, parsed, mail, report, first_documents=position == 0)
-        for embedded in parsed.embedded:
-            self._ingest(embedded, raw, parent_id=mail.mail_id, report=report)
+            for order, segment in enumerate(split_thread(parsed.text_body, self._tz)):
+                self._ingest_segment(segment, parsed, mail, report, first_documents=order == 0)
+        for index, embedded in enumerate(parsed.embedded):
+            self._ingest(embedded, raw, parent_id=mail.mail_id, position=index, report=report)
 
-    def _mail_entity(self, parsed: ParsedMail, raw: RawMail, parent_id: str | None) -> Mail:
+    def _mail_entity(
+        self, parsed: ParsedMail, raw: RawMail, parent_id: str | None, position: int | None
+    ) -> Mail:
         is_embedded = parent_id is not None
         digest = _canonical_hash(parsed) if is_embedded else hashlib.sha256(raw.content).hexdigest()
         key = self._objects.put(raw.content if not is_embedded else _canonical_bytes(parsed))
@@ -124,6 +131,8 @@ class IngestMail:
             raw_object_key=key,
             size_bytes=len(raw.content),
             parent_mail_id=parent_id,
+            source_ref=raw.source_ref,
+            position=position,
         )
 
     def _ingest_segment(

@@ -66,12 +66,30 @@ def test_report_in_json_has_every_shipment_and_field(ran: tuple[Path, str]) -> N
     assert vessel["evidence"].startswith("Vessel") and vessel["source_role"] == "carrier"
 
 
-def test_evaluate_scores_the_verdicts_against_the_gold(
+def test_evaluate_reports_aggregated_metrics_only(
     ran: tuple[Path, str], synthetic_dir: Path
 ) -> None:
     workdir, _ = ran
-    output = cli(workdir, "evaluate", "--gold", str(synthetic_dir / "gold.json"), "--verbose")
-    assert "acierto del veredicto: 100.0%" in output and "esperado" not in output
+    output = cli(workdir, "evaluate", "--gold", str(synthetic_dir / "gold.json"))
+    assert "| Veredicto exacto | 28/28 = 100,0 % [87,9 % - 100,0 %] |" in output
+    assert "| Precisión de la asociación automática | 13/13 = 100,0 %" in output
+    assert "| booking | 4 | 4 | 4 | 100,0 %" in output
+    assert "ES2690" not in output
+
+
+def test_evaluate_lists_the_mismatches_only_when_asked(
+    ran: tuple[Path, str], synthetic_dir: Path
+) -> None:
+    workdir, _ = ran
+    gold = str(synthetic_dir / "gold.json")
+    output = cli(workdir, "evaluate", "--gold", gold, "--verbose")
+    assert "## Fallos (solo para uso local" in output
+    assert "| class | ES26900003 | M3 | VSL | BKG |" in output
+    report = json.loads(cli(workdir, "evaluate", "--gold", gold, "--format", "json"))
+    assert report["verdicts"]["overall"]["rate"] == 1.0 and "mismatches" not in report
+    target = workdir / "eval" / "report.md"
+    assert "evaluación escrita" in cli(workdir, "evaluate", "--gold", gold, "--out", str(target))
+    assert target.read_text(encoding="utf-8").startswith("# Evaluación frente al gold standard")
 
 
 def test_urgent_notices_are_logged_without_content(
@@ -116,4 +134,4 @@ def test_broken_files_in_the_folder_do_not_change_the_result(
     output = cli(workdir, "run", str(mails), "--erp", str(synthetic_dir / "erp.csv"), "--no-llm")
     assert "failures=1" in output
     scored = cli(workdir, "evaluate", "--gold", str(synthetic_dir / "gold.json"))
-    assert "acierto del veredicto: 100.0%" in scored
+    assert "| Veredicto exacto | 28/28 = 100,0 %" in scored

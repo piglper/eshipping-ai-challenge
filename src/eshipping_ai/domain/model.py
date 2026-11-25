@@ -56,7 +56,13 @@ class DomainModel(BaseModel):
 
 
 class Mail(DomainModel):
-    """A mail as received from the mailbox, or a mail embedded in another one."""
+    """A mail as received from the mailbox, or a mail embedded in another one.
+
+    ``source_ref`` says where the mail came from (a file name, or the identifier of the
+    message in the mailbox) and ``position`` the order of an embedded mail among those of
+    its parent, from 0. Both trace a mail back to its source and let the evaluation pair
+    it with its labelled counterpart.
+    """
 
     mail_id: str
     rfc_message_id: str | None
@@ -66,6 +72,8 @@ class Mail(DomainModel):
     raw_object_key: str
     size_bytes: NonNegativeInt
     parent_mail_id: str | None = None
+    source_ref: str | None = None
+    position: NonNegativeInt | None = None
 
 
 class Message(DomainModel):

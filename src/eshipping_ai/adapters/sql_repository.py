@@ -28,8 +28,14 @@ from eshipping_ai.domain.model import (
     ShipmentAlias,
     Verdict,
 )
-from eshipping_ai.domain.ports import ThreadMessage, ThreadView
-from eshipping_ai.domain.vocabulary import AliasType, ObservationStatus, VerdictStatus
+from eshipping_ai.domain.ports import MailOutcome, ThreadMessage, ThreadView
+from eshipping_ai.domain.vocabulary import (
+    AliasType,
+    AssociationStatus,
+    MailClass,
+    ObservationStatus,
+    VerdictStatus,
+)
 
 _OPEN_VERDICTS = (VerdictStatus.OPEN.value, VerdictStatus.PROPOSED.value)
 
@@ -219,6 +225,59 @@ class SqlRepository:
         query = select(t.association.c.payload).where(t.association.c.shipment_id == shipment_id)
         with self._engine.connect() as connection:
             return [Association.model_validate(p) for p in connection.execute(query).scalars()]
+
+    def mail_outcomes(self) -> Sequence[MailOutcome]:
+        """Return what the processing made of every mail, by source and position.
+
+        The message of a mail is the one at depth 0 of its thread, the one it wrote itself.
+        """
+        parent = t.mail.alias("parent")
+        holders = select(parent.c.parent_mail_id).where(parent.c.parent_mail_id.is_not(None))
+        own = (
+            select(t.mail_message.c.mail_id, t.mail_message.c.message_id)
+            .where(t.mail_message.c.depth == 0)
+            .subquery()
+        )
+        with self._engine.connect() as connection:
+            mails = connection.execute(
+                select(t.mail.c.mail_id, t.mail.c.source_ref, t.mail.c.position, own.c.message_id)
+                .outerjoin(own, own.c.mail_id == t.mail.c.mail_id)
+                .where(t.mail.c.mail_id.not_in(holders))
+                .order_by(t.mail.c.source_ref, t.mail.c.position, t.mail.c.mail_id)
+            ).all()
+            classes: dict[str, list[tuple[bool, str]]] = {}
+            for row in connection.execute(
+                select(
+                    t.classification.c.message_id,
+                    t.classification.c.is_primary,
+                    t.classification.c.mail_class,
+                )
+            ):
+                classes.setdefault(row.message_id, []).append((row.is_primary, row.mail_class))
+            shipments: dict[str, list[tuple[str, AssociationStatus]]] = {}
+            for row in connection.execute(
+                select(
+                    t.association.c.message_id,
+                    t.association.c.shipment_id,
+                    t.association.c.status,
+                ).order_by(t.association.c.shipment_id)
+            ):
+                shipments.setdefault(row.message_id, []).append(
+                    (row.shipment_id, AssociationStatus(row.status))
+                )
+        return [
+            MailOutcome(
+                mail_id=row.mail_id,
+                source_ref=row.source_ref,
+                position=row.position,
+                classes=tuple(
+                    MailClass(name)
+                    for _, name in sorted(classes.get(row.message_id, []), key=lambda c: not c[0])
+                ),
+                shipments=tuple(shipments.get(row.message_id, [])),
+            )
+            for row in mails
+        ]
 
     # --- observations -------------------------------------------------------------------
 
