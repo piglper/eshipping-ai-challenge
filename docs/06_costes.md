@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.2.0 |
+| Versión | 0.2.1 |
 | Estado | Recalibrado en F4.4 con las mediciones de la PoC (§2.1) |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
@@ -178,7 +178,7 @@ Notas de dimensionamiento:
 
 | Requisito | Valor | Por qué |
 |---|---|---|
-| Modelo | Abierto, de 4 a 8 mil millones de parámetros | Los de la PoC (`qwen3.5:4b`, `gemma4:e4b`, `llama3.2:3b`, D9) o uno algo mayor si la evaluación lo pide |
+| Modelo | Abierto, de 4 a 8 mil millones de parámetros | El de la PoC (`qwen3.5:4b`, [ADR-0015](adr/0015-modelo-local-de-la-poc.md)) o uno algo mayor si la evaluación lo pide |
 | Memoria de la GPU | 24 GB | Un modelo de 8 mil millones de parámetros ocupa unos 16 GB en 16 bits y unos 5 GB cuantizado a 4 bits; el resto queda para la caché de contexto de varias peticiones simultáneas |
 | Rendimiento necesario | Unas 26 llamadas por minuto en el pico con 300.000 correos al mes (arquitectura §9.4) | Medido en F4.4: el portátil de la PoC atiende unas 21 llamadas por minuto en serie con un modelo de 3.000 millones de parámetros (p50 de 2,8 s). Una GPU de servidor con agrupación de peticiones (por ejemplo, vLLM) lo multiplica, también con un modelo de 8.000 millones. El rendimiento no es el problema del autoalojado: lo es el coste fijo de la GPU |
 | Réplicas | 2 para alta disponibilidad, o 1 con la API como respaldo | — |
@@ -227,5 +227,6 @@ Los precios cambian con frecuencia; antes de contratar se vuelven a consultar.
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.1 | 25/11/2026 | Modelo local elegido (ADR-0015) |
 | 0.2.0 | 25/11/2026 | Recalibrado con las mediciones de la PoC (F4.4): tokens, latencia, tiempos por etapa y memoria (§2.1). El coste del LLM baja a menos de la mitad (referencia: 28 $ al mes con 100.000 correos) y el total técnico, a unos 330 €. Hallazgo: la descodificación del RTF de los `.msg` era el 97 % de la ingesta |
 | 0.1.0 | 23/11/2026 | Primera versión: coste del LLM por proveedor y escenario con precios oficiales, requisitos de máquina por rol, máquinas de referencia y coste técnico mensual a 100.000, 150.000 y 300.000 correos |

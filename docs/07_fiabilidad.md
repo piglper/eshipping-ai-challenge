@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.2.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -197,6 +197,31 @@ Casos necesarios **sin ningún error** para que el límite inferior alcance el o
 - Once expedientes de un mismo tipo (exportación marítima FCL desde España): no cubren importación, LCL ni otros modos (S-03).
 - El conjunto sintético (F3.10) sirve para regresión y casos límite, no para estimar la precisión real.
 
+### 6.3 Qué se midió y qué porcentaje de acierto se espera
+
+Lo medido en la F4 sobre la muestra real, solo con reglas ([evaluación §4 y §5](11_evaluacion.md)):
+
+| Medida | Resultado | Intervalo al 95 % |
+|---|---|---|
+| Asociación automática correcta | 35 de 35 | 90,1 % – 100 % |
+| Lo aceptado sin revisión es correcto | 54 de 60 (90,0 %) | 79,9 % – 95,3 % |
+| Precisión de la extracción | 86,1 % | 76,3 % – 92,3 % |
+| Recall de la extracción | 75,6 % | 65,3 % – 83,6 % |
+| Veredicto exacto frente al ERP | 63 de 85 (74,1 %) | 63,9 % – 82,2 % |
+
+La muestra la eligió EShipping para dar contexto y no es representativa del flujo, así que estas cifras describen el comportamiento y los tipos de error, no tasas de producción. Por eso la respuesta a «qué porcentaje de acierto se espera» tiene dos partes:
+
+- **La precisión de lo automático es un objetivo que se impone, no una cifra que se espera.**
+  - Los umbrales se fijan para que el límite inferior del intervalo cumpla el objetivo de cada campo: 98 % en los críticos y 99,5 % en la asociación (§4).
+  - La auditoría por muestreo lo vigila y endurece el umbral si cae (§5).
+  - Con los umbrales fijos de la PoC, lo automático acierta el 90 %. En producción ese umbral subiría hasta llegar al 98 %.
+- **Lo que se espera es la cobertura: qué parte resuelve el sistema solo.**
+  - En la muestra, las reglas dejan en zona automática unos tres de cada cuatro valores.
+  - Para cumplir el 98 %, una parte pasaría a revisión. Cuánta solo lo dice la curva de precisión y cobertura de un piloto con datos etiquetados (§6.1).
+  - El objetivo de diseño es que la revisión humana quede por debajo del 15 % de los correos en régimen estable (RNF-13). Se alcanza a medida que el aprendizaje continuo convierte correcciones en reglas y plantillas ([08](08_aprendizaje_continuo.md)).
+
+Los casos de baja confianza nunca se aceptan solos. Van a la cola de revisión con su evidencia, ordenados por prioridad (P1 a P3, ADR-0009 §6), o no se proponen.
+
 ## 7. Cambios sin regresiones
 
 Cualquier cambio que afecte al resultado (modelo, prompt, plantilla, reglas, umbrales) sigue este camino:
@@ -223,4 +248,5 @@ Cualquier cambio que afecte al resultado (modelo, prompt, plantilla, reglas, umb
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.0 | 25/11/2026 | §6.3: lo medido en la F4 y qué porcentaje de acierto se espera (la precisión de lo automático se impone con umbrales; lo que se espera es la cobertura) |
 | 0.1.0 | 23/11/2026 | Primera versión: unidades y tipos de error, métricas, confianza calibrada, umbrales por campo, auditoría continua con freno automático, límites estadísticos de la PoC y cambios sin regresiones |

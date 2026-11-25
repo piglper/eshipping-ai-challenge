@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.2.2 |
+| Versión | 0.2.3 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -61,7 +61,7 @@ src/eshipping_ai/
 │   ├── identifiers.py       # Contenedor ISO 6346, referencias, UN/LOCODE (validación y normalización)
 │   ├── policy.py            # Configuración, rango de cada fuente y valor vigente de un campo (ADR-0009 §1-§3)
 │   ├── comparison.py        # Tolerancias, reglas A y B, coherencia del ERP, veredictos y prioridades (ADR-0009 §4-§6)
-│   ├── senders.py           # Directorio de remitentes: rol y orden día-mes por dominio (RF-73)
+│   ├── senders.py           # Rol del remitente en cascada y orden día-mes (RF-73, ADR-0013)
 │   └── ports.py             # Clock, MailSource, ObjectStore, DocumentParser, LLMClient, ERPGateway, Repository, Notifier, TaskQueue
 ├── application/             # Casos de uso; solo dependen del dominio
 │   ├── ingest.py            # IngestMail
@@ -105,7 +105,7 @@ config/                      # Configuración versionada (sin datos reales)
 ├── reconciliation.yaml      # Autoridad, tolerancias, prioridades (ADR-0009)
 ├── triage.yaml              # Palabras de urgencia y ruido
 ├── confidence.yaml          # Confianzas iniciales y umbrales por campo
-├── senders.yaml             # Directorio de remitentes por dominio (sintético en el repo)
+├── senders.yaml             # Dominios curados (propios y navieras) y partes del ERP (ADR-0013)
 └── templates/               # Plantillas de documentos
 ```
 
@@ -159,7 +159,7 @@ Una decisión nunca edita lo que dijo una fuente: aceptar o corregir añade una 
 ## 6. LLM en la PoC
 
 - **Ollama** en local, en un Mac M5 con 16 GB ([ADR-0005](adr/0005-llm-local-ollama-en-la-poc.md)).
-- **Candidatos:** dos o tres modelos abiertos de 3 a 8B parámetros, cuantizados; se fijan y se comparan en F4.4b (D9, #43).
+- **Modelo:** `qwen3.5:4b`, elegido en F4.4b entre tres modelos abiertos de 3 a 8B parámetros, cuantizados ([ADR-0015](adr/0015-modelo-local-de-la-poc.md); comparativa en la [evaluación §5.8](11_evaluacion.md#58-comparativa-de-modelos-locales-f44b)).
 - **Una llamada por mensaje** con los campos pendientes: los que la clase del mensaje hace esperables, que las reglas no han encontrado y de los que el texto tiene alguna pista (una confirmación de booking sin una palabra sobre cut-offs no los pregunta). Prompt con prefijo fijo (instrucciones y esquema) y el mensaje nuevo limpio, hasta 12.000 caracteres; salida con esquema JSON por hecho: campo, valor, clasificador y cita literal.
 - **Esquema impuesto o en las instrucciones:** con Ollama 0.40, `llama3.2:3b` admite el esquema en `format`; `qwen3.5:4b` y `gemma4:e4b` responden 501 y el adaptador pasa a poner el esquema en las instrucciones y a extraer el objeto JSON de la respuesta. La validación es la misma en los dos casos.
 - **Validación determinista** (nada de la respuesta se da por bueno):
@@ -244,6 +244,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.3 | 25/11/2026 | Coherencia con ADR-0013 y ADR-0015 (F5.2) |
 | 0.2.2 | 25/11/2026 | Modelo local por defecto: `qwen3.5:4b` (ADR-0015) |
 | 0.2.1 | 24/11/2026 | Streamlit reducido implementado (F3.9): tres pestañas, correcciones como observaciones humanas o sustituciones (nunca ediciones) y nueva reconciliación del expediente; Streamlit como extra opcional |
 | 0.2.0 | 24/11/2026 | Escalón del LLM implementado (F3.4): campos pendientes con pista en el texto, validación determinista de la cita y del valor, confianza fija por escalón, esquema en las instrucciones para los modelos que no admiten `format`, modelo por defecto `llama3.2:3b` (provisional, D9) y `make demo-llm` |
