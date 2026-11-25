@@ -3,7 +3,7 @@ PYTHON ?= python3.14
 VENV   := .venv
 BIN    := $(VENV)/bin
 
-.PHONY: help setup lint format typecheck test test-unit test-integration check sample migrate demo demo-llm evaluate evaluate-real ui
+.PHONY: help setup lint format typecheck test test-unit test-integration check sample migrate demo demo-llm evaluate evaluate-real volume ui
 
 help: ## Muestra esta ayuda
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-17s %s\n", $$1, $$2}'
@@ -61,6 +61,17 @@ demo-llm: sample ## La demo con el escalón del LLM (Ollama en local; MODEL=<mod
 
 evaluate: demo ## Informe de evaluación sobre los datos sintéticos (data_sample/build/evaluacion.md)
 	$(ESHIPPING) evaluate --gold data_sample/build/gold.json --out data_sample/build/evaluacion.md
+
+COPIES ?= 715
+VOLUME_DIR := data_sample/build/volume
+VOLUME := $(BIN)/python -m eshipping_ai.entrypoints.cli --workdir $(VOLUME_DIR)/work --now $(DEMO_NOW)
+
+volume: ## Prueba de volumen sintética, sin LLM (COPIES=<n> copias de cada expediente; 715 ≈ 10.000 mensajes)
+	rm -rf $(VOLUME_DIR)
+	$(BIN)/python -m eshipping_ai.synthetic --out $(VOLUME_DIR) --copies $(COPIES)
+	/usr/bin/time -p $(VOLUME) run $(VOLUME_DIR)/mails --erp $(VOLUME_DIR)/erp.csv --no-llm
+	$(VOLUME) evaluate --gold $(VOLUME_DIR)/gold.json --out $(VOLUME_DIR)/evaluacion.md
+	@du -sh $(VOLUME_DIR)/work/*
 
 REAL_TAG := $(if $(MODEL),_$(subst :,_,$(subst .,_,$(MODEL))),)
 REAL_DIR := data/output/eval_real$(REAL_TAG)

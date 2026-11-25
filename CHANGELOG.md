@@ -7,6 +7,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Prueba de volumen (F4.5): `make volume` replica los expedientes sintéticos con identificadores renumerados (`python -m eshipping_ai.synthetic --copies N`) y procesa unos 10.000 mensajes sin LLM. Resultado: unos 9.100 mensajes por minuto en un solo proceso, crecimiento lineal y la misma calidad que el conjunto base (arquitectura §9.10).
 - Medición de costes y rendimiento (F4.4). El informe de procesado da la distribución por llamada al LLM de los tokens de entrada y salida y de la latencia (p50, p95 y máximo). Cada etapa de la CLI informa de sus segundos. `docs/06_costes.md` y la arquitectura §9 se recalibran con lo medido: el coste del LLM baja a menos de la mitad.
 - Diagnóstico de errores en `eshipping evaluate` (F4.3):
   - la etapa que pierde cada valor esperado (no extraído, extraído mal, leído y no elegido, o de más);
