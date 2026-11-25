@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.2.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
-| Tarea | F4.2 (#40) |
+| Tarea | F4.2 (#40), F4.3 (#41) |
 | Requisitos | RF-10, RF-20, RF-52, RNF-01, RNF-10, RNF-11 |
 | Documentos relacionados | [01 §6](01_analisis_datos.md#6-gold-standard-f13) (gold standard), [07](07_fiabilidad.md) (qué se mide y por qué), [ADR-0009](adr/0009-politica-de-resolucion-de-discrepancias.md) (veredictos) |
 
@@ -16,14 +16,19 @@
 
 - La evaluación mide cuatro cosas: la **asociación** de cada correo a su expediente, su **clase**, el **valor de cada campo** y el **veredicto** frente al ERP. Cada proporción lleva su intervalo de confianza de Wilson al 95 %.
 - Es reproducible con un comando: `make evaluate` sobre los datos sintéticos y `make evaluate-real` sobre la muestra real, solo en local.
-- Sobre el conjunto sintético, la asociación, la extracción y los veredictos aciertan en todos los casos. La clase principal falla en 3 de 14 correos: los avisos de buque se toman por reservas. Ese fallo se analiza en la F4.3.
+- Sobre el conjunto sintético, la asociación, la extracción y los veredictos aciertan en todos los casos. La clase principal falla en 2 de 14 correos.
 - Sobre la **muestra real**, solo con reglas y sin LLM:
   - **Asociación:** todo lo asociado de forma automática es correcto (35 de 35); 3 correos quedan sin asociar.
   - **Extracción:** precisión del 86 % y recall del 76 %. El booking y el levante aciertan siempre; el buque es el campo más débil (recall del 45 %).
   - **Veredictos:** el 74 % son exactos. Las discrepancias se detectan, pero ninguno de los 4 errores claros del ERP sale como `ERP_ERROR`.
-  - **Clasificación:** la clase principal acierta en menos de la mitad de los correos (47 %).
+  - **Clasificación:** la clase principal acierta en el 63 % de los correos. Antes de corregir la causa principal de error, hallada en el análisis, acertaba en el 47 %.
 
-  El detalle está en la [sección 4](#4-resultados-sobre-la-muestra-real) y las causas se analizan en la F4.3.
+  El detalle está en la [sección 4](#4-resultados-sobre-la-muestra-real).
+- **Análisis de errores** ([sección 5](#5-análisis-de-errores-f43)):
+  - **Lo que más importa sale bien:** ninguna asociación automática es errónea.
+  - **El 90 % de lo que se acepta sin revisión es correcto.** Está lejos del 98 % de RNF-11, y casi todo el error viene de correos internos que mencionan buques o fechas que no son el dato vigente.
+  - **El fallo más frecuente no es de extracción:** en 8 casos el valor correcto se leyó, pero la proyección eligió otro.
+  - **El LLM local pequeño (`llama3.2:3b`) apenas suma.** Resuelve 2 valores, y sus fallos van a revisión.
 
 ## 2. Cómo se mide
 
@@ -69,12 +74,12 @@ Cuatro expedientes y 14 correos inventados que siembran los siete veredictos (`m
 |---|---|
 | Precisión de la asociación automática | 13/13 = 100,0 % [77,2 % - 100,0 %] |
 | Correos resueltos sin revisión | 14/14 = 100,0 % [78,5 % - 100,0 %] |
-| Exactitud de la clase principal | 11/14 = 78,6 % [52,4 % - 92,4 %] |
+| Exactitud de la clase principal | 12/14 = 85,7 % [60,1 % - 96,0 %] |
 | Precisión y recall de la extracción | 27/27 = 100,0 % [87,5 % - 100,0 %] |
 | Veredicto exacto | 28/28 = 100,0 % [87,9 % - 100,0 %] |
 | Detección de lo que pide acción (precisión y recall) | 6/6 = 100,0 % [61,0 % - 100,0 %] |
 
-Los tres fallos de clase son avisos de buque (`VSL`) y un correo de otro tipo (`OTR`) que las reglas clasifican como reserva (`BKG`). Esos correos mencionan el booking, y la palabra «booking» pesa más que el vocabulario del buque.
+Los dos fallos de clase son avisos de buque (`VSL`) sin ninguna palabra del vocabulario de buque, que quedan como `OTR`. Antes de la corrección del §5.5 eran tres y salían como reserva (`BKG`).
 
 ## 4. Resultados sobre la muestra real
 
@@ -94,7 +99,7 @@ Salieron 2 internos, 3 navieras, 2 agentes de aduanas y 13 clientes. Nadie lo ha
 |---|---|
 | Precisión de la asociación automática | 35/35 = 100,0 % [90,1 % - 100,0 %] |
 | Correos resueltos sin revisión | 35/38 = 92,1 % [79,2 % - 97,3 %] |
-| Exactitud de la clase principal | 18/38 = 47,4 % [32,5 % - 62,7 %] |
+| Exactitud de la clase principal | 24/38 = 63,2 % [47,3 % - 76,6 %] (antes del §5.5: 18/38 = 47,4 %) |
 | Precisión de la extracción | 62/72 = 86,1 % [76,3 % - 92,3 %] |
 | Recall de la extracción | 62/82 = 75,6 % [65,3 % - 83,6 %] |
 | Veredicto exacto | 63/85 = 74,1 % [63,9 % - 82,2 %] |
@@ -131,15 +136,111 @@ Por campo, el veredicto es exacto en todos los bookings (11/11) y en 10 de 11 le
 
 ### 4.4 Clasificación
 
-La clase principal acierta en 18 de 38 correos. Las aduanas se reconocen siempre (`CUS`: 11 de 11, sin falsos positivos), pero el transporte terrestre se queda corto (`TRP`: recall del 31,6 %). Además, la reserva y el buque se asignan de más: `BKG` tiene una precisión del 23,5 % y `VSL`, del 9,1 %.
+La clase principal acierta en 24 de 38 correos (18 antes de la corrección del §5.5). Las aduanas se reconocen siempre (`CUS`: 11 de 11, sin falsos positivos), pero el transporte terrestre se queda corto (`TRP`: recall del 31,6 %) y el buque se asigna de más (`VSL`: precisión del 9,1 %).
 
 ### 4.5 Qué dicen estas cifras
 
 - **Lo que más importa sale bien.** No hay ninguna asociación automática equivocada, y cuando el sistema afirma que un campo coincide con el ERP, acierta en el 95 % de los casos. Un error de asociación contamina un expediente ajeno sin que nadie lo note ([07 §2.2](07_fiabilidad.md#22-tipos-de-error-y-su-gravedad)).
-- **Los fallos se concentran en tres sitios:** el nombre del buque, los errores claros del ERP (que salen como `DISCREPANCY`, de modo que se avisan, pero con un veredicto menos preciso) y la clasificación. La F4.3 analiza qué parte del pipeline falla en cada caso y qué resolvería el escalón del LLM.
-- **Las cifras son orientativas:** los intervalos son anchos y el gold está pendiente de revisión humana (§5).
+- **Los fallos se concentran en tres sitios:** el nombre del buque, los errores claros del ERP (que salen como `DISCREPANCY`, de modo que se avisan, pero con un veredicto menos preciso) y la clasificación. La sección 5 explica dónde y por qué.
+- **Las cifras son orientativas:** los intervalos son anchos y el gold está pendiente de revisión humana (§6).
 
-## 5. Limitaciones
+## 5. Análisis de errores (F4.3)
+
+Todo el análisis es automático, se hace en local y solo publica categorías y recuentos. El informe de `eshipping evaluate` incluye el diagnóstico (secciones «Diagnóstico»). Las causas finas del §5.2 y del §5.3 salen de comparar, en cada fallo, la observación ganadora con la correcta: regla, rol de la fuente, clasificador y fecha.
+
+Los textos de los correos no se han leído para este análisis. Por eso, donde la explicación va más allá de esos datos, se indica como **hipótesis**, que habría que confirmar con una revisión humana de los casos.
+
+### 5.1 Dónde se pierde cada valor
+
+De los 82 valores que espera el gold (muestra real, solo reglas):
+
+| Etapa | Valores | Qué significa |
+|---|---|---|
+| Acierto | 62 (75,6 %) | — |
+| Leído, no elegido | 8 (9,8 %) | Alguna observación tenía el valor correcto, pero la **proyección** eligió otro o ninguno |
+| Extraído mal | 6 (7,3 %) | Las reglas leyeron el campo, pero ninguna lectura es correcta |
+| No extraído | 6 (7,3 %) | Ninguna observación del campo |
+| De más | 1 | Un cut-off que el gold no recoge |
+
+Por campo, el **buque** reparte sus 6 fallos entre las tres etapas (2 en cada una) y la **carga en almacén** falla sobre todo en la extracción (3 extraídos mal). El booking, el levante y el equipo están casi completos.
+
+### 5.2 Por qué no se elige un valor leído
+
+| Causa | Casos | Etapa responsable |
+|---|---|---|
+| El valor correcto solo lo dio una fuente informativa (un dominio que el directorio trata como cliente) y espera confirmación | 4 | Directorio de remitentes (propuesto automáticamente, §4) o una política demasiado estricta con el cliente |
+| Un mensaje interno posterior menciona otro buque u otra fecha, y gana por ser el más reciente entre fuentes fiables | 3 | La regla «el más reciente de los fiables». Hipótesis: el correo interno cita una alternativa o un dato antiguo, y la extracción lo toma por vigente |
+| Un mensaje interno gana a una naviera más reciente en la carga en almacén | 1 | Autoridad por campo del ADR-0009 |
+
+### 5.3 Errores aceptados sin revisión
+
+Son los más graves ([07 §2.2](07_fiabilidad.md#22-tipos-de-error-y-su-gravedad)): **6 de 60 valores automáticos son erróneos**, así que lo automático acierta un 90,0 % [79,9 % - 95,3 %]. En los 4 casos que se pueden atribuir, ganó la regla «el más reciente de los fiables». En 3 de ellos la fuente era un **correo interno** (buque, salida y carga) y en 1 una naviera (un cut-off).
+
+Hipótesis: los correos internos de EShipping reenvían, resumen y proponen alternativas a sus clientes; no son la fuente del dato, sino quien lo transmite. Si es así, darles la misma autoridad que a la naviera para el buque y sus fechas es la causa principal de que un error pase sin revisión.
+
+### 5.4 Veredictos
+
+De los 22 veredictos erróneos, **16 (73 %) vienen de un valor ya erróneo** y solo 6 de la propia reconciliación:
+
+| Gold | Sistema | Casos | Causa |
+|---|---|---|---|
+| `ERP_ERROR` | `DISCREPANCY` | 2 | La regla B («error claro») solo reconoce erratas de dígitos y el cambio de día por mes. Hipótesis: estos errores son de otro tipo, así que se avisan como discrepancia sin atribuirla |
+| `ERP_ERROR` | `MATCH` | 1 | El sistema da por iguales el valor de los correos y el del ERP. Hay que revisar si lo causa la tolerancia de la comparación o el gold |
+| `ERP_NEWER` | `DISCREPANCY` | 1 | Hipótesis: sin la fecha de actualización de cada campo del ERP no se puede saber que es más reciente (pregunta para EShipping, [01 §6.4](01_analisis_datos.md#64-hallazgos-que-afectan-al-diseño)) |
+| `MAIL_MISSING` | Sin veredicto | 2 | Campo sin columna en el ERP y sin valor en los correos: el sistema no emite veredicto. Es una diferencia de criterio con el gold, no un error |
+
+### 5.5 Clasificación
+
+La confusión más frecuente era **transporte clasificado como reserva** (9 de 20 fallos). En la muestra real, todo un hilo conserva en el asunto «BKG 12345678», y el asunto pesa el triple que el cuerpo. Así, cualquier respuesta (la orden al transportista, el levante...) sumaba puntos de reserva.
+
+**Corrección aplicada:** la palabra que solo etiqueta el número de booking (`BKG`, `booking nº`) ya no cuenta; «Booking confirmation» sí. La clase principal real pasa del 47,4 % al 63,2 % y la sintética, del 78,6 % al 85,7 %, sin cambiar ninguna otra métrica.
+
+Una advertencia: la regla se ha corregido mirando la misma muestra con la que se evalúa. Es una causa general, no un ajuste a un caso, pero la mejora hay que confirmarla con correos nuevos.
+
+Quedan dos problemas:
+- **Buque de más:** 4 reservas salen como `VSL`, porque palabras como «delay» aparecen también en correos de reserva.
+- **Transporte de menos:** recall del 31,6 %. Los transportistas reales usan otro vocabulario.
+
+Con 38 correos no compensa seguir afinando palabras: es el caso del escalón de ML de la cascada ([ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md)), con un clasificador entrenado sobre correos etiquetados.
+
+### 5.6 Porcentaje resuelto en cada escalón
+
+Cada uno de los 82 valores esperados, según quién da el valor vigente:
+
+| Escalón | Zona | Solo reglas | Con LLM (`llama3.2:3b`) |
+|---|---|---|---|
+| Reglas | automática, correcto | 54 (65,9 %) | 52 (63,4 %) |
+| Reglas | automática, **erróneo** | 6 (7,3 %) | 6 (7,3 %) |
+| Reglas | revisión, correcto | 8 (9,8 %) | 8 (9,8 %) |
+| Reglas | revisión, erróneo | 3 (3,7 %) | 3 (3,7 %) |
+| LLM | revisión, correcto | — | 2 (2,4 %) |
+| LLM | revisión, erróneo | — | 3 (3,7 %) |
+| Sin resolver (a una persona) | — | 11 (13,4 %) | 8 (9,8 %) |
+| Plantilla y ML | — | No implementados en la PoC | No implementados en la PoC |
+
+- **Las reglas resuelven sin intervención humana dos tercios de los valores.** El 75,6 % acaba correcto si una persona confirma la zona de revisión.
+- **El escalón del LLM funciona como se diseñó, pero este modelo aporta poco:**
+  - Se le pregunta 185 veces y propone valores que se validan; 398 lecturas se descartan, sobre todo porque la cita no está en el texto (228) o el valor no es válido (132).
+  - Ningún valor del LLM entra sin revisión, porque tiene la confianza fija de su escalón.
+  - Reduce los valores sin resolver de 11 a 8, pero solo 2 de los 5 que pasan a ganar son correctos. La precisión de la extracción baja del 86,1 % al 81,6 %.
+  - Hay además un efecto lateral: los «leídos, no elegidos» suben de 8 a 11. La pregunta al LLM se decide por mensaje, y no se tiene en cuenta que el expediente ya tenga ese campo por otro mensaje.
+
+  La elección del modelo (F4.4b) y la recalibración de costes (F4.4) parten de estos datos: 77.015 tokens de entrada y 20.693 de salida, y 503 s para los 382 mensajes en el Mac de la PoC.
+
+### 5.7 Qué cambiar, por orden de impacto
+
+| # | Cambio | Ataca | Esfuerzo |
+|---|---|---|---|
+| 1 | El correo interno no es fuente de autoridad para el buque ni sus fechas: baja de rango, o exige confirmación de la naviera para entrar en zona automática | Errores aceptados sin revisión (§5.3) y «leídos, no elegidos» (§5.2) | Bajo: configuración de `reconciliation.yaml` y ADR que sustituya al ADR-0009 en ese punto |
+| 2 | Validar el directorio de remitentes con operaciones | 4 valores «leídos, no elegidos» | Bajo, pero necesita a EShipping |
+| 3 | Preguntar al LLM solo por los campos que le faltan al **expediente**, no al mensaje | Efecto lateral del LLM (§5.6) | Bajo |
+| 4 | Tratar las listas de buques alternativos y las menciones a datos antiguos (A-25) como contexto, no como valor | Buque extraído mal | Medio |
+| 5 | Escalón de ML para la clasificación con correos etiquetados | Clasificación (§5.5) | Medio; necesita datos |
+| 6 | Ampliar la regla B con el patrón de los errores del ERP que se vean en la auditoría | `ERP_ERROR` dado como `DISCREPANCY` | Bajo, cuando haya casos |
+
+Solo se ha aplicado la corrección del §5.5. El resto queda propuesto, porque con 11 expedientes cualquier ajuste más fino sería ajustar la política a la muestra.
+
+## 6. Limitaciones
 
 - **Muestra pequeña.** 11 expedientes, 38 correos y 85 veredictos puntuables: los intervalos son anchos y ninguna cifra demuestra los objetivos de RNF-10 (99,5 %) ni de RNF-11 (98 %). Para eso hacen falta unos 765 y 190 casos sin errores ([07 §6.1](07_fiabilidad.md#61-qué-se-puede-demostrar-con-el-gold-standard)).
 - **Gold provisional.** Lo etiquetó Claude Code y está pendiente de revisión humana (`meta.review`), con un solo etiquetador.
@@ -147,7 +248,7 @@ La clase principal acierta en 18 de 38 correos. Las aduanas se reconocen siempre
 - **Directorio de remitentes propuesto automáticamente** y sin revisar (§4).
 - **El orden de los correos incrustados** es el del fichero. Si un mismo correo aparece en dos contenedores, se guarda una vez y cuenta en el primero; en el segundo queda sin emparejar y se cuenta como no encontrado.
 
-## 6. Cómo reproducirlo
+## 7. Cómo reproducirlo
 
 ```bash
 make evaluate                     # datos sintéticos -> data_sample/build/evaluacion.md
@@ -162,4 +263,5 @@ eshipping evaluate --gold <gold.json> --format json --verbose   # con los fallos
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.0 | 25/11/2026 | Análisis de errores (F4.3): etapa que pierde cada valor, causas, errores aceptados sin revisión, veredictos, clasificación con su corrección, porcentaje resuelto en cada escalón con y sin LLM, y cambios propuestos |
 | 0.1.0 | 25/11/2026 | Primera versión: metodología, métricas con intervalo de Wilson y resultados sobre el conjunto sintético y la muestra real, solo con reglas (F4.2) |

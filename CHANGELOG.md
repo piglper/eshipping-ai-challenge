@@ -7,6 +7,11 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Diagnóstico de errores en `eshipping evaluate` (F4.3):
+  - la etapa que pierde cada valor esperado (no extraído, extraído mal, leído y no elegido, o de más);
+  - el escalón y la zona que resuelven cada valor, con la precisión de lo aceptado sin revisión;
+  - si un veredicto falla por el valor o por la reconciliación;
+  - qué clases principales se confunden entre sí.
 - Evaluación frente al gold standard (F4.2, `docs/11_evaluacion.md`). `eshipping evaluate` mide:
   - la asociación de cada correo (automática y correcta o equivocada, a revisión, sin asociar, ruido);
   - la clase principal y la precisión, el recall y el F1 por clase;
@@ -23,6 +28,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Dependencia de desarrollo `hypothesis` 6.170.17.
 
 ### Changed
+- El clasificador no cuenta la palabra que etiqueta un booking (`BKG 990000101`, `booking nº ...`). Un hilo la conserva en el asunto trate de lo que trate cada respuesta, y por eso las respuestas de transporte salían como reserva. «Booking confirmation» sí cuenta. En la muestra real, la clase principal pasa del 47 % al 63 %.
+- `make evaluate-real` usa una carpeta de trabajo por modelo, para comparar ejecuciones.
 - La cobertura mínima del 90 % se exige en `make test` y en el CI (`fail_under`). La página de Streamlit queda fuera de la medida, porque se prueba con `AppTest` en un proceso que coverage no ve.
 
 ### Fixed
