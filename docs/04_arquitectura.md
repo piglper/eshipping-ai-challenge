@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.2.2 |
+| Versión | 0.3.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
-| Última actualización | 23/11/2026 |
+| Última actualización | 25/11/2026 |
 | Tareas | F2.1 (#15), F2.1b (#16), F2.2 (#17) |
 | Decisiones | [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md), [ADR-0008](adr/0008-estrategia-de-ia-cascada-por-etapa.md), [ADR-0009](adr/0009-politica-de-resolucion-de-discrepancias.md); pendientes D7 (#27) y D8 (#28) |
 | Fuentes | [Requisitos](02_requisitos.md), [análisis de datos](01_analisis_datos.md), [taxonomía y ambigüedades](03_taxonomia_y_ambiguedades.md), [plan §7](PLAN.md#7-estándares-de-arquitectura) |
@@ -318,9 +318,9 @@ Todas las cifras de esta sección salen de estos parámetros. Los marcados como 
 | PDF por correo | 0,6 | Muestra: 23 PDF en 38 correos (no extrapolable, S-04) |
 | PDF escaneados (con OCR) | 13 %, 2 páginas de media | Muestra: 3 de 23 |
 | Correos operativos que necesitan el LLM para algún campo | 50 % | Hipótesis conservadora; se mide como porcentaje por escalón (RNF-21) |
-| Tokens por llamada al LLM | 3.000 de entrada, 400 de salida | Hipótesis (solo el mensaje nuevo, más instrucciones y esquema); se mide en F4.4 |
-| Tiempo de CPU por unidad (1 vCPU) | Parseo y limpieza 0,1 s por correo; texto de PDF 0,5 s por PDF; OCR 5 s por página; extracción sin LLM 0,05 s por mensaje; reconciliación 0,05 s por correo | Hipótesis (órdenes de magnitud habituales de estas librerías); se mide en F4.4 |
-| Latencia de una llamada al LLM | 8 s | Hipótesis |
+| Tokens por llamada al LLM | 1.750 de entrada, 200 de salida | Medido en F4.4 (p95 de 817 y 196 en la PoC) más el esquema y dos ejemplos que la PoC no envía ([06 §2.1](06_costes.md#21-mediciones-de-la-poc-f44)). Antes de medir: 3.000 y 400 |
+| Tiempo de CPU por unidad (1 vCPU) | Parseo y limpieza 0,1 s por correo; texto de PDF 0,5 s por PDF; OCR 5 s por página; extracción sin LLM 0,05 s por mensaje; reconciliación 0,05 s por correo | Hipótesis conservadora. Medido en F4.4: parseo y texto de PDF juntos ≈ 0,06 s por correo y extracción sin LLM ≈ 2 ms por mensaje, entre 7 y 25 veces menos. El OCR no está en la PoC y sigue como hipótesis. Se mantienen los valores supuestos como cota superior |
+| Latencia de una llamada al LLM | 8 s | Hipótesis para una API. Medido en F4.4 con un modelo local de 3.000 millones de parámetros: p50 de 2,8 s y p95 de 5,8 s |
 | Tamaño del original con adjuntos | 250 KB de media | Hipótesis (PDF de la muestra entre 9 y 770 KB) |
 | Eventos por correo operativo | 4 | Hipótesis |
 | Utilización objetivo de un worker | 60 % (margen para ráfagas) | Diseño |
@@ -348,6 +348,8 @@ Núcleos de CPU ocupados en la hora pico (carga × tiempo por unidad):
 | Reconciliación | 0,01 | 0,02 | 0,04 | 2 |
 | **Total** | **0,48** | **0,72** | **1,45** | — |
 
+Con los tiempos medidos en F4.4 (§9.1), los núcleos de esta tabla bajan entre 7 y 25 veces, salvo el OCR, que no se ha medido; la tabla se mantiene como cota superior.
+
 **Conclusión:** con estos volúmenes, el número de réplicas lo fija la **disponibilidad**, no la carga. La arquitectura con workers por etapa no se justifica por rendimiento, sino porque permite **aislar fallos y escalar solo la etapa que lo necesite** cuando cambie la mezcla de correos (por ejemplo, si EShipping tiene muchos más escaneados de los que muestra la muestra, solo crece el worker de documentos). Aunque los tiempos por unidad fueran diez veces peores que la hipótesis, a 300.000 correos al mes harían falta unos 15 núcleos en el pico: sigue siendo una cuestión de configuración.
 
 ### 9.4 LLM
@@ -355,10 +357,10 @@ Núcleos de CPU ocupados en la hora pico (carga × tiempo por unidad):
 | | 100.000/mes | 150.000/mes | 300.000/mes |
 |---|---|---|---|
 | Llamadas al mes | 37.500 | 56.250 | 112.500 |
-| Tokens al mes (entrada / salida) | 112 M / 15 M | 169 M / 22,5 M | 338 M / 45 M |
+| Tokens al mes (entrada / salida) | 66 M / 7,5 M | 98 M / 11 M | 197 M / 22,5 M |
 | Llamadas por minuto en el pico | 8,5 | 12,8 | 25,6 |
 | Peticiones simultáneas en el pico (llamadas por segundo × latencia) | 1,1 | 1,7 | 3,4 |
-| Tokens por minuto en el pico | ≈ 29.000 | ≈ 43.000 | ≈ 87.000 |
+| Tokens por minuto en el pico | ≈ 17.000 | ≈ 25.000 | ≈ 50.000 |
 
 - La concurrencia necesaria es muy baja: el LLM **no es un cuello de botella de rendimiento**, sino de **coste y de dependencia externa**. Los tokens por minuto del pico están dentro de los límites habituales de los niveles de uso de pago de los proveedores; se comprueba con cada proveedor en la comparativa (F2.7b, #23).
 - Si se autoaloja el modelo, unas 3–4 peticiones simultáneas con un modelo de 4 a 8 mil millones de parámetros caben en una sola GPU con margen; la comparación de coste se hace en F2.7b.
@@ -650,6 +652,7 @@ Como la clave de idempotencia incluye la versión, reprocesar con la misma versi
 | 0.1.0 | 23/11/2026 | Primera versión: impulsores, estilo, C4 niveles 1 a 3, funcionamiento de la canalización y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes |
 | 0.1.1 | 23/11/2026 | D5 aceptada (ADR-0008) |
 | 0.1.2 | 23/11/2026 | D6 aceptada (ADR-0009) |
+| 0.3.0 | 25/11/2026 | §9 recalibrado con las mediciones de F4.4: tokens por llamada (1.750 y 200), tiempos por unidad y latencia del LLM |
 | 0.2.2 | 24/11/2026 | La regla de dependencias ya se comprueba en el CI con `import-linter` |
 | 0.2.1 | 23/11/2026 | D7 y D8 aceptadas (ADR-0011 y ADR-0012) |
 | 0.2.0 | 23/11/2026 | §12: diagramas de secuencia de los flujos principales (ingesta, revisión de discrepancias, aprendizaje, sincronización del ERP y reprocesado) |

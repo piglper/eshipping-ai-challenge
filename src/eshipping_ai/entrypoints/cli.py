@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import sys
+import time
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import asdict, fields
@@ -72,18 +73,20 @@ class Context:
         self.engine.dispose()
 
 
-def _summary(report: object) -> str:
-    """One line with the counts of a run report (dataclass), counters included."""
+def _summary(report: object, started: float) -> str:
+    """One line with the counts of a run report (dataclass) and the seconds it took."""
     parts = []
     for item in fields(report):  # type: ignore[arg-type]
         value = getattr(report, item.name)
         if isinstance(value, Counter):
             value = ", ".join(f"{key} {count}" for key, count in value.most_common()) or "-"
         parts.append(f"{item.name}={value}")
+    parts.append(f"seconds={time.perf_counter() - started:.1f}")
     return " ".join(parts)
 
 
 def _ingest(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
+    started = time.perf_counter()
     report = IngestMail(
         FolderMailSource(args.mails, args.mailbox),
         MailFileParser(),
@@ -93,7 +96,7 @@ def _ingest(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
         ctx.clock,
         ctx.tz,
     ).run()
-    print(f"ingesta: {_summary(report)}", file=out)
+    print(f"ingesta: {_summary(report, started)}", file=out)
 
 
 class UsageError(Exception):
@@ -116,6 +119,7 @@ def _llm(args: argparse.Namespace) -> LLMClient | None:
 
 def _process(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
     llm = _llm(args)
+    started = time.perf_counter()
     snapshot, records = ctx.erp(args.erp).read()
     seed_aliases(records, ctx.repo, snapshot.read_at)
     senders = load_sender_directory(args.senders or ctx.config_dir / "senders.yaml")
@@ -132,10 +136,11 @@ def _process(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
         llm,
         senders.parties_of(records),
     ).run()
-    print(f"procesado: {_summary(report)}", file=out)
+    print(f"procesado: {_summary(report, started)}", file=out)
 
 
 def _reconcile(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
+    started = time.perf_counter()
     erp = ctx.erp(args.erp)
     snapshot, records = erp.read()
     shipments = seed_aliases(records, ctx.repo, snapshot.read_at)
@@ -149,7 +154,7 @@ def _reconcile(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
         ctx.clock,
         load_reconciliation_config(ctx.config_dir / "reconciliation.yaml"),
     ).run(shipments)
-    print(f"reconciliación: {_summary(report)}", file=out)
+    print(f"reconciliación: {_summary(report, started)}", file=out)
     for shipment_id, verdicts in notifier.notices:
         fields = ", ".join(f"{v.field} {v.code.value}" for v in verdicts)
         print(f"URGENTE {shipment_id}: {fields}", file=out)

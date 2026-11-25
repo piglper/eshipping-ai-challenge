@@ -190,11 +190,16 @@ def parse_msg(message: _MsgLike) -> ParsedMail:
         message: A message opened with ``extract_msg``.
 
     Returns:
-        The decoded mail.
+        The decoded mail. The HTML body is decoded only when there is no plain text body:
+        Outlook keeps it as compressed RTF, and decoding it takes most of the ingestion
+        time (F4.4).
     """
-    raw_html = message.htmlBody
-    html = raw_html.decode("utf-8", errors="replace") if isinstance(raw_html, bytes) else None
-    text = message.body or (html_to_text(html) if html else "")
+    text = message.body or ""
+    html = None
+    if not text:
+        raw_html = message.htmlBody
+        html = raw_html.decode("utf-8", errors="replace") if isinstance(raw_html, bytes) else None
+        text = html_to_text(html) if html else ""
     attachments: list[Attachment] = []
     embedded: list[ParsedMail] = []
     for attachment in message.attachments:
