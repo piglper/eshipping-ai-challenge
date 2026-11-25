@@ -6,10 +6,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-25
+
+Entrega de la prueba técnica (fase F5).
+
 ### Added
 - Resumen ejecutivo de una página (F5.1, `docs/00_resumen_ejecutivo.md`).
 - Presentación final en HTML autocontenido y PDF (F5.3, `docs/presentacion/`).
 - Auditoría de confidencialidad (F5.4): `make audit` (`python -m eshipping_ai.entrypoints.audit`) busca los valores reales de `data/` en los ficheros versionados, en todos los commits y en las issues y PR de GitHub. Informa de la categoría y el lugar de cada coincidencia, nunca del valor.
+
+### Changed
+- Revisión de coherencia entre documentos (F5.2): rol del remitente según el ADR-0013, modelo local del ADR-0015 y RF-11, RF-23, RF-24, RF-26 y RF-27 marcados como parciales en la PoC.
+- Los documentos pasan de «Borrador» a «Entregado».
 
 ### Security
 - Un caso de test de la extracción de referencias usaba un número de booking real. Se sustituye por uno sintético y se reescribe el historial para eliminarlo (`docs/09_seguridad.md` §9).
@@ -150,7 +158,8 @@ Cierre de la fase F0 (entorno y proceso).
 - `.gitignore` que excluye datos reales (`data/`, `*.csv`, `*.eml`, `*.msg`), entornos virtuales y secretos.
 - Hook de pre-commit (`.githooks/pre-commit`) que bloquea commits con ficheros confidenciales.
 
-[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.5.0...v1.0.0
 [0.5.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.2.0...v0.3.0

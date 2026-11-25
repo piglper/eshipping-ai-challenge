@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Versión | 0.2.1 |
-| Estado | Recalibrado en F4.4 con las mediciones de la PoC (§2.1) |
+| Estado | Entregado (`v1.0.0`); recalibrado en F4.4 con las mediciones de la PoC (§2.1) |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
 | Tareas | F2.7 (#22), F2.7b (#23), F4.4 (#42) |
