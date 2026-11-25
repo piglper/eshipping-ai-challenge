@@ -5,6 +5,7 @@
 | Documento | Contenido | Fase | Estado |
 |---|---|---|---|
 | [00_resumen_ejecutivo.md](00_resumen_ejecutivo.md) | Resumen ejecutivo de una página: la respuesta a cada pregunta del enunciado | F5 | ✅ |
+| [presentacion/](presentacion/index.html) | Presentación final: HTML autocontenido y su PDF ([cómo se regenera](presentacion/README.md)) | F5 | ✅ |
 | [PLAN.md](PLAN.md) | Plan de actuación, estándares e historial de revisiones | F0 | 🔄 Borrador |
 | [adr/](adr/README.md) | Registro de decisiones de arquitectura y de proyecto | Todas | 🔄 En curso |
 | [../CHANGELOG.md](../CHANGELOG.md) | Cambios del proyecto por versión | Todas | 🔄 En curso |
