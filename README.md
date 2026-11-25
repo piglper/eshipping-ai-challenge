@@ -51,7 +51,7 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
 ## Documentación
 
 - **[Resumen ejecutivo](docs/00_resumen_ejecutivo.md)**: la propuesta en una página
-- **[Presentación](docs/presentacion/index.html)** ([PDF](docs/presentacion/presentacion.pdf)): 15 diapositivas; el HTML se navega con las flechas
+- **[Presentación](docs/presentacion/index.html)** ([PDF](docs/presentacion/presentacion.pdf)): 16 diapositivas organizadas por público; el HTML se navega con las flechas
 - [Plan de actuación](docs/PLAN.md)
 - [Índice de documentación](docs/README.md)
 - [Registro de decisiones (ADR)](docs/adr/README.md)
