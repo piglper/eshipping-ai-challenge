@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.1 |
+| Versión | 0.1.2 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 22/11/2026 |
@@ -38,7 +38,7 @@
 | ID | Requisito | Prioridad | PoC | Criterio de aceptación | Origen |
 |---|---|---|---|---|---|
 | RF-10 | Clasificar cada correo en las clases de la taxonomía (multietiqueta), con una clase principal | M | ✅ | Exactitud de la clase principal y F1 por clase medidas frente al gold standard | E5.2, taxonomía §2 |
-| RF-11 | Detectar el tipo de evento o cambio comunicado: confirmación, retraso, cambio de buque, omisión de escala, roleo, transbordo, enmienda | M | ✅ | Los eventos de incidencia del gold standard se detectan; recall medido | E5.2, E6 |
+| RF-11 | Detectar el tipo de evento o cambio comunicado: confirmación, retraso, cambio de buque, omisión de escala, roleo, transbordo, enmienda | M | 🟡 | Los eventos de incidencia del gold standard se detectan; recall medido. En la PoC: confirmación, enmienda, cambio de buque (con el roleo) y retraso como nueva fecha estimada; la omisión de escala y el transbordo quedan diseñados | E5.2, E6 |
 | RF-12 | Filtrar los correos sin relación con un expediente al principio del pipeline, con un coste mínimo | S | ✅ | Un correo sintético de publicidad se descarta sin llegar al LLM | Taxonomía `OTR` |
 
 ### 2.3 Extracción (E5.3, E6)
@@ -48,11 +48,11 @@
 | RF-20 | Extraer identificadores: expediente, booking, B/L y contenedor | M | ✅ | Precisión y recall por identificador frente al gold standard | E6 |
 | RF-21 | Validar los contenedores con ISO 6346 completo (cuarta letra `U`/`J`/`Z` y dígito de control) y separarlos de los precintos | M | ✅ | Ningún precinto de la muestra se extrae como contenedor; test con códigos sintéticos válidos e inválidos | A-27 |
 | RF-22 | Extraer naviera, buque y viaje | M | ✅ | Buque correcto en los expedientes del gold standard | E6 |
-| RF-23 | Extraer puertos de origen, destino y transbordo, normalizados a UN/LOCODE | M | ✅ | Puertos de la muestra normalizados; test con nombres y variantes sintéticas | E6 |
-| RF-24 | Extraer los eventos del buque (salida, llegada al puerto de carga, llegada a destino, transbordo) con su clasificador planificado, estimado o real | M | ✅ | Clasificador correcto en el gold standard; la «ETA» de llegada al puerto de carga no se confunde con la de destino | E6, A-01, A-02, ADR-0006 |
+| RF-23 | Extraer puertos de origen, destino y transbordo, normalizados a UN/LOCODE | M | 🟡 | Puertos de la muestra normalizados; test con nombres y variantes sintéticas. En la PoC, con una tabla pública reducida de UN/LOCODE y sin el puerto de transbordo | E6 |
+| RF-24 | Extraer los eventos del buque (salida, llegada al puerto de carga, llegada a destino, transbordo) con su clasificador planificado, estimado o real | M | 🟡 | Clasificador correcto en el gold standard; la «ETA» de llegada al puerto de carga no se confunde con la de destino. En la PoC, sin los eventos del transbordo | E6, A-01, A-02, ADR-0006 |
 | RF-25 | Extraer los cut-offs (documental, VGM, entrega del contenedor) con fecha y hora | M | ✅ | Cut-offs del gold standard extraídos con fecha y hora | E6 |
-| RF-26 | Extraer los eventos del contenedor: recogida del vacío, carga en almacén, entrada en terminal, carga a bordo | S | ✅ | Carga en almacén (fecha, hora y lugar) correcta en el gold standard | A-04, taxonomía §3 |
-| RF-27 | Extraer los datos de aduanas de los PDF oficiales: levante, autorización de salida, DUA y circuito | S | ✅ | Fecha de levante correcta en todos los PDF con texto de la muestra | Análisis §2.4 |
+| RF-26 | Extraer los eventos del contenedor: recogida del vacío, carga en almacén, entrada en terminal, carga a bordo | S | 🟡 | Carga en almacén (fecha, hora y lugar) correcta en el gold standard. En la PoC solo la carga en almacén | A-04, taxonomía §3 |
+| RF-27 | Extraer los datos de aduanas de los PDF oficiales: levante, autorización de salida, DUA y circuito | S | 🟡 | Fecha de levante correcta en todos los PDF con texto de la muestra. En la PoC solo el levante; el DUA y el circuito quedan diseñados | Análisis §2.4 |
 | RF-28 | Distinguir las opciones de buques ofertadas de la reserva confirmada | M | ✅ | En los hilos con varias opciones, solo la reservada genera eventos del expediente | A-25 |
 | RF-29 | Guardar con cada dato su evidencia literal, la fuente (mensaje, remitente y rol), el escalón que lo extrajo y su confianza | M | ✅ | Todo dato mostrado en la interfaz enlaza con el fragmento del que sale | E7 (fiabilidad), taxonomía §3.3 |
 | RF-30 | Extracción configurable por proveedor (plantillas para PDF y asuntos estructurados) sin desplegar código | S | 🟡 | Añadir una plantilla sintética nueva no requiere cambiar código (solo un fichero de configuración) | E1, PLAN §7.2 |
@@ -206,5 +206,6 @@ Se priorizan por su efecto en el diseño. Las marcadas con ★ conviene plantear
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.2 | 25/11/2026 | Revisión de coherencia (F5.2): RF-11, RF-23, RF-24, RF-26 y RF-27 pasan a 🟡, porque la PoC no cubre el transbordo, la omisión de escala, los eventos del contenedor salvo la carga ni el DUA y el circuito |
 | 0.1.1 | 25/11/2026 | RF-73: el rol del remitente se resuelve sin dar de alta los dominios uno a uno (ADR-0013) |
 | 0.1.0 | 22/11/2026 | Primera versión: 43 requisitos funcionales y 20 no funcionales (29 imprescindibles, 27 de ellos en la PoC), 10 supuestos y 13 preguntas |

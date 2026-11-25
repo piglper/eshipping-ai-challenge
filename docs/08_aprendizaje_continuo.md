@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.1.1 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -42,7 +42,7 @@ Las señales **implícitas** (las tres últimas) solo refuerzan o debilitan; no 
 | **Ejemplos para el LLM** (few-shot dinámico) | Cómo extraer de un remitente o formato concreto | Correcciones validadas por doble revisión o auditoría | Continua (banco versionado) | Automático |
 | **Plantillas nuevas** | El formato fijo de un proveedor o documento | Formatos que llegan a menudo al LLM con salidas validadas | Cuando se detecta el patrón | Propuesta automática, aprobación del equipo técnico |
 | **Perfil de remitente** | Orden día-mes, zona horaria, plantillas, fiabilidad por campo | Correcciones y auditoría por remitente | Continua | Automático para el formato; la fiabilidad solo como señal de confianza |
-| **Directorio de remitentes y autoridad** | Rol y rango de una fuente por campo | Rechazos y correcciones agrupados por rol | Mensual | Propuesta automática, aprobación de operaciones |
+| **Rol del remitente y autoridad** | El perfil aprendido de cada dominio (señal 3 del [ADR-0013](adr/0013-rol-del-remitente-en-cascada.md)) y el rango de una fuente por campo | Clases de correo que manda cada dominio, expedientes en que aparece, rechazos y correcciones agrupados por rol | Mensual (el perfil, cada noche) | Propuesta automática. Operaciones solo confirma los pocos dominios que concentran el volumen; nunca se dan de alta uno a uno |
 | **Alias de expediente** | Bookings nuevos tras un roleo, referencias del cliente | Correcciones de asociación | Inmediata | Automático, al validar la corrección |
 | **Reglas de triaje** | Palabras o patrones de urgencia | Mensajes urgentes que no se marcaron como tales | Mensual | Propuesta automática, aprobación del equipo técnico |
 | **Umbrales** | Hasta dónde se puede aceptar sin revisión | Calibración y auditoría | Con cada recalibración | Subir: automático. Bajar: persona ([fiabilidad §4.3](07_fiabilidad.md#43-tres-zonas)) |
@@ -153,4 +153,5 @@ Además de mejorar la extracción, el histórico da información de negocio (RF-
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.1 | 25/11/2026 | El rol del remitente se aprende como perfil por dominio, sin directorio manual (ADR-0013) |
 | 0.1.0 | 23/11/2026 | Primera versión: señales, mecanismos de aprendizaje, control de calidad de las etiquetas, reversibilidad, gobernanza, indicadores y alcance en la PoC |
