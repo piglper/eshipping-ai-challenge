@@ -16,6 +16,13 @@ from eshipping_ai.extraction.classify import Priority, classify, lists_offered_o
         ("Cotización flete", "tarifa válida hasta", MailClass.COMMERCIAL),
         ("Factura demurrage", "invoice adjunta", MailClass.FINANCE),
         ("Boletín semanal", "nuevas grúas en la terminal", MailClass.OTHER),
+        # The booking in the subject of a thread names it; the reply is about transport.
+        (
+            "RE: BKG 990000101 / ES26900001",
+            "Orden de transporte para la recogida",
+            MailClass.TRANSPORT,
+        ),
+        ("RE: Booking nº 990000101", "se ha concedido el levante", MailClass.CUSTOMS),
     ],
 )
 def test_primary_class(subject: str, body: str, expected: MailClass) -> None:

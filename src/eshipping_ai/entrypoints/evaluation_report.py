@@ -4,10 +4,16 @@ Both hold aggregated counts only, so that the report of a confidential gold can 
 The mismatches name shipments and are written only when asked for (``--verbose``).
 """
 
+from collections import Counter
 from collections.abc import Mapping
 from typing import Any
 
 from eshipping_ai.application.evaluate import (
+    EXTRACTED_WRONG,
+    NOT_CHOSEN,
+    NOT_EXTRACTED,
+    SPURIOUS,
+    UNRESOLVED,
     EvaluationReport,
     Proportion,
     Score,
@@ -22,6 +28,24 @@ _ASSOCIATION_LABELS = {
     "noise_right": "Ruido sin asociar (correcto)",
     "noise_wrong": "Ruido asociado a un expediente",
 }
+
+
+_STAGES = {
+    "right": "Acierto",
+    NOT_EXTRACTED: "No extraído",
+    EXTRACTED_WRONG: "Extraído mal",
+    NOT_CHOSEN: "Leído, no elegido",
+    SPURIOUS: "De más",
+}
+_TIER_LABELS = {
+    "rule": "Reglas",
+    "template": "Plantilla",
+    "ml": "ML",
+    "llm": "LLM",
+    "human": "Persona",
+    UNRESOLVED: "Sin resolver (a una persona)",
+}
+_ZONE_LABELS = {"auto": "automática", "review": "revisión", "not_proposed": "no propuesto"}
 
 
 def _pct(value: float) -> str:
@@ -117,6 +141,7 @@ def render_markdown(report: EvaluationReport, *, verbose: bool = False) -> str:
     ]
     if mails.unpaired:
         lines += ["", f"{mails.unpaired} correos del gold no se encontraron en la ejecución."]
+    lines += _diagnosis(report)
     if verbose:
         lines += [
             "",
@@ -130,6 +155,59 @@ def render_markdown(report: EvaluationReport, *, verbose: bool = False) -> str:
             ),
         ]
     return "\n".join(lines) + "\n"
+
+
+def _diagnosis(report: EvaluationReport) -> list[str]:
+    """Where the values and verdicts are lost, and which tier resolves each value."""
+    fields, verdicts, mails = report.fields, report.verdicts, report.mails
+    lines = [
+        "",
+        "## Diagnóstico: dónde se pierde cada valor",
+        "",
+        "Cada valor que espera el gold, según la etapa que lo pierde. «Leído, no elegido»: "
+        "alguna observación tenía el valor correcto, pero la proyección eligió otro o ninguno. "
+        "«De más»: el sistema da un valor que el gold no espera.",
+        "",
+        "| Campo | " + " | ".join(_STAGES.values()) + " |",
+        "|---|" + "---|" * len(_STAGES),
+    ]
+    totals: Counter[str] = Counter()
+    for name, stages in fields.stages.items():
+        totals.update(stages)
+        lines.append(f"| {name} | " + " | ".join(str(stages[k]) for k in _STAGES) + " |")
+    lines.append("| **Total** | " + " | ".join(f"**{totals[k]}**" for k in _STAGES) + " |")
+    lines += [
+        "",
+        "## Diagnóstico: qué escalón resuelve cada valor",
+        "",
+        "| Escalón | Zona | Correctos | Erróneos |",
+        "|---|---|---|---|",
+    ]
+    keys = sorted({(tier, zone) for tier, zone, _ in fields.resolution})
+    for tier, zone in keys:
+        right, wrong = fields.resolution[tier, zone, True], fields.resolution[tier, zone, False]
+        zone_label = "—" if zone == UNRESOLVED else _ZONE_LABELS.get(zone, zone)
+        lines.append(f"| {_TIER_LABELS.get(tier, tier)} | {zone_label} | {right} | {wrong} |")
+    lines += [
+        "",
+        f"Precisión de lo aceptado sin revisión: {_proportion(fields.automatic_precision)}.",
+        "",
+        "## Diagnóstico: veredictos y clases",
+        "",
+        f"- Veredictos erróneos porque el valor ya lo era: {verdicts.causes['value']}.",
+        f"- Veredictos erróneos con el valor correcto (reconciliación): "
+        f"{verdicts.causes['reconciliation']}.",
+    ]
+    lines += [
+        f"  - `{expected}` dado como `{got}`: {n}"
+        for (expected, got), n in verdicts.reconciliation_errors.most_common()
+    ]
+    lines.append("- Clase principal confundida (gold → sistema):")
+    lines += [
+        f"  - {expected} → {got}: {n}"
+        for (expected, got), n in mails.primary_confusion.most_common()
+    ]
+    return lines
 
 
 def _score_json(s: Score) -> dict[str, Any]:
@@ -163,6 +241,12 @@ def report_to_json(report: EvaluationReport, *, verbose: bool = False) -> dict[s
             "micro": _score_json(total_score(fields.scores)),
             "by_field": _scores_json(fields.scores),
             "classifier": {k: _proportion_json(p) for k, p in fields.classifier.items()},
+            "stages": {k: dict(v) for k, v in fields.stages.items()},
+            "resolution": [
+                {"tier": tier, "zone": zone, "right": right, "count": n}
+                for (tier, zone, right), n in sorted(fields.resolution.items())
+            ],
+            "automatic_precision": _proportion_json(fields.automatic_precision),
         },
         "verdicts": {
             "overall": _proportion_json(verdicts.overall),
@@ -173,9 +257,18 @@ def report_to_json(report: EvaluationReport, *, verbose: bool = False) -> dict[s
                 {"gold": gold, "system": got, "count": n}
                 for (gold, got), n in sorted(verdicts.confusion.items())
             ],
+            "causes": dict(verdicts.causes),
+            "reconciliation_errors": [
+                {"gold": gold, "system": got, "count": n}
+                for (gold, got), n in sorted(verdicts.reconciliation_errors.items())
+            ],
         },
         "mails": {
             "primary_class": _proportion_json(mails.primary),
+            "primary_confusion": [
+                {"gold": gold, "system": got, "count": n}
+                for (gold, got), n in sorted(mails.primary_confusion.items())
+            ],
             "by_class": _scores_json(mails.by_class),
             "association": dict(mails.association),
             "automatic_precision": _proportion_json(mails.automatic_precision),

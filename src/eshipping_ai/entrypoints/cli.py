@@ -118,6 +118,7 @@ def _process(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
     llm = _llm(args)
     snapshot, records = ctx.erp(args.erp).read()
     seed_aliases(records, ctx.repo, snapshot.read_at)
+    senders = load_sender_directory(args.senders or ctx.config_dir / "senders.yaml")
     report = ProcessMessages(
         ctx.repo,
         ctx.objects,
@@ -126,9 +127,10 @@ def _process(ctx: Context, args: argparse.Namespace, out: TextIO) -> None:
         ctx.repo,
         ctx.clock,
         load_reconciliation_config(ctx.config_dir / "reconciliation.yaml"),
-        load_sender_directory(args.senders or ctx.config_dir / "senders.yaml"),
+        senders,
         ctx.tz,
         llm,
+        senders.parties_of(records),
     ).run()
     print(f"procesado: {_summary(report)}", file=out)
 

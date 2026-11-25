@@ -1,6 +1,6 @@
 # ADR-0009: Política de resolución de discrepancias: autoridad por campo, estado del dato, frescura y escalado a una persona
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado. Cómo se obtiene el rol (§1) lo sustituye el [ADR-0013](0013-rol-del-remitente-en-cascada.md); la regla 3 del §3 la amplía el [ADR-0014](0014-el-llm-rellena-huecos-no-sustituye.md)
 - **Fecha:** 2026-11-23
 - **Decisores:** Pablo Iglesias Peral
 - **Referencias:** decisión D6, issue #20, [arquitectura §6.2](../04_arquitectura.md#62-worker-de-asociación-y-reconciliación), [taxonomía y ambigüedades](../03_taxonomia_y_ambiguedades.md) (A-03, A-05, A-06, A-12, A-13, A-15, A-16, A-25, A-28), [análisis de datos §6](../01_analisis_datos.md#6-gold-standard-f13), [ADR-0006](0006-modelo-de-eventos-basado-en-dcsa.md), [ADR-0008](0008-estrategia-de-ia-cascada-por-etapa.md)

@@ -230,8 +230,12 @@ def test_mails_are_paired_by_file_and_position_and_noise_by_file_order() -> None
     evaluation = evaluate_mails(gold, outcomes)
     assert evaluation.primary.right == 5
     assert (evaluation.by_class["BKG"].fn, evaluation.by_class["DOC"].fp) == (1, 1)
-    assert evaluation.association == {"auto_right": 2, "auto_wrong": 1, "noise_right": 1,
-                                      "noise_wrong": 1}  # fmt: skip
+    assert evaluation.association == {
+        "auto_right": 2,
+        "auto_wrong": 1,
+        "noise_right": 1,
+        "noise_wrong": 1,
+    }
     assert evaluation.automatic_precision.rate == pytest.approx(2 / 3)
     assert evaluation.automatic_coverage.rate == pytest.approx(3 / 5)
 
@@ -247,3 +251,85 @@ def test_review_missing_and_unpaired_mails() -> None:
     assert evaluation.unpaired == 1
     assert evaluation.primary.right == 1
     assert {(m.unit, m.field) for m in evaluation.mismatches} >= {("class", "M2"), ("class", "M3")}
+
+
+# --- diagnosis (F4.3) -------------------------------------------------------------------
+
+
+def test_each_lost_value_is_traced_to_its_stage() -> None:
+    gold = {
+        "S1": {
+            "booking": {"value": "990000101"},
+            "vessel": {"value": "AURORA FICTICIA"},
+            "vessel_departure": {"value": "2026-10-08"},
+            "vessel_arrival_pod": {"value": "2026-10-24"},
+            "customs_release": {"value": "2026-10-06"},
+            "stuffing": {"value": None},
+        }
+    }
+    extracted = {
+        "S1": {
+            "booking": Extracted("990000101", None, "rule", "auto", ("990000101",)),
+            # Read right, but an older reading was chosen.
+            "vessel": Extracted(
+                "BOREAL FICTICIA", None, "rule", "auto", ("BOREAL FICTICIA", "AURORA FICTICIA")
+            ),
+            # Read wrong, and sent to review.
+            "vessel_departure": Extracted("2026-10-09", "EST", "rule", "review", ("2026-10-09",)),
+            # Read right, but only from a source that cannot win on its own.
+            "vessel_arrival_pod": Extracted(None, None, candidates=("2026-10-24",)),
+            "stuffing": Extracted("2026-09-30", "PLN", "rule", "auto", ("2026-09-30",)),
+        }
+    }
+    evaluation = evaluate_fields(gold, extracted)
+    stages = {name: dict(counter) for name, counter in evaluation.stages.items()}
+    assert stages == {
+        "booking": {"right": 1},
+        "vessel": {"not_chosen": 1},
+        "vessel_departure": {"extracted_wrong": 1},
+        "vessel_arrival_pod": {"not_chosen": 1},
+        "customs_release": {"not_extracted": 1},
+        "stuffing": {"spurious": 1},
+    }
+    assert evaluation.resolution == {
+        ("rule", "auto", True): 1,
+        ("rule", "auto", False): 1,
+        ("rule", "review", False): 1,
+        ("unresolved", "unresolved", False): 2,
+    }
+    assert evaluation.automatic_precision.rate == 0.5
+
+
+def test_wrong_verdicts_are_split_between_the_value_and_the_reconciliation() -> None:
+    gold = {
+        "S1": {
+            "vessel": {"value": "AURORA FICTICIA", "verdict": "ERP_ERROR"},
+            "booking": {"value": "990000101", "verdict": "MATCH"},
+        }
+    }
+    verdicts = {
+        "S1": [
+            verdict("vessel", VerdictCode.DISCREPANCY),
+            verdict("booking", VerdictCode.ERP_ERROR),
+        ]
+    }
+    extracted = {
+        "S1": {
+            "vessel": Extracted("BOREAL FICTICIA", None),
+            "booking": Extracted("990000101", None),
+        }
+    }
+    evaluation = evaluate_verdicts(gold, verdicts)
+    evaluation.attribute(evaluate_fields(gold, extracted).mismatches)
+    assert evaluation.causes == {"value": 1, "reconciliation": 1}
+    assert evaluation.reconciliation_errors == {("MATCH", "ERP_ERROR"): 1}
+
+
+def test_the_primary_classes_that_are_confused_are_counted() -> None:
+    gold = {"S1": [["TRP"], ["TRP"], ["CUS"]]}
+    outcomes = [
+        outcome("S1.eml", 0, (MailClass.BOOKING,)),
+        outcome("S1.eml", 1, (MailClass.BOOKING, MailClass.TRANSPORT)),
+        outcome("S1.eml", 2, (MailClass.CUSTOMS,)),
+    ]
+    assert evaluate_mails(gold, outcomes).primary_confusion == {("TRP", "BKG"): 2}

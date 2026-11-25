@@ -3,6 +3,7 @@ import pytest
 from eshipping_ai.domain.policy import project_field, rank_for
 from eshipping_ai.domain.vocabulary import (
     EventClassifier,
+    ExtractionTier,
     ObservationStatus,
     SourceRank,
     SourceRole,
@@ -90,6 +91,27 @@ def test_only_informative_sources_leave_the_field_pending() -> None:
     state = project(customer)
     assert (state.value, state.rule) == (None, "only_informative")
     assert state.pending_confirmation == (customer.observation_id,)
+
+
+def llm_observation(value: str, known: str):  # type: ignore[no-untyped-def]
+    found = observation(DEP, value, known=known, zone=Zone.REVIEW, confidence=0.7)
+    provenance = found.provenance.model_copy(update={"tier": ExtractionTier.LLM})
+    return found.model_copy(
+        update={"provenance": provenance, "observation_id": f"llm-{value}-{known}"}
+    )
+
+
+def test_the_model_fills_a_gap_but_never_displaces_the_rules() -> None:
+    rules = observation(DEP, "2026-10-06", known="2026-09-15")
+    later_model = llm_observation("2026-10-09", "2026-09-20")
+    state = project(rules, later_model)
+    assert (state.value, state.rule) == ("2026-10-06", "freshest_reliable")
+    assert state.pending_confirmation == (later_model.observation_id,)
+    # Alone, the model's value is the current one (in its review zone).
+    alone = project(later_model)
+    assert alone.value == "2026-10-09"
+    # Agreeing with the rules, it is not pending.
+    assert project(rules, llm_observation("2026-10-06", "2026-09-20")).pending_confirmation == ()
 
 
 def test_a_human_review_prevails_but_flags_a_later_contradiction() -> None:

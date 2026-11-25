@@ -63,6 +63,7 @@ class Pipeline:
         snapshot, records = self.erp.read()
         self.shipments = seed_aliases(records, self.repo, snapshot.read_at)
         self.senders = load_sender_directory(ROOT / "config" / "senders.yaml")
+        self.parties = self.senders.parties_of(records)
 
     def process(self, llm: LLMClient | None = None) -> ProcessReport:
         return ProcessMessages(
@@ -76,6 +77,7 @@ class Pipeline:
             self.senders,
             MADRID,
             llm,
+            self.parties,
         ).run()
 
     def reconcile(self) -> ReconcileReport:
@@ -225,8 +227,13 @@ def test_an_injected_instruction_cannot_move_a_verdict(
         return {"facts": []}
 
     report = pipeline.process(FakeLLMClient(obey))
-    # The model obeys the mail, but its quote names the departure, not the arrival.
-    assert report.llm_rejected["field_contradicts_quote"] == 1
+    # Whether or not the model is asked about that mail, an obeyed instruction never gets
+    # through: its quote names the departure, not the arrival (test_llm_extractor).
+    assert report.llm_rejected["field_contradicts_quote"] <= 1
+    assert not any(
+        o.field == "vessel_arrival_pod" and o.value == "2027-01-01"
+        for o in pipeline.repo.observations_for("ES26900004")
+    )
     # The rules do read the injected departure; its sender is unknown, so it has the lowest
     # authority and waits for confirmation instead of winning.
     injected = [
