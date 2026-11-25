@@ -29,6 +29,7 @@ eshipping = "eshipping_ai.entrypoints.cli:main"
 
 [dependency-groups]
 dev = [
+    "hypothesis==6.170.17",
     "import-linter==2.17",
     "mypy==2.4.1",
     "pre-commit==4.7.0",
@@ -115,11 +116,18 @@ warn_unreachable = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
+markers = [
+    "integration: runs on the generated synthetic data set, end to end through the real adapters",
+]
 
 [tool.coverage.run]
 source = ["eshipping_ai"]
 branch = true
+# Streamlit runs the page script on its own, out of coverage's sight; the page is tested
+# with AppTest in tests/entrypoints/test_streamlit_app.py.
+omit = ["*/entrypoints/streamlit_app.py"]
 
 [tool.coverage.report]
+fail_under = 90
 show_missing = true
 skip_covered = true
