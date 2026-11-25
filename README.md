@@ -50,6 +50,7 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
 
 ## Documentación
 
+- **[Resumen ejecutivo](docs/00_resumen_ejecutivo.md)**: la propuesta en una página
 - [Plan de actuación](docs/PLAN.md)
 - [Índice de documentación](docs/README.md)
 - [Registro de decisiones (ADR)](docs/adr/README.md)
