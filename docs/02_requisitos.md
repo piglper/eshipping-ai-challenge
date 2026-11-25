@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.0 |
+| Versión | 0.1.1 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 22/11/2026 |
@@ -97,7 +97,7 @@
 | RF-70 | El operativo puede validar o corregir cada dato y cada discrepancia desde la interfaz | M | ✅ | Una corrección queda guardada como evento de fuente humana con autor y fecha | E5.7 |
 | RF-71 | Las correcciones validadas se reutilizan: ejemplos para el LLM, nuevas plantillas y ajuste de umbrales | S | 🟡 | Tras corregir un caso sintético, un correo equivalente se extrae bien | E5.7 |
 | RF-72 | Evitar aprender de errores: control de calidad de las correcciones (doble revisión de una muestra, reglas de coherencia, reversibilidad) | M | 📐 | Diseño en `08_aprendizaje_continuo.md` | E7 |
-| RF-73 | Aprender de la relación con clientes y proveedores: perfiles por remitente (formato de fechas, fiabilidad histórica, plantillas) | S | 🟡 | El perfil de un remitente sintético cambia la interpretación de sus fechas | E5.7, A-09 |
+| RF-73 | Aprender de la relación con clientes y proveedores: perfiles por remitente (rol, formato de fechas, fiabilidad histórica, plantillas), sin dar de alta los dominios uno a uno (ADR-0013) | S | 🟡 | El rol de un remitente sintético sale del directorio curado o de las partes de su expediente en el ERP, y su perfil cambia la interpretación de sus fechas | E5.7, A-09 |
 
 ## 3. Requisitos no funcionales
 
@@ -206,4 +206,5 @@ Se priorizan por su efecto en el diseño. Las marcadas con ★ conviene plantear
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.1 | 25/11/2026 | RF-73: el rol del remitente se resuelve sin dar de alta los dominios uno a uno (ADR-0013) |
 | 0.1.0 | 22/11/2026 | Primera versión: 43 requisitos funcionales y 20 no funcionales (29 imprescindibles, 27 de ellos en la PoC), 10 supuestos y 13 preguntas |

@@ -14,6 +14,7 @@ a line break and the clean body for a message, or the text of the attachment for
 """
 
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, tzinfo
 
@@ -39,7 +40,7 @@ from eshipping_ai.domain.ports import (
     ThreadMessage,
     ThreadView,
 )
-from eshipping_ai.domain.senders import SenderDirectory
+from eshipping_ai.domain.senders import ResolvedSender, SenderDirectory
 from eshipping_ai.domain.vocabulary import (
     AssociationStatus,
     ExtractionTier,
@@ -89,6 +90,7 @@ class ProcessReport:
     llm_input_tokens: int = 0
     llm_output_tokens: int = 0
     llm_rejected: Counter[str] = field(default_factory=Counter)
+    roles: Counter[str] = field(default_factory=Counter)
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,6 +129,7 @@ class ProcessMessages:
         senders: SenderDirectory,
         local_tz: tzinfo,
         llm: LLMClient | None = None,
+        parties: Mapping[str, Mapping[SourceRole, Sequence[str]]] | None = None,
     ) -> None:
         """Create the use case.
 
@@ -142,6 +145,8 @@ class ProcessMessages:
             local_tz: Time zone of the places of the events (A-11).
             llm: Model for what the rules leave pending; without it the cascade stops at
                 the rules and what is pending is left for an operator (``--no-llm``).
+            parties: Shipment to role to the names of its parties in the ERP, which give
+                the role of the senders the directory does not know (ADR-0013).
         """
         self._inbox = inbox
         self._objects = objects
@@ -153,6 +158,7 @@ class ProcessMessages:
         self._senders = senders
         self._llm = llm
         self._tz = local_tz
+        self._parties = parties or {}
 
     def run(self) -> ProcessReport:
         """Process every message that has not been classified yet."""
@@ -265,7 +271,8 @@ class ProcessMessages:
             for match in matches
         )
         report.in_review += sum(match.status is AssociationStatus.IN_REVIEW for match in matches)
-        profile = self._senders.profile_for(message.sender_address)
+        profile = self._sender(message.sender_address, matches)
+        report.roles[f"{profile.role.value}:{profile.basis}"] += 1
         sources = [(read.message, None), *((text, doc_id) for doc_id, text in read.documents)]
         for text, document_id in sources:
             candidates = extract_candidates(
@@ -290,6 +297,14 @@ class ProcessMessages:
                     report.observations += new
                     report.zones[observation.zone.value] += new
                     report.tiers[candidate.tier.value] += new
+
+    def _sender(self, address: str, matches: list[Match]) -> ResolvedSender:
+        """Resolve the sender against the parties of every shipment the message is about."""
+        parties: dict[SourceRole, list[str]] = {}
+        for match in matches:
+            for role, names in self._parties.get(match.shipment_id, {}).items():
+                parties.setdefault(role, []).extend(names)
+        return self._senders.resolve(address, parties)
 
     def _ask_llm(
         self,

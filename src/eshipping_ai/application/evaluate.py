@@ -12,6 +12,12 @@ Four units are scored, each against its own part of the gold:
 - **Association**: the shipment of each mail, telling apart the automatic ones, the ones
   left for review and the noise.
 
+Each failure is also traced to the stage that lost it (F4.3): a field that was not
+extracted, extracted wrong, or extracted right but not chosen as current value; a verdict
+wrong because its value was, or wrong on its own (the reconciliation). Each expected value
+is counted by the tier and zone that resolved it, so that the share left to people and the
+errors accepted without review are visible.
+
 The gold may cover several system fields with one name: ``cutoff`` covers the three
 cut-offs and ``equipment`` the number of containers. Fields the gold leaves out of a
 shipment are not scored. Every proportion carries its 95 % Wilson interval, because the
@@ -170,10 +176,25 @@ class Mismatch:
 
 @dataclass(frozen=True, slots=True)
 class Extracted:
-    """The current value of a system field and the classifier of the observation behind it."""
+    """The current value of a system field, how it was obtained and what else was read.
+
+    ``tier`` and ``zone`` are those of the observation behind the value; ``candidates`` are
+    the values of every observation of the field, chosen or not.
+    """
 
     value: str | None
     classifier: str | None
+    tier: str | None = None
+    zone: str | None = None
+    candidates: tuple[str, ...] = ()
+
+
+# Stage that lost a value of the gold (F4.3).
+NOT_EXTRACTED = "not_extracted"
+EXTRACTED_WRONG = "extracted_wrong"
+NOT_CHOSEN = "not_chosen"
+SPURIOUS = "spurious"
+UNRESOLVED = "unresolved"
 
 
 @dataclass(slots=True)
@@ -182,7 +203,17 @@ class FieldEvaluation:
 
     scores: dict[str, Score] = field(default_factory=lambda: defaultdict(Score))
     classifier: dict[str, Proportion] = field(default_factory=lambda: defaultdict(Proportion))
+    stages: dict[str, Counter[str]] = field(default_factory=lambda: defaultdict(Counter))
+    resolution: Counter[tuple[str, str, bool]] = field(default_factory=Counter)
     mismatches: list[Mismatch] = field(default_factory=list)
+
+    @property
+    def automatic_precision(self) -> Proportion:
+        """Right values among those accepted without review (RNF-11)."""
+        accepted = {k: n for k, n in self.resolution.items() if k[1] == "auto"}
+        return Proportion(
+            right=sum(n for k, n in accepted.items() if k[2]), total=sum(accepted.values())
+        )
 
 
 def _dates(value: str) -> tuple[date, ...] | None:
@@ -262,7 +293,8 @@ def evaluate_fields(
     tolerance = tolerance_days or {}
     evaluation = FieldEvaluation()
     for shipment_id, fields in gold.items():
-        given = {f: e for f, e in extracted.get(shipment_id, {}).items() if e.value is not None}
+        system = extracted.get(shipment_id, {})
+        given = {f: e for f, e in system.items() if e.value is not None}
         for name, expectation in fields.items():
             if name not in GOLD_TO_FIELDS or "value" not in expectation:
                 continue
@@ -283,6 +315,12 @@ def evaluate_fields(
                 if chosen:
                     used.add(chosen)
                 score.count(expected=want is not None, given=chosen is not None, right=bool(match))
+                if want is not None:
+                    stage = _stage(name, want, candidates, system, chosen, match, tolerance)
+                    evaluation.stages[name][stage] += 1
+                    evaluation.resolution[_resolution(system, chosen, match)] += 1
+                elif chosen is not None:
+                    evaluation.stages[name][SPURIOUS] += 1
                 if match and "classifier" in expectation:
                     evaluation.classifier[name].add(
                         ok=given[match].classifier == expectation["classifier"]
@@ -295,10 +333,44 @@ def evaluate_fields(
             if name == "cutoff":
                 for extra in (f for f in GOLD_TO_FIELDS[name] if f in given and f not in used):
                     score.count(expected=False, given=True, right=False)
+                    evaluation.stages[name][SPURIOUS] += 1
                     evaluation.mismatches.append(
                         Mismatch("field", shipment_id, extra, "None", str(given[extra].value))
                     )
     return evaluation
+
+
+def _stage(  # noqa: PLR0913, PLR0917 - one comparison and everything known about it
+    name: str,
+    want: str,
+    candidates: tuple[str, ...],
+    system: Mapping[str, Extracted],
+    chosen: str | None,
+    match: str | None,
+    tolerance: Mapping[str, int],
+) -> str:
+    """Tell where an expected value was lost, or ``right`` if it was not."""
+    if match:
+        return "right"
+    read = [v for f in candidates for v in system.get(f, _NOTHING).candidates]
+    if not read:
+        return NOT_EXTRACTED
+    if any(values_agree(name, want, value, tolerance.get(name, 0)) for value in read):
+        return NOT_CHOSEN
+    return EXTRACTED_WRONG
+
+
+def _resolution(
+    system: Mapping[str, Extracted], chosen: str | None, match: str | None
+) -> tuple[str, str, bool]:
+    """Tier, zone and correctness of the value given for an expected one."""
+    if chosen is None:
+        return (UNRESOLVED, UNRESOLVED, False)
+    value = system[chosen]
+    return (value.tier or UNRESOLVED, value.zone or UNRESOLVED, match is not None)
+
+
+_NOTHING = Extracted(None, None)
 
 
 # --- verdicts ---------------------------------------------------------------------------
@@ -312,6 +384,23 @@ class VerdictEvaluation:
     confusion: Counter[tuple[str, str]] = field(default_factory=Counter)
     actionable: Score = field(default_factory=Score)
     mismatches: list[Mismatch] = field(default_factory=list)
+    causes: Counter[str] = field(default_factory=Counter)
+    reconciliation_errors: Counter[tuple[str, str]] = field(default_factory=Counter)
+
+    def attribute(self, field_mismatches: Sequence[Mismatch]) -> None:
+        """Split the wrong verdicts between a wrong value and the reconciliation itself.
+
+        Args:
+            field_mismatches: The values the extraction got wrong, by shipment and field.
+        """
+        wrong_values = {(m.shipment_id, m.field) for m in field_mismatches}
+        wrong_values |= {(m.shipment_id, "cutoff") for m in field_mismatches if "cutoff" in m.field}
+        for miss in self.mismatches:
+            if (miss.shipment_id, miss.field) in wrong_values:
+                self.causes["value"] += 1
+            else:
+                self.causes["reconciliation"] += 1
+                self.reconciliation_errors[miss.expected, miss.got] += 1
 
     @property
     def overall(self) -> Proportion:
@@ -379,6 +468,7 @@ class MailEvaluation:
     """Classes and association of the mails of the gold."""
 
     primary: Proportion = field(default_factory=Proportion)
+    primary_confusion: Counter[tuple[str, str]] = field(default_factory=Counter)
     by_class: dict[str, Score] = field(default_factory=lambda: defaultdict(Score))
     association: Counter[str] = field(default_factory=Counter)
     unpaired: int = 0
@@ -478,6 +568,7 @@ def evaluate_mails(
         evaluation.primary.add(ok=primary_ok)
         if not primary_ok:
             want, have = (classes[0] if classes else "-"), (got[0] if got else "-")
+            evaluation.primary_confusion[want, have] += 1
             evaluation.mismatches.append(Mismatch("class", key, label, want, have))
         for name in set(classes) | set(got):
             evaluation.by_class[name].count(
@@ -519,10 +610,21 @@ def _extracted(
     states: Sequence[FieldState], observations: Sequence[Observation]
 ) -> dict[str, Extracted]:
     by_id = {o.observation_id: o for o in observations}
+    read: dict[str, list[str]] = defaultdict(list)
+    for item in observations:
+        read[item.field].append(item.value)
     result = {}
     for state in states:
         winner = by_id.get(state.winning_observation_id or "")
-        result[state.field] = Extracted(state.value, winner.classifier.value if winner else None)
+        result[state.field] = Extracted(
+            value=state.value,
+            classifier=winner.classifier.value if winner else None,
+            tier=winner.provenance.tier.value if winner else None,
+            zone=winner.zone.value if winner else None,
+            candidates=tuple(read.get(state.field, ())),
+        )
+    for name, values in read.items():
+        result.setdefault(name, Extracted(None, None, candidates=tuple(values)))
     return result
 
 
@@ -570,12 +672,15 @@ class EvaluateRun:
             for k, v in _mapping(gold.get("mails")).items()
             if isinstance(v, list)
         }
+        fields = evaluate_fields(expectations, extracted, tolerance)
+        verdict_evaluation = evaluate_verdicts(expectations, verdicts)
+        verdict_evaluation.attribute(fields.mismatches)
         return EvaluationReport(
             gold_version=str(meta.get("version", "")),
             gold_review=str(meta.get("review", "")),
             shipments=len(expectations),
-            fields=evaluate_fields(expectations, extracted, tolerance),
-            verdicts=evaluate_verdicts(expectations, verdicts),
+            fields=fields,
+            verdicts=verdict_evaluation,
             mails=evaluate_mails(gold_mails, self._processing.mail_outcomes()),
         )
 

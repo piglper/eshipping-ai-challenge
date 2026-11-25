@@ -52,6 +52,12 @@ _BOOKING_RE = re.compile(
     rf"(?<![A-Za-z])(?:booking|bkg|reserva){_BOOKING_FILLER}\.?\s*[:=#]?\s*{_BOOKING_VALUE}",
     re.IGNORECASE,
 )
+# Only the label: "Booking confirmation 990000101" also says what the message is about.
+_BOOKING_LABEL_RE = re.compile(
+    r"(?<![A-Za-z])(?:booking|bkg|reserva)(?:\s+(?:number|no|ref|reference|nº|n°|num|número))*"
+    rf"\.?\s*[:=#]?\s*{_BOOKING_VALUE}",
+    re.IGNORECASE,
+)
 _PREVIOUS_BOOKING_RE = re.compile(
     rf"(?:replaces|replacing|supersedes|sustituye(?: a)?(?: al)?|reemplaza(?: a)?(?: al)?)"
     rf"\s+(?:booking\s+)?{_BOOKING_VALUE}",
@@ -101,6 +107,22 @@ def find_containers(text: str) -> list[ReferenceMention]:
             )
         )
     return found
+
+
+def strip_booking_labels(text: str) -> str:
+    """Drop the word that labels a booking number, keeping the number.
+
+    In ``RE: BKG 990000101`` the word is the name of an identifier, not the topic of the
+    message: a whole thread keeps it in the subject, whatever each reply is about.
+
+    Args:
+        text: Text to clean.
+
+    Returns:
+        The text with every ``booking <number>`` reduced to the number; ``booking
+        confirmation <number>`` is kept, because it does say what the message is about.
+    """
+    return _BOOKING_LABEL_RE.sub(lambda match: match.group("v"), text)
 
 
 def find_bookings(text: str) -> list[ReferenceMention]:

@@ -2,7 +2,9 @@
 
 This is the first tier of the classifier (ADR-0008): cheap, explainable and with no model.
 Keywords come from the taxonomy (docs/03_taxonomia_y_ambiguedades.md §2). A hit in the
-subject weighs more than a hit in the body. A message with no signal is ``OTR``, and a
+subject weighs more than a hit in the body. The word that labels a booking number
+(``BKG 990000101``) does not count: a thread keeps it in the subject whatever each reply is
+about (F4.3). A message with no signal is ``OTR``, and a
 message that carries no identifier at all is noise: it cannot belong to a shipment.
 """
 
@@ -12,7 +14,7 @@ from enum import StrEnum
 
 from eshipping_ai.domain.vocabulary import MailClass
 from eshipping_ai.extraction.locations import strip_accents
-from eshipping_ai.extraction.references import find_references
+from eshipping_ai.extraction.references import find_references, strip_booking_labels
 
 SUBJECT_WEIGHT = 3
 BODY_WEIGHT = 1
@@ -122,7 +124,8 @@ def classify(subject: str, body: str) -> list[ClassMatch]:
         The matching classes by decreasing score, the first one marked as primary; ``OTR``
         alone if no rule matches.
     """
-    head, text = strip_accents(subject), strip_accents(body)
+    head = strip_accents(strip_booking_labels(subject))
+    text = strip_accents(strip_booking_labels(body))
     scores = {
         mail_class: SUBJECT_WEIGHT * _hits(head, words) + BODY_WEIGHT * _hits(text, words)
         for mail_class, words in _KEYWORDS.items()

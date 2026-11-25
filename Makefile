@@ -62,7 +62,8 @@ demo-llm: sample ## La demo con el escalón del LLM (Ollama en local; MODEL=<mod
 evaluate: demo ## Informe de evaluación sobre los datos sintéticos (data_sample/build/evaluacion.md)
 	$(ESHIPPING) evaluate --gold data_sample/build/gold.json --out data_sample/build/evaluacion.md
 
-REAL_DIR := data/output/eval_real
+REAL_TAG := $(if $(MODEL),_$(subst :,_,$(subst .,_,$(MODEL))),)
+REAL_DIR := data/output/eval_real$(REAL_TAG)
 REAL_NOW := 2026-11-22T12:00:00+01:00
 REAL_CLI := $(BIN)/python -m eshipping_ai.entrypoints.cli --workdir $(REAL_DIR) --now $(REAL_NOW)
 
@@ -70,7 +71,7 @@ evaluate-real: ## Evaluación sobre la muestra real, solo en local: todo queda e
 	rm -rf $(REAL_DIR)
 	$(REAL_CLI) run data/mails_muestra --erp data/expedientes_prueba_tecnica.csv --senders data/config/senders.yaml \
 		$(if $(MODEL),--model $(MODEL),--no-llm) > $(REAL_DIR).log 2>&1
-	$(REAL_CLI) evaluate --gold data/gold/gold_standard.json --out data/output/evaluacion/real$(if $(MODEL),_$(subst :,_,$(MODEL)),).md
+	$(REAL_CLI) evaluate --gold data/gold/gold_standard.json --out data/output/evaluacion/real$(REAL_TAG).md
 
 ui: ## Vista para operativos en Streamlit sobre la base de la demo (ESHIPPING_WORKDIR para otra)
 	ESHIPPING_WORKDIR=$${ESHIPPING_WORKDIR:-$(DEMO_DIR)} ESHIPPING_ERP=$${ESHIPPING_ERP:-data_sample/build/erp.csv} \

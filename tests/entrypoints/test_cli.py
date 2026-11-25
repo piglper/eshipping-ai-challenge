@@ -84,7 +84,7 @@ def test_evaluate_lists_the_mismatches_only_when_asked(
     gold = str(synthetic_dir / "gold.json")
     output = cli(workdir, "evaluate", "--gold", gold, "--verbose")
     assert "## Fallos (solo para uso local" in output
-    assert "| class | ES26900003 | M3 | VSL | BKG |" in output
+    assert "| class | ES26900003 | M3 | VSL | OTR |" in output
     report = json.loads(cli(workdir, "evaluate", "--gold", gold, "--format", "json"))
     assert report["verdicts"]["overall"]["rate"] == 1.0 and "mismatches" not in report
     target = workdir / "eval" / "report.md"

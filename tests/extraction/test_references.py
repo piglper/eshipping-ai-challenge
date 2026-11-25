@@ -7,6 +7,7 @@ from eshipping_ai.extraction.references import (
     find_containers,
     find_operations,
     find_references,
+    strip_booking_labels,
 )
 
 # SYNU1000019 and SYNU3000039 are invented containers with a valid ISO 6346 check digit.
@@ -76,3 +77,12 @@ def test_find_references_returns_everything_in_order() -> None:
         ReferenceKind.BOOKING,
         ReferenceKind.CONTAINER,
     ]
+
+
+def test_booking_labels_are_dropped_but_a_confirmation_is_kept() -> None:
+    assert strip_booking_labels("RE: BKG 990000101 - booking nº 990000102") == (
+        "RE: 990000101 - 990000102"
+    )
+    assert strip_booking_labels("Booking confirmation 990000101") == (
+        "Booking confirmation 990000101"
+    )

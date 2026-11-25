@@ -86,6 +86,8 @@ shipments:
       Locode Destino: USNYC
       Buque: AURORA FICTICIA
       Línea Transporte: NAVIERA FICTICIA
+      Transportistas: "TRANSPORTES INVENTADOS S.L."
+      Agente Aduana: "ADUANAS EJEMPLO S.L."
       Cont: "1"
       TEUS: "2"
       Vol.(m3): "58,000"
@@ -188,6 +190,8 @@ shipments:
       Locode Destino: BRSSZ
       Buque: BOREAL FICTICIA
       Línea Transporte: NAVIERA FICTICIA
+      Transportistas: ""
+      Agente Aduana: ""
       Cont: "2"
       TEUS: "2"
       Vol.(m3): "56,000"
@@ -274,6 +278,8 @@ shipments:
       Locode Destino: CNSHA
       Buque: DORADA FICTICIA
       Línea Transporte: NAVIERA FICTICIA
+      Transportistas: "TRANSPORTES INVENTADOS S.L."
+      Agente Aduana: ""
       Cont: "1"
       TEUS: "2"
       Vol.(m3): "60,000"
@@ -391,6 +397,8 @@ shipments:
       Locode Destino: MXVER
       Buque: ESMERALDA FICTICIA
       Línea Transporte: NAVIERA FICTICIA
+      Transportistas: "TRANSPORTES INVENTADOS S.L."
+      Agente Aduana: ""
       Cont: "1"
       TEUS: "1"
       Vol.(m3): "28,000"
