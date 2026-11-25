@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.3.0 |
+| Versión | 0.4.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
@@ -418,7 +418,42 @@ Elementos a revisar al mes (porcentaje de correos operativos con algún elemento
 
 - **F4.4 (#42):** se miden en la PoC los tiempos por unidad, los tokens por llamada y la memoria, y se recalculan las tablas de §9.3 a §9.5.
 - **F4.3 (#41):** se mide el porcentaje resuelto en cada escalón, que fija el porcentaje real que llega al LLM y a revisión.
-- **F4.5 (#44):** prueba de volumen con correos sintéticos generados a partir de plantillas para comprobar el rendimiento por worker y extrapolar al pico.
+- **F4.5 (#44):** prueba de volumen con correos sintéticos generados a partir de plantillas para comprobar el rendimiento por worker y extrapolar al pico. Resultado en §9.10.
+
+### 9.10 Prueba de volumen (F4.5)
+
+**Cómo se hace.** `make volume` replica los 4 expedientes sintéticos 715 veces, lo que da **2.860 expedientes y 10.010 mensajes** (715 de ellos, ruido). Cada copia es un expediente distinto: se renumeran el expediente, los bookings y los contenedores (con su dígito de control), y cada correo lleva una línea de despedida propia para que ninguno sea un duplicado. Se procesa sin LLM, en un solo proceso con SQLite, en el Mac de la PoC. Se reproduce con `make volume` (y `COPIES=<n>` para otro tamaño).
+
+| Etapa | 10.010 mensajes | Por unidad | 2.506 mensajes (control de linealidad) |
+|---|---|---|---|
+| Ingesta (parseo, división del hilo, deduplicación) | 24,3 s | 2,4 ms por mensaje | 5,8 s |
+| Procesado (clasificación, rol, asociación y extracción) | 32,9 s | 3,3 ms por mensaje | 8,8 s |
+| Reconciliación | 8,8 s | 3,1 ms por expediente | 2,2 s |
+| **Total** | **66 s ≈ 9.100 mensajes por minuto** | | 16,8 s |
+| Memoria del proceso | ≈ 200 MB de máximo residente | | |
+| Base de datos | 96 MB (≈ 9,6 KB por mensaje, con índices) | | 22 MB |
+| Almacén de objetos (cuerpos limpios) | 89 MB | | 22 MB |
+
+**Calidad a escala:** idéntica a la del conjunto base. La asociación automática acierta 9.295 de 9.295, la extracción está al 100 %, los veredictos son exactos en 20.020 de 20.020 y la clase principal, en el mismo 85,7 %. Ningún expediente se confunde con otro, aunque comparten textos, buques y fechas.
+
+**Extrapolación al pico** (con los parámetros de §9.1: 25 % de ruido y 1,5 mensajes por correo operativo):
+
+| | 100.000/mes | 150.000/mes | 300.000/mes |
+|---|---|---|---|
+| Mensajes en el minuto pico | ≈ 32 | ≈ 47 | ≈ 94 |
+| Margen de un solo proceso sobre el pico | ≈ 290× | ≈ 195× | ≈ 97× |
+| Cómputo de todo el mes, sin LLM ni OCR | ≈ 15 min | ≈ 23 min | ≈ 46 min |
+| Base de datos al año (9,6 KB por mensaje) | ≈ 16 GB | ≈ 23 GB | ≈ 46 GB |
+
+- **El coste crece de forma lineal.** Con 4 veces más mensajes, cada etapa tarda entre 3,7 y 4,2 veces más: ni la asociación ni la deduplicación se degradan al crecer el índice de alias (2.860 expedientes).
+- **Confirma la conclusión de §9.3.** Sin LLM ni OCR, el procesado es una fracción mínima de un núcleo, incluso a 300.000 correos al mes. Las réplicas las fija la disponibilidad, y lo que limita es el LLM (§9.4), el OCR y la revisión humana (§9.6).
+- **La base de datos** queda dentro del rango de §9.5 (10–25 GB al año con 100.000 correos, contando índices).
+
+**Lo que no prueba:**
+- No hay PDF ni OCR en el conjunto sintético; esa etapa sigue con los tiempos supuestos de §9.1.
+- Los correos sintéticos son cortos y poco variados.
+- Es un solo proceso con SQLite, sin colas ni red. Mide el coste algorítmico, no el de la plataforma de producción (PostgreSQL y workers, ADR-0007 y ADR-0011).
+- El LLM se midió aparte (F4.4 y F4.4b).
 
 ## 10. Trazabilidad: requisitos y componentes
 
@@ -652,6 +687,7 @@ Como la clave de idempotencia incluye la versión, reprocesar con la misma versi
 | 0.1.0 | 23/11/2026 | Primera versión: impulsores, estilo, C4 niveles 1 a 3, funcionamiento de la canalización y análisis de capacidad a 100.000, 150.000 y 300.000 correos al mes |
 | 0.1.1 | 23/11/2026 | D5 aceptada (ADR-0008) |
 | 0.1.2 | 23/11/2026 | D6 aceptada (ADR-0009) |
+| 0.4.0 | 25/11/2026 | §9.10: resultado de la prueba de volumen (F4.5) con 10.010 mensajes sintéticos |
 | 0.3.0 | 25/11/2026 | §9 recalibrado con las mediciones de F4.4: tokens por llamada (1.750 y 200), tiempos por unidad y latencia del LLM |
 | 0.2.2 | 24/11/2026 | La regla de dependencias ya se comprueba en el CI con `import-linter` |
 | 0.2.1 | 23/11/2026 | D7 y D8 aceptadas (ADR-0011 y ADR-0012) |
