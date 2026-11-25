@@ -26,7 +26,7 @@ from eshipping_ai.domain.model import (
     ShipmentAlias,
     Verdict,
 )
-from eshipping_ai.domain.vocabulary import AliasType, Priority
+from eshipping_ai.domain.vocabulary import AliasType, AssociationStatus, MailClass, Priority
 
 # --- Values exchanged through the ports ----------------------------------------
 
@@ -76,6 +76,21 @@ class ThreadView(DomainModel):
 
     mail: Mail
     messages: tuple[ThreadMessage, ...]
+
+
+class MailOutcome(DomainModel):
+    """What the processing made of one mail: the classes and shipments of its own message.
+
+    A mail that holds other mails is not an outcome itself: each mail it holds is. The
+    classes come primary first; both tuples are empty if the mail had no message of its own
+    or it has not been processed.
+    """
+
+    mail_id: str
+    source_ref: str | None
+    position: NonNegativeInt | None
+    classes: tuple[MailClass, ...]
+    shipments: tuple[tuple[str, AssociationStatus], ...]
 
 
 class ParsedDocument(DomainModel):
@@ -237,6 +252,10 @@ class ProcessingStore(Protocol):
 
     def associations_for(self, shipment_id: str) -> Sequence[Association]:
         """Return the messages associated with a shipment."""
+        ...
+
+    def mail_outcomes(self) -> Sequence[MailOutcome]:
+        """Return what the processing made of every mail, by source and position."""
         ...
 
 

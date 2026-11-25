@@ -68,6 +68,8 @@ mail = Table(
     Column("raw_object_key", Text, nullable=False),
     Column("size_bytes", Integer, nullable=False),
     Column("parent_mail_id", String(40), ForeignKey("mail.mail_id")),
+    Column("source_ref", Text),
+    Column("position", Integer),
     Index("ix_mail_sha256", "sha256"),
 )
 

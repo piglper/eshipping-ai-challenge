@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.1.1 |
+| Versión | 0.1.2 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
-| Última actualización | 23/11/2026 |
+| Última actualización | 25/11/2026 |
 | Tarea | F2.3 (#18) |
 | Requisitos | RF-03, RF-06, RF-29, RF-43, RF-44, RF-50 a RF-53, RF-55, RF-60, RF-61, RF-70, RNF-04, RNF-41, RNF-43 |
 | Decisiones relacionadas | [ADR-0006](adr/0006-modelo-de-eventos-basado-en-dcsa.md) (eventos DCSA), [ADR-0007](adr/0007-monolito-modular-con-workers-por-etapa.md) (workers y colas), [ADR-0009](adr/0009-politica-de-resolucion-de-discrepancias.md) (valor vigente y veredictos); almacenamiento de producción pendiente (D7, #27) |
@@ -58,7 +58,7 @@ erDiagram
 
 | Entidad | Qué es | Campos principales | Clave de idempotencia |
 |---|---|---|---|
-| `mail` | Un correo tal como llega del buzón (en la PoC, cada `.msg` contenedor y cada correo incrustado) | `mail_id`, `rfc_message_id`, `sha256`, `mailbox`, `received_at`, `raw_object_key`, `size_bytes`, `parent_mail_id` (si venía incrustado en otro) | `rfc_message_id` + `sha256` |
+| `mail` | Un correo tal como llega del buzón (en la PoC, cada `.msg` contenedor y cada correo incrustado) | `mail_id`, `rfc_message_id`, `sha256`, `mailbox`, `received_at`, `raw_object_key`, `size_bytes`, `parent_mail_id` (si venía incrustado en otro), `source_ref` (fichero o identificador del mensaje en el buzón) y `position` (orden del correo incrustado entre los de su contenedor) | `rfc_message_id` + `sha256` |
 | `message` | Un mensaje de un hilo, tras dividirlo; un mismo mensaje puede aparecer citado en muchos correos | `message_id`, `content_hash`, `sender_id`, `sent_at`, `subject`, `language`, `clean_body_key`, `first_seen_mail_id` | `content_hash` (SHA-256 del texto normalizado) |
 | `mail_message` | En qué correos aparece cada mensaje y en qué posición | `mail_id`, `message_id`, `depth` (0 = mensaje nuevo, 1+ = citado), `is_new` | (`mail_id`, `message_id`) |
 | `document` | Un adjunto, una vez por contenido | `document_id`, `sha256`, `filename`, `mime_type`, `object_key`, `text_key`, `has_text_layer`, `ocr_applied`, `doc_type` (plantilla reconocida), `pages` | `sha256` |
@@ -228,5 +228,6 @@ Las direcciones de los remitentes y las citas cortas pueden contener datos perso
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.1.2 | 25/11/2026 | `mail` guarda su origen (`source_ref`) y el orden de los correos incrustados (`position`), para trazar cada correo hasta su fuente y emparejarlo con el gold en la evaluación (F4.2); migración 0003 |
 | 0.1.1 | 24/11/2026 | La clave de idempotencia de la observación incluye el expediente (un mensaje puede hablar de varios); esquema de la PoC en `adapters/sql_schema.py` con las columnas consultadas como columnas y el resto de la entidad en una columna `payload` JSON |
 | 0.1.0 | 23/11/2026 | Primera versión: tres capas, entidades, linaje, bitemporalidad con cuatro fechas, tablas operativas y almacenamiento físico |
