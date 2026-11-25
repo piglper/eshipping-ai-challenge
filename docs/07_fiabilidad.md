@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Versión | 0.2.0 |
-| Estado | Borrador |
+| Estado | Entregado (`v1.0.0`) |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
 | Tarea | F2.6 (#21) |

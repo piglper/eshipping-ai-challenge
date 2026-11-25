@@ -59,4 +59,4 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
 
 ## Estado
 
-Fase F4 (evaluación) cerrada con `v0.5.0`: métricas frente al gold, análisis de errores, costes recalibrados, benchmark de modelos locales y prueba de volumen. Siguiente: F5 (entrega). Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).
+**Entregado con `v1.0.0`** (25/11/2026): diseño completo, PoC funcional, evaluación, resumen ejecutivo y presentación. Queda la F6 tras el proceso de selección: borrar los datos reales. Ver el [plan](docs/PLAN.md#4-calendario-e-hitos).
