@@ -31,7 +31,7 @@ La opción 2 se descarta porque el LLM dejaría de ver las actualizaciones que l
 
 ## Consecuencias
 
-- **Positivas:** el LLM ya no empeora lo que las reglas resuelven bien. Lo que lee de nuevo no se pierde: queda a la vista para confirmar. No cambia el número de llamadas.
+- **Positivas:** el LLM ya no empeora lo que las reglas resuelven bien. Lo que lee de nuevo no se pierde: queda a la vista para confirmar. No cambia el número de llamadas. En la muestra real, con `llama3.2:3b`, las reglas conservan sus 54 aciertos automáticos, la precisión de la extracción sube del 81,6 % al 84,0 % y el veredicto exacto, de 63 a 64 de 85 (evaluación §5.6).
 - **Negativas y riesgos asumidos:** una actualización real que solo lee el LLM no se aplica sola; espera a que una persona la confirme. Es coherente con dar prioridad a la precisión sobre la cobertura (`07 §1`).
 - **Seguimiento:** la evaluación cuenta los valores pendientes que venían del LLM y cuántos eran correctos. Si con un modelo mejor (F4.4b, ADR-0010) lo pendiente del LLM resulta casi siempre correcto, se puede dar al LLM una confianza calibrada por campo (`07 §3`) en lugar de esta regla fija.
 

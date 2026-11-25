@@ -29,7 +29,7 @@
   - **Lo que más importa sale bien:** ninguna asociación automática es errónea.
   - **El 90 % de lo que se acepta sin revisión es correcto en esta muestra.** No basta para el 98 % de RNF-11. Los errores atribuibles ganan por la regla «el más reciente de los fiables».
   - **El fallo más frecuente no es de extracción:** en 8 casos el valor correcto se leyó, pero la proyección eligió otro.
-  - **El LLM local pequeño (`llama3.2:3b`) apenas suma.** Con la regla nueva del ADR-0014 ya no empeora lo que resuelven las reglas.
+  - **El LLM local pequeño (`llama3.2:3b`) apenas suma.** Con la regla nueva del ADR-0014 ya no empeora lo que resuelven las reglas: la precisión de la extracción pasa del 81,6 % al 84,0 %.
 - **Dos decisiones salen del análisis:**
   - el rol del remitente se resuelve en cascada, sin dar de alta los dominios uno a uno ([ADR-0013](adr/0013-rol-del-remitente-en-cascada.md));
   - un valor del LLM rellena un hueco, pero no desplaza a un valor fiable de las reglas ([ADR-0014](adr/0014-el-llm-rellena-huecos-no-sustituye.md)).
@@ -218,25 +218,25 @@ Con 38 correos no compensa seguir afinando palabras: es el caso del escalón de 
 
 Cada uno de los 82 valores esperados, según quién da el valor vigente:
 
-| Escalón | Zona | Solo reglas | Con LLM (`llama3.2:3b`) |
-|---|---|---|---|
-| Reglas | automática, correcto | 54 (65,9 %) | 52 (63,4 %) |
-| Reglas | automática, **erróneo** | 6 (7,3 %) | 6 (7,3 %) |
-| Reglas | revisión, correcto | 8 (9,8 %) | 8 (9,8 %) |
-| Reglas | revisión, erróneo | 3 (3,7 %) | 3 (3,7 %) |
-| LLM | revisión, correcto | — | 2 (2,4 %) |
-| LLM | revisión, erróneo | — | 3 (3,7 %) |
-| Sin resolver (a una persona) | — | 11 (13,4 %) | 8 (9,8 %) |
-| Plantilla y ML | — | No implementados en la PoC | No implementados en la PoC |
+| Escalón | Zona | Solo reglas | Con LLM (`llama3.2:3b`), antes del ADR-0014 | Con LLM, con el ADR-0014 |
+|---|---|---|---|---|
+| Reglas | automática, correcto | 54 (65,9 %) | 52 (63,4 %) | 54 (65,9 %) |
+| Reglas | automática, **erróneo** | 6 (7,3 %) | 6 (7,3 %) | 6 (7,3 %) |
+| Reglas | revisión, correcto | 8 (9,8 %) | 8 (9,8 %) | 8 (9,8 %) |
+| Reglas | revisión, erróneo | 3 (3,7 %) | 3 (3,7 %) | 3 (3,7 %) |
+| LLM | revisión, correcto | — | 2 (2,4 %) | 1 (1,2 %) |
+| LLM | revisión, erróneo | — | 3 (3,7 %) | 1 (1,2 %) |
+| Sin resolver (a una persona) | — | 11 (13,4 %) | 8 (9,8 %) | 9 (11,0 %) |
+| Plantilla y ML | — | No implementados en la PoC | No implementados en la PoC | No implementados en la PoC |
 
-- **Las reglas resuelven sin intervención humana dos tercios de los valores.** El 75,6 % acaba correcto si una persona confirma la zona de revisión.
+- **Las reglas resuelven sin intervención humana dos tercios de los valores de la muestra.** El 75,6 % acaba correcto si una persona confirma la zona de revisión. Son proporciones de esta muestra, no la carga de revisión esperada en producción.
 - **El escalón del LLM funciona como se diseñó, pero este modelo aporta poco:**
-  - Se le pregunta 185 veces y propone valores que se validan; 398 lecturas se descartan, sobre todo porque la cita no está en el texto (228) o el valor no es válido (132).
+  - Se le pregunta 185 veces y propone valores que se validan; la mayoría de las lecturas se descartan, sobre todo porque la cita no está en el texto (228) o el valor no es válido.
   - Ningún valor del LLM entra sin revisión, porque tiene la confianza fija de su escalón.
-  - Reduce los valores sin resolver de 11 a 8, pero solo 2 de los 5 que pasan a ganar son correctos. La precisión de la extracción baja del 86,1 % al 81,6 %.
-  - Hay además un efecto lateral: los «leídos, no elegidos» suben de 8 a 11. La pregunta al LLM se decide por mensaje, y no se tiene en cuenta que el expediente ya tenga ese campo por otro mensaje.
+  - **Antes del ADR-0014** desplazaba a valores correctos de las reglas: los «leídos, no elegidos» subían de 8 a 11 y la precisión de la extracción bajaba del 86,1 % al 81,6 %.
+  - **Con el ADR-0014** solo rellena huecos: las reglas conservan sus 54 aciertos automáticos, la precisión queda en el 84,0 % y el veredicto exacto sube de 63 a 64 de 85. Lo que el LLM lee distinto de las reglas queda pendiente de confirmación, a la vista del operativo.
 
-  La elección del modelo (F4.4b) y la recalibración de costes (F4.4) parten de estos datos: 77.015 tokens de entrada y 20.693 de salida, y 503 s para los 382 mensajes en el Mac de la PoC.
+  La elección del modelo (F4.4b) y la recalibración de costes (F4.4) parten de estos datos: 77.015 tokens de entrada y 20.693 de salida, unos 560 s para los 382 mensajes y unos 400 MB de memoria del proceso en el Mac de la PoC.
 
 ### 5.7 Qué cambiar, por orden de impacto
 
