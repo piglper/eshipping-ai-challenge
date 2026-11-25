@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.2.1 |
+| Versión | 0.2.2 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 23/11/2026 |
@@ -169,7 +169,7 @@ Una decisión nunca edita lo que dijo una fuente: aceptar o corregir añade una 
   - lo que falla se descarta y se cuenta por motivo (`llm_rejected`).
 - **Confianza fija por escalón** (0,85, zona de revisión): nunca es la que declara el modelo. El estado PLN/EST/ACT del modelo solo vale para fechas; un nombre de buque o un número de contenedores es una estimación, como en las reglas, y un buque citado junto a un roleo es un cambio de buque.
 - **Inyección de instrucciones:** el correo malicioso sintético llega al LLM (su asunto dice «booking»). Si el modelo obedece, la cita atribuye la fecha a otro campo y se descarta; y aunque pasara, el remitente es desconocido, su autoridad es la mínima y el valor queda pendiente de confirmación. Lo prueban los tests con un modelo falso que obedece.
-- **Sin modelo:** con `--no-llm` (o si Ollama no responde y se usa esa opción) la cascada se detiene en las reglas; sin la opción, la CLI se niega a empezar si Ollama no tiene el modelo, en lugar de procesar a medias. El modelo por defecto es `llama3.2:3b`, provisional hasta el benchmark de F4 (D9).
+- **Sin modelo:** con `--no-llm` (o si Ollama no responde y se usa esa opción) la cascada se detiene en las reglas; sin la opción, la CLI se niega a empezar si Ollama no tiene el modelo, en lugar de procesar a medias. El modelo por defecto es `qwen3.5:4b`, elegido por benchmark en F4.4b ([ADR-0015](adr/0015-modelo-local-de-la-poc.md)).
 - **Banco de ejemplos:** las correcciones validadas del mismo remitente se añaden como ejemplos (hasta tres).
 - **Puerto `LLMClient`:** cambiar a un proveedor de la lista del [ADR-0010](adr/0010-proveedor-de-llm-de-produccion.md) es un adaptador nuevo, sin tocar el resto.
 
@@ -244,6 +244,7 @@ El orden pone primero lo que hace funcionar el sistema de extremo a extremo sin 
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.2 | 25/11/2026 | Modelo local por defecto: `qwen3.5:4b` (ADR-0015) |
 | 0.2.1 | 24/11/2026 | Streamlit reducido implementado (F3.9): tres pestañas, correcciones como observaciones humanas o sustituciones (nunca ediciones) y nueva reconciliación del expediente; Streamlit como extra opcional |
 | 0.2.0 | 24/11/2026 | Escalón del LLM implementado (F3.4): campos pendientes con pista en el texto, validación determinista de la cita y del valor, confianza fija por escalón, esquema en las instrucciones para los modelos que no admiten `format`, modelo por defecto `llama3.2:3b` (provisional, D9) y `make demo-llm` |
 | 0.1.9 | 24/11/2026 | CLI implementada (F3.8): `process` y `reconcile` reciben el ERP (la asociación necesita el índice sembrado antes de procesar), opciones comunes `--workdir` y `--now`, `--no-llm` se pospone al escalón del LLM y `make demo` |

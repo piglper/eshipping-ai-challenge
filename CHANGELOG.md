@@ -29,6 +29,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Dependencia de desarrollo `hypothesis` 6.170.17.
 
 ### Changed
+- El modelo local por defecto pasa a ser `qwen3.5:4b`, elegido por benchmark frente a `llama3.2:3b` y `gemma4:e4b` (F4.4b, ADR-0015, `docs/11_evaluacion.md` §5.8).
 - La ingesta de `.msg` solo descodifica el cuerpo HTML (RTF comprimido de Outlook) cuando no hay texto plano. Era el 97 % del tiempo de ingesta: la muestra pasa de 36,5 s a 2,8 s, con el mismo resultado.
 - El rol del remitente se resuelve en cascada (ADR-0013), sin dar de alta los dominios uno a uno:
   - un directorio corto y curado: los dominios propios y un registro público de navieras;
@@ -42,6 +43,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - La cobertura mínima del 90 % se exige en `make test` y en el CI (`fail_under`). La página de Streamlit queda fuera de la medida, porque se prueba con `AppTest` en un proceso que coverage no ve.
 
 ### Fixed
+- El adaptador de Ollama acepta una respuesta que es la lista de hechos sin el objeto que la envuelve, cuando el esquema tiene una única propiedad de tipo lista. `gemma4:e4b` respondía así en una de cada seis llamadas, que fallaban.
 - El lugar de carga de un expediente del gold sintético se partía en dos claves por una coma sin comillas en `sample.yaml`.
 - `make help` muestra los objetivos con guion (`demo-llm`, `test-unit`, `test-integration`).
 
