@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.26.0 |
+| Versión | 1.27.0 |
 | Estado | Borrador para revisión |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
@@ -116,7 +116,7 @@ gantt
     F1 Descubrimiento         :done,    f1, 2026-11-21, 1.5d
     F2 Diseño                 :done,    f2, 2026-11-22, 1.5d
     F3 PoC                    :done,    f3, 2026-11-24, 1d
-    F4 Evaluación             :         f4, after f3, 0.5d
+    F4 Evaluación             :done,    f4, 2026-11-25, 0.5d
     F5 Documentación y entrega:         f5, 2026-11-25, 1d
     Colchón                   :crit,    b,  2026-11-26, 1d
 ```
@@ -419,14 +419,14 @@ Ver el [ADR-0002](adr/0002-proteccion-datos-confidenciales.md) y el `CLAUDE.md`.
 |---|---|---|---|
 | 8 · Documento de arquitectura con diagrama | `04_arquitectura.md` | F2 | ✅ |
 | 8 · Justificación técnica y alternativas descartadas | `docs/adr/` | F2 | ✅ |
-| 8 · Estimación de costes | `06_costes.md` | F2, F4 | 🔄 |
-| 8 · Planteamiento de la medición de fiabilidad | `07_fiabilidad.md`, `11_evaluacion.md` | F2, F4 | 🔄 |
+| 8 · Estimación de costes | `06_costes.md` | F2, F4 | ✅ |
+| 8 · Planteamiento de la medición de fiabilidad | `07_fiabilidad.md`, `11_evaluacion.md` | F2, F4 | ✅ |
 | 8 · PoC funcional que admite correos nuevos | `src/`, CLI, Streamlit | F3 | ✅ |
 | 7 · Modelo de IA y por qué | ADR de la estrategia de IA | F2 | ✅ |
-| 7 · Coste computacional y económico | `06_costes.md` | F2, F4 | 🔄 |
+| 7 · Coste computacional y económico | `06_costes.md` | F2, F4 | ✅ |
 | 7 · Datos obtenidos y estructura | `05_modelo_datos.md` | F2 | ✅ |
 | 7 · Fiabilidad y baja confianza | `07_fiabilidad.md` | F2 | ✅ |
-| 7 · Escalabilidad (100.000 → 150.000 correos al mes) | `04_arquitectura.md` (análisis de capacidad), `06_costes.md` | F2, F4 | 🔄 |
+| 7 · Escalabilidad (100.000 → 150.000 correos al mes) | `04_arquitectura.md` (análisis de capacidad y prueba de volumen), `06_costes.md` | F2, F4 | ✅ |
 | 7 · Aprendizaje continuo sin aprender de errores | `08_aprendizaje_continuo.md` | F2 | ✅ |
 | 3 · Ambigüedad entre fuentes | `03_taxonomia_y_ambiguedades.md`, ADR-0006, ADR de reconciliación | F1, F2 | ✅ |
 | 4 · Declarar el envío a servicios externos | `09_seguridad.md`, presentación | F2, F5 | 🔄 |
@@ -499,3 +499,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.24.0 | 25/11/2026 | P. Iglesias Peral | F4.4: tokens, latencia, tiempos por etapa y memoria medidos en la PoC. Supuesto de tokens por llamada recalibrado (de 3.000 y 400 a 1.750 y 200, con margen sobre el p95); el LLM baja a 28 $ al mes en el escenario de referencia y el total técnico, a unos 330 €. La ingesta de `.msg` pasa a ser 13 veces más rápida | #42 |
 | 1.25.0 | 25/11/2026 | P. Iglesias Peral | F4.4b: benchmark de los tres modelos locales sobre la muestra real. D9 decidida: `qwen3.5:4b` por defecto (ADR-0015). Los tres empatan en resultado final; la elección se apoya en la proporción de propuestas válidas, las citas inventadas y la memoria. No quedan decisiones abiertas | #43 |
 | 1.26.0 | 25/11/2026 | P. Iglesias Peral | F4.5: prueba de volumen con 10.010 mensajes sintéticos (2.860 expedientes). Unos 9.100 mensajes por minuto en un solo proceso, coste lineal y calidad idéntica a la del conjunto base. Margen de unas 195 veces sobre el pico de 150.000 correos al mes, sin contar LLM ni OCR | #44 |
+| 1.27.0 | 25/11/2026 | P. Iglesias Peral | Revisión de fase de F4, cerrada con `v0.5.0`. Criterio de salida cumplido: métricas finales con intervalos sobre el gold (sintético y real), análisis de errores, costes recalibrados con lo medido, modelo local elegido por benchmark (D9) y prueba de volumen. Desviación: el rol del remitente pasó de directorio manual a cascada (ADR-0013) al ver que no escala. Pendiente: la revisión humana del gold real (R10), que solo puede hacer el responsable | — |
