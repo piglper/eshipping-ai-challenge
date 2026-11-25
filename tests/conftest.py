@@ -1,13 +1,27 @@
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from hypothesis import settings
 
 from eshipping_ai.domain.model import Document, Mail, Message
 from eshipping_ai.synthetic.build import build
 from eshipping_ai.synthetic.spec import load_spec
 
 SPEC_PATH = Path(__file__).parents[1] / "data_sample" / "spec" / "sample.yaml"
+
+# Property tests: a quick default run and a thorough one (HYPOTHESIS_PROFILE=thorough).
+settings.register_profile("default", max_examples=100, deadline=None)
+settings.register_profile("thorough", max_examples=5000, deadline=None)
+settings.load_profile(os.environ.get("HYPOTHESIS_PROFILE", "default"))
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Mark as integration every test that runs on the generated synthetic data set."""
+    for item in items:
+        if "synthetic_dir" in getattr(item, "fixturenames", ()):
+            item.add_marker(pytest.mark.integration)
 
 
 class MemoryInbox:

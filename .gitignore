@@ -16,6 +16,7 @@ ENV/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.hypothesis/
 *.egg-info/
 
 # --- Secretos y sistema ---

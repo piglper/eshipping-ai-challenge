@@ -34,6 +34,16 @@ eshipping report --format md
 eshipping evaluate --gold <gold.json> --verbose
 ```
 
+### Cómo probarlo
+
+Todo funciona con los datos sintéticos de `data_sample/` y sin conexión; el LLM es opcional.
+
+1. **Comprobar el código:** `make check` ejecuta lint, tipos y los tests con cobertura, como el CI. `make test-unit` lanza solo los tests rápidos y `make test-integration`, los de extremo a extremo sobre los datos sintéticos. `HYPOTHESIS_PROFILE=thorough make test` ejecuta los tests de propiedades con 5.000 ejemplos cada uno.
+2. **Ver la canalización completa:** `make demo` genera los datos sintéticos (cuatro expedientes y un correo de ruido) y los procesa. Después muestra el informe de discrepancias, con lo urgente primero, y el acierto frente al gold. El resultado esperado es un `URGENTE ES26900002: vessel DISCREPANCY` y un 100 % de acierto del veredicto.
+3. **Revisar como un operativo:** `make ui` abre en el navegador la vista para operativos sobre la base de la demo, con las discrepancias por prioridad, el expediente con su línea temporal y la corrección.
+4. **Con el LLM local (opcional):** con [Ollama](https://ollama.com) en marcha y un modelo descargado (`ollama pull <modelo>`), `make demo-llm MODEL=<modelo>` repite la demo con el escalón del LLM para los campos que las reglas no resuelven.
+5. **Sobre otra carpeta de correos:** `eshipping run <carpeta> --erp <export.csv> --no-llm`, seguido de `eshipping report`. Los resultados de datos reales deben guardarse con `--workdir data/output/...`, que está ignorado por git.
+
 Ver [CONTRIBUTING.md](CONTRIBUTING.md) para el flujo de trabajo.
 
 ## Documentación
