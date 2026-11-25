@@ -12,6 +12,7 @@ import re
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Mapping
 
 from eshipping_ai.domain.ports import LLMError, LLMRequest, LLMResponse
 
@@ -96,7 +97,7 @@ class OllamaClient:
         content = str(message.get("content", "")) if isinstance(message, dict) else ""
         duration = result.get("total_duration")
         return LLMResponse(
-            output=self._json_object(content),
+            output=self._json_object(content, request.json_schema),
             model=str(result.get("model", self._model)),
             input_tokens=int(str(result.get("prompt_eval_count", 0))),
             output_tokens=int(str(result.get("eval_count", 0))),
@@ -134,8 +135,13 @@ class OllamaClient:
         return body
 
     @staticmethod
-    def _json_object(content: str) -> dict[str, object]:
-        """The JSON object of an answer, also when the model wraps it in other text."""
+    def _json_object(content: str, json_schema: Mapping[str, object]) -> dict[str, object]:
+        """The JSON object of an answer, also when the model wraps it in other text.
+
+        Some models answer a schema whose only property is a list with the bare list
+        (F4.4b: ``gemma4:e4b`` in about one call in six); the list is then put back under
+        that property. What it holds is validated afterwards like any other answer.
+        """
         for candidate in (content, *(m.group(0) for m in [_JSON_OBJECT_RE.search(content)] if m)):
             try:
                 output = json.loads(candidate)
@@ -143,5 +149,17 @@ class OllamaClient:
                 continue
             if isinstance(output, dict):
                 return output
+            wrapper = _only_list_property(json_schema)
+            if isinstance(output, list) and wrapper is not None:
+                return {wrapper: output}
         msg = "the model did not answer with a JSON object"
         raise LLMError(msg)
+
+
+def _only_list_property(json_schema: Mapping[str, object]) -> str | None:
+    """The name of the property of an object schema, if it has one and it is a list."""
+    properties = json_schema.get("properties")
+    if not isinstance(properties, Mapping) or len(properties) != 1:
+        return None
+    ((name, spec),) = properties.items()
+    return name if isinstance(spec, Mapping) and spec.get("type") == "array" else None

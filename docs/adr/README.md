@@ -28,3 +28,4 @@ Cada decisión relevante, técnica o de proyecto, se documenta como un *Architec
 | [0012](0012-despliegue-en-contenedores-portables.md) | Despliegue en contenedores portables sobre un servicio gestionado de la UE, sin Kubernetes | Aceptado | 2026-11-23 |
 | [0013](0013-rol-del-remitente-en-cascada.md) | El rol del remitente se resuelve en cascada, sin dar de alta los dominios uno a uno | Aceptado | 2026-11-25 |
 | [0014](0014-el-llm-rellena-huecos-no-sustituye.md) | Un valor del LLM rellena un hueco, pero no desplaza a un valor fiable de las reglas | Aceptado | 2026-11-25 |
+| [0015](0015-modelo-local-de-la-poc.md) | Modelo local de la PoC: `qwen3.5:4b` por defecto | Aceptado | 2026-11-25 |

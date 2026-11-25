@@ -44,7 +44,7 @@ from eshipping_ai.entrypoints.evaluation_report import render_markdown, report_t
 DEFAULT_WORKDIR = Path("data/output")
 DEFAULT_CONFIG = Path("config")
 DEFAULT_TZ = "Europe/Madrid"
-DEFAULT_MODEL = "llama3.2:3b"  # provisional: the model of the PoC is chosen in F4 (D9, #43)
+DEFAULT_MODEL = "qwen3.5:4b"  # chosen by benchmark in F4.4b (ADR-0015)
 
 
 class Context:
