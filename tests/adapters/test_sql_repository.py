@@ -391,3 +391,44 @@ def test_threads_to_process_follow_the_classification(engine: Engine, tmp_path: 
     assert repo.associations_for("S1") == [association]
     with pytest.raises(KeyError):
         repo.thread("mail-unknown")
+
+
+def test_mail_outcomes_give_the_classes_and_shipments_of_each_mail(repo: SqlRepository) -> None:
+    repo.add_mail(mail("container"))
+    for position in (0, 1):
+        repo.add_mail(
+            mail(f"m{position}", parent="container").model_copy(
+                update={"source_ref": "S1.eml", "position": position}
+            )
+        )
+    repo.add_message(message("c" * 64, "msg-0"), "m0", 0)
+    repo.add_message(message("d" * 64, "msg-1"), "m1", 0)
+    repo.add_message(message("c" * 64, "msg-0"), "m1", 1)  # quoted: not the mail's own
+    repo.add_classifications(
+        Classification(
+            message_id="msg-0",
+            mail_class=mail_class,
+            is_primary=primary,
+            confidence=0.8,
+            tier=ExtractionTier.RULE,
+            extractor_version="v1",
+        )
+        for mail_class, primary in ((MailClass.DOCUMENTATION, False), (MailClass.BOOKING, True))
+    )
+    repo.add_associations(
+        [
+            Association(
+                message_id="msg-0",
+                shipment_id="S1",
+                method=AssociationMethod.BOOKING,
+                matched_value="990000101",
+                confidence=0.95,
+                status=AssociationStatus.AUTO,
+            )
+        ]
+    )
+    outcomes = repo.mail_outcomes()
+    assert [(o.source_ref, o.position) for o in outcomes] == [("S1.eml", 0), ("S1.eml", 1)]
+    assert outcomes[0].classes == (MailClass.BOOKING, MailClass.DOCUMENTATION)
+    assert outcomes[0].shipments == (("S1", AssociationStatus.AUTO),)
+    assert outcomes[1].classes == () and outcomes[1].shipments == ()

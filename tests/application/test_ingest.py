@@ -36,6 +36,19 @@ def test_synthetic_set_is_unpacked_split_and_deduplicated(synthetic_dir, tmp_pat
     assert report.failures == 0
 
 
+def test_each_mail_keeps_its_file_and_the_order_of_the_embedded_ones(
+    synthetic_dir, tmp_path, inbox, clock
+):  # type: ignore[no-untyped-def]
+    ingest(synthetic_dir / "mails", tmp_path, inbox, clock)
+    embedded = [
+        m for m in inbox.mails.values() if m.source_ref == "ES26900003.eml" and m.parent_mail_id
+    ]
+    assert sorted(m.position for m in embedded) == [0, 1, 2, 3]
+    containers = [m for m in inbox.mails.values() if not m.parent_mail_id]
+    assert {m.source_ref for m in containers} >= {"ES26900001.eml", "N1.eml"}
+    assert all(m.position is None for m in containers)
+
+
 def test_every_message_is_dated_by_its_own_header(synthetic_dir, tmp_path, inbox, clock):  # type: ignore[no-untyped-def]
     ingest(synthetic_dir / "mails", tmp_path, inbox, clock)
     quoted = [

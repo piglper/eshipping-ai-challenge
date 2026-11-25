@@ -7,6 +7,14 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ## [Unreleased]
 
 ### Added
+- Evaluación frente al gold standard (F4.2, `docs/11_evaluacion.md`). `eshipping evaluate` mide:
+  - la asociación de cada correo (automática y correcta o equivocada, a revisión, sin asociar, ruido);
+  - la clase principal y la precisión, el recall y el F1 por clase;
+  - la precisión, el recall y el F1 de la extracción por campo, y el acierto del clasificador;
+  - el veredicto exacto, la matriz de confusión y la detección de lo que pide acción.
+
+  Cada proporción lleva su intervalo de Wilson al 95 %. El informe en Markdown o JSON (`--format`, `--out`) solo tiene cifras agregadas; los fallos, que nombran expedientes, solo salen con `--verbose`. Objetivos `make evaluate` (sintético) y `make evaluate-real` (muestra real, solo en local).
+- `Mail` guarda su origen (`source_ref`) y el orden de los correos incrustados (`position`), con la migración 0003. Puerto `ProcessingStore.mail_outcomes()`.
 - Tests de propiedades con Hypothesis (F4.1): con cualquier texto los extractores no fallan y cada mención apunta a los caracteres exactos que cita. El dígito de control ISO 6346 detecta cualquier error de un dígito, una fecha completa se lee tal como está escrita y una fecha sin año cae junto al mensaje. El perfil `HYPOTHESIS_PROFILE=thorough` lanza 5.000 ejemplos por propiedad.
 - Marcador `integration`, que lleva solo todo test que usa el conjunto sintético generado, y los objetivos `make test-unit` y `make test-integration`.
 - Test de integración con ficheros rotos, vacíos y binarios en la carpeta de correos: cuentan como fallo de ingesta o no dan mensajes, y los veredictos no cambian.
@@ -18,6 +26,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - La cobertura mínima del 90 % se exige en `make test` y en el CI (`fail_under`). La página de Streamlit queda fuera de la medida, porque se prueba con `AppTest` en un proceso que coverage no ve.
 
 ### Fixed
+- El lugar de carga de un expediente del gold sintético se partía en dos claves por una coma sin comillas en `sample.yaml`.
 - `make help` muestra los objetivos con guion (`demo-llm`, `test-unit`, `test-integration`).
 
 ## [0.4.0] - 2026-11-24

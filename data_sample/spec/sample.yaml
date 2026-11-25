@@ -150,7 +150,7 @@ shipments:
       vessel_arrival_pod:
         {value: "2026-10-24", verdict: MATCH, source: M1, known_at: "2026-09-20", classifier: EST, erp: 24/10/2026}
       stuffing:
-        value: {date: "2026-10-02", time: "08:00", place: Polígono Industrial Ficticio, Valencia}
+        value: {date: "2026-10-02", time: "08:00", place: "Polígono Industrial Ficticio, Valencia"}
         verdict: MATCH
         source: M2
         known_at: "2026-09-28"

@@ -100,7 +100,7 @@ def test_the_rules_reproduce_the_verdicts_of_the_gold(
     verdicts = {operation: pipeline.repo.verdicts_for(operation) for operation in gold}
     evaluation = evaluate_verdicts(gold, verdicts)
     assert evaluation.mismatches == []
-    assert evaluation.accuracy == 1.0
+    assert evaluation.overall.rate == 1.0
 
 
 def test_the_run_counts_what_it_found(pipeline: Pipeline) -> None:
