@@ -115,7 +115,13 @@ def test_a_model_without_imposed_schema_gets_it_in_the_instructions(server: str)
     assert "follows this schema" in second["messages"][0]["content"]
 
 
-@pytest.mark.parametrize("answer", ["not json", "[1, 2]"])
+def test_a_bare_list_is_put_back_under_the_only_list_property(server: str) -> None:
+    fact = {"field": "vessel", "value": "AURORA FICTICIA", "classifier": "EST", "quote": "x"}
+    FakeOllama.answer = json.dumps([fact])
+    assert OllamaClient("fake:1b", server).complete(REQUEST).output == {"facts": [fact]}
+
+
+@pytest.mark.parametrize("answer", ["not json", '"just a string"'])
 def test_an_answer_that_is_not_a_json_object_is_an_error(server: str, answer: str) -> None:
     FakeOllama.answer = answer
     with pytest.raises(LLMError):
@@ -135,3 +141,11 @@ def test_a_real_model_answers_with_the_schema() -> None:
     assert client.available()
     response = client.complete(REQUEST)
     assert isinstance(response.output.get("facts"), list)
+
+
+def test_a_bare_list_is_an_error_when_the_schema_has_no_single_list() -> None:
+    request = REQUEST.model_copy(
+        update={"json_schema": {"type": "object", "properties": {"a": {}, "b": {}}}}
+    )
+    with pytest.raises(LLMError):
+        OllamaClient._json_object("[1, 2]", request.json_schema)

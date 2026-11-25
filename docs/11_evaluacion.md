@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.3.0 |
+| Versión | 0.4.0 |
 | Estado | Borrador |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
@@ -251,6 +251,38 @@ Cada uno de los 82 valores esperados, según quién da el valor vigente:
 
 Se han aplicado la corrección del §5.5 y los cambios 2 y 3, que son de diseño y no dependen de la muestra. El resto queda propuesto: con 11 expedientes elegidos para dar contexto, cualquier ajuste más fino sería ajustar la política a la muestra.
 
+### 5.8 Comparativa de modelos locales (F4.4b)
+
+Los tres candidatos de la F0.10 sobre la misma muestra real, con la misma canalización (reglas, ADR-0013 y ADR-0014) y Ollama en el Mac de la PoC (Apple M5, 16 GB). Cada modelo recibe las mismas 185 llamadas.
+
+| | `llama3.2:3b` | `qwen3.5:4b` | `gemma4:e4b` |
+|---|---|---|---|
+| Esquema | Impuesto (`format`) | En las instrucciones | En las instrucciones |
+| Valores propuestos por el LLM | 469 | 56 | 79 |
+| Que pasan la validación (cita literal, valor válido, contexto) | 71 (15 %) | 22 (39 %) | 36 (46 %) |
+| Causa principal de rechazo | Cita que no está en el texto (228) | Valor no válido (14) | Valor no válido (16) |
+| Llamadas fallidas | 0 | 2 | 0 (31 antes de corregir el adaptador) |
+| Valores vigentes que da el LLM: correctos / erróneos | 1 / 1 | 1 / 1 | 1 / 1 |
+| Precisión de la extracción | 84,0 % | 85,1 % | 84,0 % |
+| Veredicto exacto | 64 / 85 | 64 / 85 | 63 / 85 |
+| Tokens de entrada por llamada (p50 / p95) | 362 / 817 | 518 / 949 | 526 / 985 |
+| Tokens de salida por llamada (media) | 112 | 31 | 33 |
+| Latencia por llamada (p50 / p95) | 2,8 s / 5,8 s | 1,0–1,4 s / 6,2–7,0 s | 1,0–1,1 s / 4,7–5,0 s |
+| Tiempo total (382 mensajes) | ≈ 570 s | ≈ 350–440 s | ≈ 300 s |
+| Memoria del modelo cargado | 2,7 GB | 5,2–6,2 GB | 11 GB |
+| Motor de Ollama | llama.cpp | MLX | MLX |
+
+Los rangos son de dos ejecuciones.
+
+- **En resultado final, los tres empatan.** Cada uno resuelve 1 valor correcto y 1 erróneo, siempre en zona de revisión. La diferencia de 1 valor o 1 veredicto entre ellos no es significativa con 82 valores.
+- **Donde se diferencian es en cómo responden.** `llama3.2:3b` inventa: 469 propuestas, la mitad con citas que no están en el texto, y 3,5 veces más tokens de salida. La validación lo frena, así que no llega al resultado, pero es el modelo menos fiable para el día en que la validación falle. `qwen3.5:4b` y `gemma4:e4b` proponen poco y bien.
+- **La latencia depende también del motor.** `llama3.2:3b` corre con llama.cpp y los otros con MLX, así que la comparación de velocidad no es solo del modelo.
+- **`gemma4:e4b` es el más preciso, pero ocupa 11 GB** de los 16 de la máquina. El ADR-0005 pide margen de memoria, y con él cargado el resto del sistema va justo.
+- **Hallazgo del benchmark:** en una de cada seis llamadas, `gemma4:e4b` respondía con la lista de hechos sin el objeto que la envuelve. El adaptador ahora la recoloca cuando el esquema tiene una única propiedad de tipo lista, y lo que contiene se valida igual. Es una corrección de formato, no de contenido.
+- **Sesgo de selección.** El benchmark usa la misma muestra que el resto de la evaluación. Como las diferencias de resultado son nulas, la elección se apoya en el comportamiento (proporción de propuestas válidas, invenciones y memoria), que depende menos de la muestra.
+
+La elección está en el [ADR-0015](adr/0015-modelo-local-de-la-poc.md): `qwen3.5:4b` por defecto. Con ningún modelo local el escalón del LLM aporta más de 1 valor correcto en esta muestra. El límite no está en el modelo, sino en lo que queda para el LLM después de las reglas. En producción el LLM es una API (ADR-0010), y su calidad se mide con el mismo procedimiento.
+
 ## 6. Limitaciones
 
 - **Muestra pequeña.** 11 expedientes, 38 correos y 85 veredictos puntuables: los intervalos son anchos y ninguna cifra demuestra los objetivos de RNF-10 (99,5 %) ni de RNF-11 (98 %). Para eso hacen falta unos 765 y 190 casos sin errores ([07 §6.1](07_fiabilidad.md#61-qué-se-puede-demostrar-con-el-gold-standard)).
@@ -275,6 +307,7 @@ eshipping evaluate --gold <gold.json> --format json --verbose   # con los fallos
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.4.0 | 25/11/2026 | §5.8: comparativa de los tres modelos locales (F4.4b) |
 | 0.3.0 | 25/11/2026 | Las cifras reales describen comportamiento y tipos de error, no tasas de producción. Rol del remitente en cascada (ADR-0013), sin directorio manual; el LLM rellena huecos (ADR-0014). Cambios propuestos reordenados: la autoridad del correo interno pasa a calibración en producción |
 | 0.2.0 | 25/11/2026 | Análisis de errores (F4.3): etapa que pierde cada valor, causas, errores aceptados sin revisión, veredictos, clasificación con su corrección, porcentaje resuelto en cada escalón con y sin LLM, y cambios propuestos |
 | 0.1.0 | 25/11/2026 | Primera versión: metodología, métricas con intervalo de Wilson y resultados sobre el conjunto sintético y la muestra real, solo con reglas (F4.2) |
