@@ -183,11 +183,11 @@
     <p class="kicker">Recorrido</p>
     <h2>Una propuesta, cuatro miradas</h2>
     <div class="cols-5">
-      <div class="card top"><span class="aud ops">Operativa</span><h3 style="margin-top:10px">Qué cambia en el día a día</h3><p class="s14">El problema, la pantalla de trabajo y cómo se decide qué dato vale.</p><p class="s13 muted">Diapositivas 4 a 6</p></div>
-      <div class="card top"><span class="aud arq">Arquitectura</span><h3 style="margin-top:10px">Diseño y modelo de IA</h3><p class="s14">Arquitectura, decisiones con sus alternativas, modelo de IA y datos.</p><p class="s13 muted">Diapositivas 7 a 10</p></div>
-      <div class="card top"><span class="aud all">Todos</span><h3 style="margin-top:10px">Fiabilidad y entrenamiento</h3><p class="s14">Cuánto acierta, cómo aprende de cada corrección y cómo evita aprender errores.</p><p class="s13 muted">Diapositivas 11 a 14</p></div>
-      <div class="card top"><span class="aud sys">Sistemas</span><h3 style="margin-top:10px">Operación y coste</h3><p class="s14">Qué hay que operar, coste, escalabilidad y confidencialidad.</p><p class="s13 muted">Diapositivas 15 a 18</p></div>
-      <div class="card top"><span class="aud all">RRHH · Todos</span><h3 style="margin-top:10px">Forma de trabajar</h3><p class="s14">Cómo se abordó la prueba, la puesta en marcha y la prueba de concepto.</p><p class="s13 muted">Diapositivas 3, 19 y 20</p></div>
+      <div class="card top"><span class="aud ops">Operativa</span><h3 style="margin-top:10px">Qué cambia en el día a día</h3><p class="s14">El problema, la pantalla de trabajo, qué hace el operativo y cómo se decide qué dato vale.</p><p class="s13 muted">Diapositivas 4 a 7</p></div>
+      <div class="card top"><span class="aud arq">Arquitectura</span><h3 style="margin-top:10px">Diseño y modelo de IA</h3><p class="s14">Arquitectura, decisiones con sus alternativas, modelo de IA y datos.</p><p class="s13 muted">Diapositivas 8 a 11</p></div>
+      <div class="card top"><span class="aud all">Todos</span><h3 style="margin-top:10px">Fiabilidad y entrenamiento</h3><p class="s14">Cuánto acierta, cómo aprende de cada corrección y cómo evita aprender errores.</p><p class="s13 muted">Diapositivas 12 a 15</p></div>
+      <div class="card top"><span class="aud sys">Sistemas</span><h3 style="margin-top:10px">Operación y coste</h3><p class="s14">Qué hay que operar, coste, escalabilidad y confidencialidad.</p><p class="s13 muted">Diapositivas 16 a 19</p></div>
+      <div class="card top"><span class="aud all">RRHH · Todos</span><h3 style="margin-top:10px">Forma de trabajar</h3><p class="s14">Cómo se abordó la prueba y qué hace la prueba de concepto.</p><p class="s13 muted">Diapositivas 3 y 20</p></div>
     </div>
     <div class="ask" style="margin-top:26px;font-size:21px;padding:16px 28px"><span class="lbl">La idea en una frase</span>El sistema lee, propone y explica; operativa decide; y DEIWORLD no se toca sin una persona.</div>
   </div>
@@ -269,7 +269,7 @@
           <li><b>Cada propuesta trae su prueba:</b> la frase literal del correo y quién la dijo. No hace falta buscar en el buzón.</li>
           <li><b>Detecta errores del ERP</b>, como el día y el mes cruzados: el 04/10 grabado como 10/04.</li>
           <li><b>La última palabra es del operativo:</b> aceptar, corregir o rechazar. <b>El sistema nunca escribe en DEIWORLD.</b></li>
-          <li><b>Cada corrección enseña al sistema:</b> la próxima vez ese caso llega resuelto o mejor priorizado (diapositivas 12 a 14).</li>
+          <li><b>Cada corrección enseña al sistema:</b> la próxima vez ese caso llega resuelto o mejor priorizado (diapositivas 13 a 15).</li>
         </ul>
       </div>
     </div>
@@ -277,7 +277,48 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 6 · Ambigüedad -->
+<!-- 6 · Circuito de operativa -->
+<section class="slide">
+  <div class="body">
+    <p class="kicker">Gestión de operativa <span class="aud ops">Operativa</span></p>
+    <h2>Qué hace el operativo, paso a paso</h2>
+    <div class="flow" style="margin-bottom:14px">
+      <div class="st"><b>1 · El sistema lee todo</b>Cada correo se asocia a su expediente y se compara con DEIWORLD. Lo que cuadra no llega a nadie.</div>
+      <div class="st"><b>2 · Solo lo dudoso, a la cola</b>Una lista única, ordenada por urgencia. Lo P1 avisa además por Teams o correo.</div>
+      <div class="st"><b>3 · El operativo decide</b>Ve el valor del ERP, el propuesto, la frase del correo y quién lo dijo. Decide en segundos.</div>
+      <div class="st"><b>4 · Se cierra solo</b>En la siguiente lectura del ERP, si el dato ya coincide, la tarea desaparece.</div>
+    </div>
+    <div class="cols">
+      <div>
+        <h3>Qué llega a la cola</h3>
+        <table class="s14">
+          <thead><tr><th>Tarea</th><th>Ejemplo</th></tr></thead>
+          <tbody>
+            <tr><td class="k">El ERP no coincide</td><td>Los correos dicen CELESTE y el ERP sigue con BOREAL</td></tr>
+            <tr><td class="k">Las fuentes se contradicen</td><td>Naviera y agente dan salidas distintas el mismo día</td></tr>
+            <tr><td class="k">Dato dudoso</td><td>Una fecha que no se lee con confianza suficiente</td></tr>
+            <tr><td class="k">Correo sin expediente claro</td><td>No trae ningún identificador, o encaja en dos expedientes</td></tr>
+          </tbody>
+        </table>
+        <p class="s14 muted" style="margin-top:8px">No llega: lo que cuadra, ni lo que el ERP ya tiene más actualizado que los correos. De eso solo se audita una muestra.</p>
+      </div>
+      <div>
+        <h3>Las tres decisiones posibles</h3>
+        <table class="s14">
+          <tbody>
+            <tr><td class="k">Aceptar</td><td>La propuesta es correcta. <b>El operativo actualiza DEIWORLD</b>, como hoy (o se genera una exportación aprobada). El sistema no escribe en el ERP.</td></tr>
+            <tr><td class="k">Corregir</td><td>El sistema leyó mal. El operativo escribe el valor bueno, que queda como dato de una persona y enseña al sistema.</td></tr>
+            <tr><td class="k">Rechazar</td><td>El ERP tenía razón. Se indica el motivo, que también enseña al sistema.</td></tr>
+          </tbody>
+        </table>
+        <div class="card tint s14" style="margin-top:10px"><b>Lo que deja de hacer:</b> leer todos los correos, buscar en el buzón qué dijo la naviera y dar de alta remitentes. Las tareas de un mismo expediente aparecen juntas, y las P3 se validan en bloque.</div>
+      </div>
+    </div>
+  </div>
+  <div class="pfoot"></div>
+</section>
+
+<!-- 7 · Ambigüedad -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Ambigüedad entre fuentes <span class="aud ops">Operativa</span> <span class="aud arq">Arquitectura</span></p>
@@ -304,7 +345,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 7 · Arquitectura -->
+<!-- 8 · Arquitectura -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Arquitectura <span class="aud arq">Arquitectura</span> <span class="aud sys">Sistemas</span></p>
@@ -333,7 +374,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 8 · Decisiones -->
+<!-- 9 · Decisiones -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Justificación técnica <span class="aud arq">Arquitectura</span></p>
@@ -355,7 +396,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 9 · Modelo de IA -->
+<!-- 10 · Modelo de IA -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Modelo de IA <span class="aud arq">Arquitectura</span> <span class="aud all">Todos</span></p>
@@ -384,7 +425,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 10 · Datos -->
+<!-- 11 · Datos -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Datos <span class="aud arq">Arquitectura</span> <span class="aud ops">Operativa</span></p>
@@ -416,7 +457,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 11 · Fiabilidad -->
+<!-- 12 · Fiabilidad -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Fiabilidad <span class="aud all">Todos</span></p>
@@ -460,7 +501,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 12 · Entrenamiento -->
+<!-- 13 · Entrenamiento -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Aprendizaje continuo · entrenamiento <span class="aud all">Todos</span></p>
@@ -490,7 +531,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 13 · De quién aprende -->
+<!-- 14 · De quién aprende -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Aprendizaje continuo · fuentes <span class="aud all">Todos</span> <span class="aud ops">Operativa</span></p>
@@ -531,36 +572,30 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 14 · Sin aprender errores -->
+<!-- 15 · Sin aprender errores -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Aprendizaje continuo · control de calidad <span class="aud all">Todos</span> <span class="aud arq">Arquitectura</span></p>
-    <h2><span class="n">4</span>Cómo se evita que aprenda de errores</h2>
+    <h2><span class="n">4</span>Cómo se evita que aprenda de errores: cuatro reglas</h2>
     <div class="cols-wide">
-      <table class="s14">
-        <thead><tr><th>Riesgo</th><th>Control</th></tr></thead>
-        <tbody>
-          <tr><td class="k">El operativo se equivoca</td><td>La corrección pasa las mismas validaciones que un dato extraído (fecha plausible, puerto existente, contenedor válido) y lleva cita o motivo</td></tr>
-          <tr><td class="k">Validar sin leer</td><td>Se detectan validaciones demasiado rápidas o un 100 % de aceptación; se intercalan casos de control ya conocidos</td></tr>
-          <tr><td class="k">Dos operativos discrepan</td><td>Doble revisión del 10 %, con el acuerdo medido (kappa de Cohen); el desacuerdo va a una tercera persona</td></tr>
-          <tr><td class="k">El ERP estaba mal</td><td>Un valor del ERP nunca es una etiqueta si una persona no lo confirma</td></tr>
-          <tr><td class="k">Aprender de sí mismo</td><td>Nada aceptado automáticamente se usa para entrenar sin confirmación de la auditoría: se corta el bucle</td></tr>
-          <tr><td class="k">Etiqueta precipitada</td><td>Cuarentena de 7 días: si algo la contradice (una salida real distinta), se revisa</td></tr>
-          <tr><td class="k">Sesgo de selección</td><td>La zona de aceptación se calibra con auditoría aleatoria, no solo con lo revisado</td></tr>
-        </tbody>
-      </table>
+      <div class="cols" style="gap:14px">
+        <div class="card top s14"><h3>1 · Solo aprende de personas</h3>Nunca de sus propias respuestas automáticas, ni de lo que dice el ERP, que también se equivoca. Solo de lo que ha confirmado un operativo o la auditoría.</div>
+        <div class="card top s14"><h3>2 · Comprueba al operativo</h3>Su corrección pasa los mismos controles que un dato leído (fecha posible, puerto que existe). Un 10 % lo revisan dos personas, y se detecta quien valida sin leer.</div>
+        <div class="card top s14"><h3>3 · Espera antes de aprender</h3>Una corrección espera 7 días antes de usarse. Si en ese tiempo algo la contradice, como la salida real del buque, vuelve a revisión.</div>
+        <div class="card top s14"><h3>4 · Todo se puede deshacer</h3>Cada versión aprendida sabe con qué correcciones se hizo. Si una era errónea, se rehace sin ella y se reprocesan los expedientes afectados.</div>
+      </div>
       <div>
-        <div class="card top s14" style="margin-bottom:12px">
-          <h3>Todo es reversible</h3>
-          Cada artefacto aprendido guarda su versión y las etiquetas que lo generaron. Si una etiqueta resulta errónea, se sabe qué la usó, se regenera sin ella y se reprocesan los datos afectados.
+        <div class="card amber s14" style="margin-bottom:12px">
+          <h3 style="color:var(--amber)">Ejemplo</h3>
+          Un operativo corrige la salida al 16/10 cuando era el 06/10. Es una fecha posible, así que pasa los controles. Durante la espera de 7 días, la naviera confirma la salida real el 06/10: la contradicción salta, la corrección vuelve a revisión y nunca llega a entrenar el sistema.
         </div>
-        <div class="card top s14" style="margin-bottom:12px">
+        <div class="card s14" style="margin-bottom:12px">
           <h3>Quién aprueba qué</h3>
-          Calibración, clasificador y ejemplos: automático, si pasa la evaluación. Plantillas nuevas: el equipo técnico. Qué fuente manda o bajar un umbral: operaciones.
+          Mejoras de estimación: automático, si no empeoran la evaluación. Plantillas nuevas: el equipo técnico. Qué fuente manda o bajar un umbral: operaciones.
         </div>
         <div class="card tint s14">
           <h3>En la prueba de concepto</h3>
-          La corrección como observación humana que recalcula el expediente, los alias aprendidos solos (4 en la demo) y el formato de fechas por remitente. La llamada al LLM ya admite ejemplos validados. El resto está diseñado en detalle.
+          La corrección como dato humano que recalcula el expediente, los alias aprendidos (4 en la demo) y el formato de fechas por remitente. Los controles de calidad están diseñados.
         </div>
       </div>
     </div>
@@ -568,7 +603,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 15 · Qué hay que operar -->
+<!-- 16 · Qué hay que operar -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Operación <span class="aud sys">Sistemas</span></p>
@@ -577,9 +612,9 @@
       <div class="card top">
         <h3>Infraestructura</h3>
         <ul class="s15">
-          <li>Una imagen de contenedor, con un rol por etapa.</li>
-          <li>2 servidores de aplicación (4 vCPU, 16 GB).</li>
-          <li>PostgreSQL con primario y réplica (2 vCPU, 8 GB), con particiones mensuales.</li>
+          <li>Una sola imagen de contenedor, con un rol por etapa.</li>
+          <li>Servidores de aplicación pequeños, duplicados para que una caída no pare el servicio.</li>
+          <li>PostgreSQL con primario y réplica, y particiones mensuales.</li>
           <li>Almacén de objetos compatible con S3 y monitorización con OpenTelemetry.</li>
           <li>En la nube de EShipping, en la UE, o en máquinas virtuales con Docker Compose.</li>
         </ul>
@@ -608,7 +643,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 16 · Coste -->
+<!-- 17 · Coste -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Coste <span class="aud sys">Sistemas</span> <span class="aud all">Dirección</span></p>
@@ -625,8 +660,7 @@
             <tr><td>Todo un mes de 100.000 correos, sin LLM ni OCR</td><td class="num">≈ 15 min de CPU</td></tr>
             <tr><td>Llamadas al LLM al mes</td><td class="num">≈ 37.500</td></tr>
             <tr><td>Tokens por llamada (medidos)</td><td class="num">≈ 360 de entrada, 100 de salida</td></tr>
-            <tr><td>Peticiones simultáneas al LLM en el pico</td><td class="num">≈ 1</td></tr>
-          </tbody>
+                      </tbody>
         </table>
       </div>
       <div>
@@ -642,39 +676,38 @@
             <tr><td class="muted">Por correo</td><td class="num muted">0,33 cént.</td><td class="num muted">0,23 cént.</td></tr>
           </tbody>
         </table>
-        <p class="s13 muted" style="margin-top:8px">Las máquinas son el 90 %. Peor caso de la sensibilidad del LLM: unos 257 $, aún menos que las máquinas. Sin cascada, unas 90 veces más. Precios oficiales del 23/11/2026. El tiempo de revisión del equipo se mide en horas, no en euros.</p>
+        <p class="s13 muted" style="margin-top:8px">Dimensionamiento de referencia, a ajustar con el volumen y la infraestructura reales. Las máquinas son el 90 %. Peor caso de la sensibilidad del LLM: unos 257 $, aún menos que las máquinas. Sin cascada, unas 90 veces más. Precios oficiales del 23/11/2026. El tiempo de revisión del equipo se mide en horas, no en euros.</p>
       </div>
     </div>
   </div>
   <div class="pfoot"></div>
 </section>
 
-<!-- 17 · Escalabilidad -->
+<!-- 18 · Escalabilidad -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Escalabilidad <span class="aud sys">Sistemas</span> <span class="aud arq">Arquitectura</span></p>
-    <h2><span class="n">6</span>De 100.000 a 150.000 correos: configuración, no rediseño</h2>
+    <h2><span class="n">6</span>De 100.000 a 150.000 correos: más réplicas, no otro diseño</h2>
     <div class="ask"><span class="lbl">Enunciado</span>Cómo se comportaría el diseño si se pasara de 100.000 a 150.000 correos.</div>
     <div class="cols-wide">
       <table class="s14">
-        <thead><tr><th></th><th class="num">100.000/mes</th><th class="num">150.000/mes</th><th>¿Qué hay que tocar?</th></tr></thead>
+        <thead><tr><th style="width:150px">Crece un 50 %</th><th>Cómo se absorbe</th></tr></thead>
         <tbody>
-          <tr><td>Correos en el minuto pico</td><td class="num">23</td><td class="num">34</td><td>Nada</td></tr>
-          <tr><td>Margen de un solo proceso sobre el pico</td><td class="num">≈ 290×</td><td class="num">≈ 195×</td><td>Nada</td></tr>
-          <tr><td>Servidores</td><td class="num">2 + 2 + 1</td><td class="num">2 + 2 + 1</td><td>Nada: las réplicas las fija la disponibilidad</td></tr>
-          <tr><td>Llamadas al LLM al mes</td><td class="num">37.500</td><td class="num">56.250</td><td>Revisar el nivel de uso del proveedor y el presupuesto</td></tr>
-          <tr><td>Base de datos al año</td><td class="num">≈ 16 GB</td><td class="num">≈ 23 GB</td><td>Nada: particiones mensuales</td></tr>
-          <tr><td>Horas de revisión al mes (15 % a revisión)</td><td class="num">≈ 281 h</td><td class="num">≈ 422 h</td><td>Es el recurso que de verdad crece</td></tr>
+          <tr><td class="k">Lectura y procesado</td><td>Cada etapa tiene su propia cola y escala por separado: se añaden réplicas solo de la que lo necesite. Sin tocar código.</td></tr>
+          <tr><td class="k">Llamadas al LLM</td><td>Crecen en proporción, y menos con el tiempo porque las plantillas le quitan trabajo. Basta revisar el límite de uso contratado y el presupuesto.</td></tr>
+          <tr><td class="k">Base de datos</td><td>Tablas particionadas por mes: lo antiguo se archiva sin afectar a lo reciente.</td></tr>
+          <tr><td class="k">ERP y buzón</td><td>Solo lectura e incremental: se procesa lo que ha cambiado.</td></tr>
+          <tr><td class="k">Revisión humana</td><td><b>Lo único que no se arregla con máquinas.</b> Si el porcentaje a revisión no bajara, crecería un 50 %. Por eso la cola prioriza y el aprendizaje continuo reduce ese porcentaje.</td></tr>
         </tbody>
       </table>
       <div>
         <div class="card top s14" style="margin-bottom:12px">
-          <h3>Prueba de volumen</h3>
-          10.010 mensajes y 2.860 expedientes sintéticos en <b>66 s</b>, en un solo proceso. Con cuatro veces más mensajes, cuatro veces más tiempo: crece de forma <b>lineal</b> y con la misma calidad.
+          <h3>Medido en la prueba de concepto</h3>
+          10.010 mensajes y 2.860 expedientes sintéticos procesados en <b>66 s</b> en un portátil. Con cuatro veces más mensajes, cuatro veces más tiempo: crece de forma <b>lineal</b>, sin perder calidad.
         </div>
         <div class="card tint s14">
-          <h3>El límite real no son las máquinas</h3>
-          Son las horas de revisión, el LLM, el OCR y lo al día que esté el ERP. Por eso la revisión se trata como una pieza de primer nivel, y el aprendizaje continuo la reduce. Con 300.000 correos basta un servidor más.
+          <h3>El tamaño exacto, con datos reales</h3>
+          Cuántas máquinas hacen falta depende del volumen real por hora y de la infraestructura de EShipping. Se fija en el piloto midiendo; lo que no cambia es el diseño.
         </div>
       </div>
     </div>
@@ -682,7 +715,7 @@
   <div class="pfoot"></div>
 </section>
 
-<!-- 18 · Confidencialidad -->
+<!-- 19 · Confidencialidad -->
 <section class="slide">
   <div class="body">
     <p class="kicker">Confidencialidad <span class="aud all">Todos</span> <span class="aud sys">Sistemas</span></p>
@@ -709,22 +742,6 @@
         </ul>
       </div>
     </div>
-  </div>
-  <div class="pfoot"></div>
-</section>
-
-<!-- 19 · Puesta en marcha -->
-<section class="slide">
-  <div class="body">
-    <p class="kicker">Puesta en marcha <span class="aud all">Todos</span></p>
-    <h2>Por fases, sin cambiar el día a día de operativa hasta que esté probado</h2>
-    <div class="cols-4">
-      <div class="card top"><div class="step">1 · Preparar</div><p class="s15">Cerrar con EShipping las preguntas del análisis de requisitos (volumen real, significado de algunos campos de DEIWORLD, proveedor de IA autorizado y jerarquía de fuentes), obtener el acceso de solo lectura al buzón y al ERP y etiquetar con operativa unos cientos de casos reales.</p></div>
-      <div class="card top"><div class="step">2 · Modo sombra</div><p class="s15">El sistema lee los correos reales <b>sin ningún efecto</b>: operativa trabaja como siempre y se compara lo que propone con lo que hace el equipo. Así se fijan los umbrales con datos.</p></div>
-      <div class="card top"><div class="step">3 · Piloto</div><p class="s15">Un equipo usa la lista de discrepancias con umbrales prudentes: al principio va mucho a revisión. Sus correcciones entrenan el sistema.</p></div>
-      <div class="card top"><div class="step">4 · Ampliar</div><p class="s15">Por naviera y por tipo de correo. La revisión baja con el aprendizaje: del 30 % del arranque hacia el 15 %, y menos en régimen maduro.</p></div>
-    </div>
-    <div class="ask" style="margin-top:22px"><span class="lbl">Objetivo</span>Hoy una persona lee todos los correos. El objetivo es que el volumen crezca más deprisa que las horas de revisión.</div>
   </div>
   <div class="pfoot"></div>
 </section>
