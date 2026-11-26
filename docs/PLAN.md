@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.28.0 |
+| Versión | 1.29.0 |
 | Estado | Cerrado con la entrega (`v1.0.0`) |
 | Responsable | Pablo Iglesias Peral |
 | Última actualización | 25/11/2026 |
@@ -501,3 +501,4 @@ El detalle está en el [índice de ADR](adr/README.md). Aquí se muestra solo el
 | 1.26.0 | 25/11/2026 | P. Iglesias Peral | F4.5: prueba de volumen con 10.010 mensajes sintéticos (2.860 expedientes). Unos 9.100 mensajes por minuto en un solo proceso, coste lineal y calidad idéntica a la del conjunto base. Margen de unas 195 veces sobre el pico de 150.000 correos al mes, sin contar LLM ni OCR | #44 |
 | 1.27.0 | 25/11/2026 | P. Iglesias Peral | Revisión de fase de F4, cerrada con `v0.5.0`. Criterio de salida cumplido: métricas finales con intervalos sobre el gold (sintético y real), análisis de errores, costes recalibrados con lo medido, modelo local elegido por benchmark (D9) y prueba de volumen. Desviación: el rol del remitente pasó de directorio manual a cascada (ADR-0013) al ver que no escala. Pendiente: la revisión humana del gold real (R10), que solo puede hacer el responsable | — |
 | 1.28.0 | 25/11/2026 | P. Iglesias Peral | Revisión de fase de F5, cerrada con `v1.0.0`. Entregados: revisión de coherencia (F5.2), resumen ejecutivo (F5.1), presentación en HTML y PDF (F5.3), auditoría de confidencialidad con un incidente corregido (F5.4) y guion de la entrevista, fuera del repositorio (F5.5). Trazabilidad con el enunciado (§13) completa. Los documentos pasan a «Entregado». Queda la F6 (borrado de los datos reales) tras el proceso de selección | #50 |
+| 1.29.0 | 26/11/2026 | P. Iglesias Peral | Presentación rehecha para el tribunal de la entrevista (RRHH, sistemas, arquitectura y operativa): 21 diapositivas en el estilo corporativo de EShipping, en tercera persona, con un bloque por público, una o más diapositivas por cada pregunta del enunciado, tres sobre el entrenamiento y el aprendizaje continuo, el circuito de operativa paso a paso, la escalabilidad sin cifras de dimensionamiento no respaldadas, capturas de la PoC sobre datos sintéticos, resumen de la PoC y despedida. El logo no se versiona (regla 1). Publicada como `v1.0.1` | #96 |

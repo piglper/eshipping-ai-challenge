@@ -6,6 +6,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-26
+
+### Changed
+- La presentación se rehace para la entrevista, con un tribunal de RRHH, sistemas, arquitectura y operativa (#96):
+  - 21 diapositivas en el estilo corporativo de EShipping (IBM Plex Sans y su verde), en tercera persona y organizadas por público;
+  - una diapositiva o más por cada pregunta del enunciado (§7), con la pregunta a la vista;
+  - el circuito de operativa paso a paso: qué llega a la cola, las tres decisiones y quién actualiza DEIWORLD;
+  - la escalabilidad explicada por componente, sin cifras de dimensionamiento que dependen del volumen real;
+  - tres diapositivas sobre el entrenamiento y el aprendizaje continuo: qué se entrena y cómo, de quién aprende y cómo evita aprender de errores;
+  - capturas de la PoC sobre datos sintéticos, resumen de la PoC y despedida.
+  - El logo no se versiona: se carga desde `data/output/` y el PDF versionado se exporta sin él.
+
 ## [1.0.0] - 2026-11-25
 
 Entrega de la prueba técnica (fase F5).
@@ -158,7 +170,8 @@ Cierre de la fase F0 (entorno y proceso).
 - `.gitignore` que excluye datos reales (`data/`, `*.csv`, `*.eml`, `*.msg`), entornos virtuales y secretos.
 - Hook de pre-commit (`.githooks/pre-commit`) que bloquea commits con ficheros confidenciales.
 
-[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/piglper/eshipping-ai-challenge/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/piglper/eshipping-ai-challenge/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.5.0...v1.0.0
 [0.5.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/piglper/eshipping-ai-challenge/compare/v0.3.0...v0.4.0
