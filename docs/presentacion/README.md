@@ -1,6 +1,6 @@
 # Presentación
 
-- `index.html`: la presentación para la entrevista, con 21 diapositivas en el estilo corporativo de EShipping. Está organizada por público (operativa, arquitectura, sistemas y RRHH) y dedica una diapositiva o más a cada pregunta del enunciado (§7). Se abre en el navegador y se navega con las flechas, `Inicio` y `Fin`; `#N` en la URL abre la diapositiva N.
+- `index.html`: la presentación para la entrevista, con 21 diapositivas en el estilo corporativo de EShipping. Está organizada por público (operativa, arquitectura y sistemas, más un bloque común) y dedica una diapositiva o más a cada pregunta del enunciado (§7). Se abre en el navegador y se navega con las flechas, `Inicio` y `Fin`; `#N` en la URL abre la diapositiva N.
 - `presentacion.pdf`: la misma presentación exportada, con una diapositiva por página y **sin el logo**.
 - `img/`: capturas de `make ui` sobre la base de `make demo`, con datos sintéticos.
 - `fonts/`: IBM Plex Sans, la tipografía de los documentos de EShipping, con licencia SIL Open Font License (`fonts/OFL.txt`). La presentación funciona sin conexión.

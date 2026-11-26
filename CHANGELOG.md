@@ -6,6 +6,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Changed
+- La presentación deja de etiquetar «Forma de trabajar» como bloque de RRHH: pasa a ser común a todos (diapositivas 2 y 3).
+
 ## [1.0.1] - 2026-11-26
 
 ### Changed
